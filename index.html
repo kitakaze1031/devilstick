@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Devilstick Siteswap Simulator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #controls {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            padding: 5px;
+            font-size: 16px;
+            width: 250px;
+        }
+        button {
+            padding: 5px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        canvas {
+            background: #ffffff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="controls">
+    <label for="siteswapInput">siteswap: </label>
+    <input type="text" id="siteswapInput" value="(4x,4x)">
+    <button id="startBtn">描画</button>
+</div>
+
+<canvas id="simCanvas" width="800" height="600"></canvas>
+
+<script>
+// =====================================
+// 定数・グローバル変数
+// =====================================
+const BEAT_TIME = 0.7;
+const COLORS = ["red", "blue", "green", "orange", "purple"];
+const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
+
+let table = null;
+let g_balls = 0;
+let g_seq = [];
+let g_n = 0;
+let T = 0;
+
+let animationFrameId = null;
+let startTime = 0;
+
+const canvas = document.getElementById("simCanvas");
+const ctx = canvas.getContext("2d");
+
+// =====================================
+// サイトスワップ構文解析 (siteswap2.c の移植)
+// =====================================
+function parse(s) {
+    let i = 0;
+    let seq = [];
+    
+    while (i < s.length) {
+        if (s[i] === '(') {
+            i++;
+            let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0 };
+
+            // left number
+            while (i < s.length && s[i] >= '0' && s[i] <= '9') {
+                t.a = t.a * 10 + parseInt(s[i]);
+                i++;
+            }
+
+            // flags for left
+            while (i < s.length) {
+                if (s[i] === 'x') { t.cross_a = 1; i++; continue; }
+                if (s[i] === '*') { if (t.a === 0) t.hs_a = HS_HAND1; i++; continue; }
+                if (s[i] === '-') { t.hs_a = HS_HAND2; i++; continue; }
+                break;
+            }
+
+            if (s[i] === ',') i++;
+
+            // right number
+            while (i < s.length && s[i] >= '0' && s[i] <= '9') {
+                t.b = t.b * 10 + parseInt(s[i]);
+                i++;
+            }
+
+            // flags for right
+            while (i < s.length) {
+                if (s[i] === 'x') { t.cross_b = 1; i++; continue; }
+                if (s[i] === '*') { if (t.b === 0) t.hs_b = HS_HAND1; i++; continue; }
+                if (s[i] === '-') { t.hs_b = HS_HAND2; i++; continue; }
+                break;
+            }
+
+            if (s[i] === ')') i++;
+            seq.push(t);
+        } else {
+            i++;
+        }
+    }
+    return seq;
+}
+
+function object_count(seq) {
+    let sum = 0;
+    for (let i = 0; i < seq.length; i++) {
+        sum += seq[i].a + seq[i].b;
+    }
+    return Math.floor(sum / (2 * seq.length));
+}
+
+function build(seq, balls) {
+    table = Array.from({ length: balls }, () => 
+        Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1 }))
+    );
+
+    let ex = [];
+    for (let t = 0; t < T; t++) {
+        // ディープコピーして周期パターンを展開
+        ex.push({ ...seq[t % g_n] });
+    }
+
+    let ball = 0;
+    for (let start_t = 0; start_t < T; start_t++) {
+        // a側 (左手)
+        if (ex[start_t].a > 0) {
+            let t = start_t;
+            let side = 0;
+            while (t < T) {
+                let tr = ex[t];
+                let value, from, to;
+
+                if (side === 0) {
+                    if (tr.a <= 0) break;
+                    value = tr.a;
+                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; }
+                    tr.a = -1;
+                } else {
+                    if (tr.b <= 0) break;
+                    value = tr.b;
+                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; }
+                    tr.b = -1;
+                }
+
+                table[ball][t] = { value, from, to };
+                t += Math.floor(value / 2);
+                if (to === 1 || to === 2) side ^= 1;
+            }
+            ball++;
+        }
+
+        // b側 (右手)
+        if (ex[start_t].b > 0) {
+            let t = start_t;
+            let side = 1;
+            while (t < T) {
+                let tr = ex[t];
+                let value, from, to;
+
+                if (side === 0) {
+                    if (tr.a <= 0) break;
+                    value = tr.a;
+                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; }
+                    tr.a = -1;
+                } else {
+                    if (tr.b <= 0) break;
+                    value = tr.b;
+                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; }
+                    tr.b = -1;
+                }
+
+                table[ball][t] = { value, from, to };
+                t += Math.floor(value / 2);
+                if (to === 1 || to === 2) side ^= 1;
+            }
+            ball++;
+        }
+    }
+
+    // to補正
+    for (let b = 0; b < balls; b++) {
+        let first = -1;
+        let prev = -1;
+        for (let t = 0; t < T; t++) {
+            if (table[b][t].value > 0) {
+                if (first === -1) first = t;
+                if (prev !== -1) {
+                    table[b][prev].to = table[b][t].from;
+                }
+                prev = t;
+            }
+        }
+        if (prev !== -1 && first !== -1) {
+            table[b][prev].to = table[b][first].from;
+        }
+    }
+}
+
+function make_siteswap_table(input) {
+    g_seq = parse(input);
+    g_n = g_seq.length;
+    if (g_n === 0) return 0;
+
+    g_balls = object_count(g_seq);
+    T = g_n * g_balls * 4;
+
+    build(g_seq, g_balls);
+    return T;
+}
+
+// =====================================
+// モーション・描画系関数 (sim2.c の移植)
+// =====================================
+function triwave(u) {
+    return (u < 0.5) ? (u * 2.0) : (2.0 - u * 2.0);
+}
+
+function calcHandMotion(t, period, phase) {
+    let u = ((t + phase) % period) / period;
+    if (u < 0) u += 1.0; 
+    let v = triwave(u);
+    return -(v - 0.5) * 2.0;
+}
+
+function drawLineEx(p1, p2, thickness, color) {
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.lineWidth = thickness;
+    ctx.strokeStyle = color;
+    ctx.lineCap = "round";
+    ctx.stroke();
+}
+
+function draw_hand1(center, a, side) {
+    let angle = a * Math.PI * 2.0;
+    if (side === 0) angle = -angle;
+    const L = 140.0;
+    let dx = Math.cos(angle) * (L / 2.0);
+    let dy = Math.sin(angle) * (L / 2.0);
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "darkgray");
+}
+
+function draw_hand2(center, a, side) {
+    let angle = a * Math.PI;
+    if (side === 0) angle = -angle;
+    const L = 140.0;
+    let dx = Math.cos(angle) * (L / 2.0);
+    let dy = Math.sin(angle) * 12.0;
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "darkgray");
+}
+
+function get_pos(id) {
+    switch(id) {
+        case 0: return { x: 340, y: 400 };
+        case 1: return { x: 400, y: 460 };
+        case 2: return { x: 400, y: 460 };
+        case 3: return { x: 460, y: 400 };
+    }
+    return { x: 0, y: 0 };
+}
+
+function lerp(a, b, t) {
+    return {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t
+    };
+}
+
+function draw_devilstick(center, angle, color) {
+    const L = 108.0;
+    let x1 = center.x + L * Math.sin(angle);
+    let y1 = center.y - L * Math.cos(angle);
+    let x2 = center.x - L * Math.sin(angle);
+    let y2 = center.y + L * Math.cos(angle);
+
+    drawLineEx({ x: x1, y: y1 }, { x: x2, y: y2 }, 8, color);
+    drawLineEx({ x: x1, y: y1 }, { x: x2, y: y2 }, 3, "white");
+
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    let len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.0001) {
+        dx /= len;
+        dy /= len;
+    }
+
+    const cap = 16.0;
+    drawLineEx({ x: x1, y: y1 }, { x: x1 + dx * cap, y: y1 + dy * cap }, 14, "black");
+    drawLineEx({ x: x2, y: y2 }, { x: x2 - dx * cap, y: y2 - dy * cap }, 14, "black");
+
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "black";
+    ctx.fill();
+}
+
+function draw_ball(balls, globalTime, color) {
+    for (let t = 0; t < T; t++) {
+        let c = balls[t];
+        if (c.value <= 0) continue;
+
+        let startTime = t * BEAT_TIME;
+        let duration = (c.value / 2.0) * BEAT_TIME;
+        let endTime = startTime + duration;
+        let gt = globalTime;
+
+        if (endTime > T * BEAT_TIME) {
+            if (gt < startTime) {
+                gt += T * BEAT_TIME;
+            }
+        }
+
+        if (gt >= startTime && gt < endTime) {
+            let a = (gt - startTime) / duration;
+            let p0 = get_pos(c.from);
+            let p1 = get_pos(c.to);
+            let p = lerp(p0, p1, a);
+
+            let s = Math.floor(c.value / 2);
+            let bounce = Math.abs(Math.sin(a * Math.PI));
+            p.y -= bounce * 60.0 * s;
+
+            let angle = 0.0;
+            let baseTilt = 25.0 * Math.PI / 180.0;
+
+            if (c.from === 0) {
+                angle = -baseTilt - a * Math.PI * s;
+            } else if (c.from === 1 || c.from === 2) {
+                let dir = (c.to > c.from) ? 1.0 : -1.0;
+                let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                let turns = 0.5 * s - 0.5;
+                let spin = a * turns * Math.PI * 2.0;
+                angle = dir * swing + dir * spin;
+            } else if (c.from === 3) {
+                angle = baseTilt + a * Math.PI * s;
+            }
+
+            draw_devilstick(p, angle, color);
+            return;
+        }
+    }
+}
+
+// =====================================
+// メインループ
+// =====================================
+function update(timestamp) {
+    if (!startTime) startTime = timestamp;
+    let t = (timestamp - startTime) / 1000.0; // 秒に変換
+
+    let totalTime = T * BEAT_TIME;
+    let globalTime = t % totalTime;
+
+    let beat = Math.floor(globalTime / BEAT_TIME) % g_n;
+    let u = (globalTime % BEAT_TIME) / BEAT_TIME;
+
+    // 画面クリア
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 手の土台座標
+    let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
+    let leftHS = calcHandMotion(t, BEAT_TIME, 0.0);
+    let rightHS = calcHandMotion(t, BEAT_TIME, 0.0);
+    let leftHY = handBaseY + leftHS * 20.0;
+    let rightHY = handBaseY + rightHS * 20.0;
+
+    // 手の円描画
+    ctx.beginPath();
+    ctx.arc(leftBaseX, leftHY, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "darkgray";
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(rightBaseX, rightHY, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "darkgray";
+    ctx.fill();
+
+    // ハンドスティック描画
+    let tr = g_seq[beat];
+    if (tr) {
+        if (tr.hs_a === HS_HAND1) draw_hand1({ x: leftBaseX, y: leftHY }, u, 0);
+        if (tr.hs_a === HS_HAND2) draw_hand2({ x: leftBaseX, y: leftHY }, u, 0);
+        if (tr.hs_b === HS_HAND1) draw_hand1({ x: rightBaseX, y: rightHY }, u, 1);
+        if (tr.hs_b === HS_HAND2) draw_hand2({ x: rightBaseX, y: rightHY }, u, 1);
+    }
+
+    // デビルスティック(Ball)描画
+    for (let b = 0; b < g_balls; b++) {
+        let color = COLORS[b % COLORS.length];
+        draw_ball(table[b], globalTime, color);
+    }
+
+    animationFrameId = requestAnimationFrame(update);
+}
+
+// 登録イベント
+function initSimulation() {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+    let inputStr = document.getElementById("siteswapInput").value;
+    let parsedT = make_siteswap_table(inputStr);
+    
+    if (parsedT > 0 && g_balls > 0) {
+        startTime = 0;
+        animationFrameId = requestAnimationFrame(update);
+    } else {
+        alert("有効なサイトスワップを入力してください。例: (4x,4x)");
+    }
+}
+
+document.getElementById("startBtn").addEventListener("click", initSimulation);
+
+// 初回実行
+initSimulation();
+</script>
+
+</body>
+</html>
