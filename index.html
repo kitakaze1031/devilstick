@@ -1,276 +1,369 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>デビルスティック サイトスワップ シミュレーター</title>
-    <style>
-        /* =====================================
-           基本スタイル（PC向け：縦並び構成）
-           ===================================== */
-        body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-            background: #f5f7fa;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-            box-sizing: border-box;
-            min-height: 100vh;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin: 0 0 5px 0;
-            color: #2c3e50;
-            text-align: center;
-        }
-        
-        .description {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 20px;
-            text-align: center;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デビルスティック サイトスワップ シミュレーター</title>
 
-        /* 全体を包むメインラッパー */
-        .main-container {
-            display: flex;
-            flex-direction: column; /* PCは縦並び(上から順) */
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-        }
+<style>
+/* =====================================
+   基本スタイル
+   ===================================== */
+body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN',
+                 'Hiragino Sans', Meiryo, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+    box-sizing: border-box;
+    min-height: 100vh;
+}
 
-        /* PCは標準の並び順（上：操作パネル） */
-        .control-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            max-width: 800px;
-            order: 1; /* PCのときは一番最初 */
-        }
+h1 {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    text-align: center;
+}
 
-        #controls {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        label {
-            font-weight: bold;
-            color: #4a5568;
-        }
-        
-        input[type="text"] {
-            padding: 8px 12px;
-            font-size: 16px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            width: 180px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        
-        input[type="text"]:focus {
-            border-color: #3182ce;
-        }
-        
-        button {
-            padding: 8px 16px;
-            font-size: 14px;
-            background-color: #3182ce;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.2s;
-        }
-        
-        button:hover {
-            background-color: #2b6cb0;
-        }
-        
-        .preset-container {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .preset-btn {
-            padding: 6px 10px;
-            font-size: 12px;
-            background-color: #e2e8f0;
-            color: #4a5568;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        
-        .preset-btn:hover {
-            background-color: #cbd5e1;
-        }
-        
-        /* PCは標準の並び順（下：キャンバス） */
-        .canvas-container {
-            width: 100%;
-            max-width: 800px;
-            display: flex;
-            justify-content: center;
-            order: 2; /* PCのときは二番目 */
-        }
+.description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+    text-align: center;
+}
 
-        canvas {
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            width: 100%;
-            height: auto;
-            aspect-ratio: 8 / 6;
-        }
-        
-        .info-box {
-            font-size: 13px;
-            color: #718096;
-            line-height: 1.6;
-            background: #edf2f7;
-            padding: 15px;
-            border-radius: 6px;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+}
 
-        /* =====================================
-           📱 スマホ（画面幅が767px以下のとき）
-           ===================================== */
-        @media (max-width: 767px) {
-            body {
-                padding: 10px;
-            }
-            h1 {
-                font-size: 18px;
-            }
-            .description {
-                margin-bottom: 10px;
-                font-size: 11px;
-            }
-            
-            /* スマホ時だけ表示順を逆転（アニメーションを上、操作パネルを下） */
-            .canvas-container {
-                order: 1;
-            }
+/* =====================================
+   キャンバス
+   ===================================== */
+.canvas-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+}
 
-            .control-panel {
-                order: 2;
-            }
+canvas {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    width: 100%;
+    height: auto;
+    aspect-ratio: 8 / 6;
+}
 
-            #controls {
-                flex-direction: row;
-                padding: 12px;
-                gap: 8px;
-            }
-            input[type="text"] {
-                flex-grow: 1;
-                width: auto;
-            }
-            .preset-container {
-                width: 100%;
-                justify-content: space-between;
-            }
-            .preset-btn {
-                flex-grow: 1;
-                text-align: center;
-            }
-            .info-box {
-                font-size: 11px;
-                padding: 10px;
-            }
-        }
-    </style>
+/* =====================================
+   コントロール
+   ===================================== */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 800px;
+}
+
+#controls {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    font-weight: bold;
+    color: #4a5568;
+}
+
+input[type="text"] {
+    padding: 8px 12px;
+    font-size: 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus {
+    border-color: #3182ce;
+}
+
+button {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #2b6cb0;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #2d3748;
+}
+
+.preset-container {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    background-color: #e2e8f0;
+    color: #4a5568;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.preset-btn:hover {
+    background-color: #cbd5e1;
+}
+
+/* =====================================
+   情報欄
+   ===================================== */
+.info-box {
+    font-size: 13px;
+    color: #718096;
+    line-height: 1.7;
+    background: #edf2f7;
+    padding: 15px;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* =====================================
+   スマホ
+   ===================================== */
+@media (max-width: 767px) {
+
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 18px;
+    }
+
+    .description {
+        font-size: 11px;
+        margin-bottom: 10px;
+    }
+
+    #controls {
+        padding: 12px;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .preset-container {
+        flex-direction: column;
+    }
+
+    .preset-btn {
+        width: 100%;
+    }
+
+    .info-box {
+        font-size: 11px;
+        padding: 10px;
+    }
+}
+</style>
 </head>
+
 <body>
 
 <h1>デビルスティック サイトスワップ シミュレーター</h1>
-<div class="description"></div>
 
 <div class="main-container">
-    <div class="control-panel">
-        <div id="controls">
-    <div style="margin-bottom: 10px; width: 100%; text-align: center;">
-        <label for="siteswapInput">パターン: </label>
-        <input type="text" id="siteswapInput" value="(2x,2x)">
-        <button id="startBtn">再生</button>
-    </div>
 
-    <div class="preset-wrapper" style="width: 100%; margin-bottom: 10px;">
-        <div class="section-title">1本(入力例)</div>
-        <div class="preset-container">
-            <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
-            <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
-            <button class="preset-btn" onclick="applyPreset('(2-,0)')">(2-,0)</button>
-            <button class="preset-btn" onclick="applyPreset('(4x,0)(0^1,0^3)(0,2x)')">(4x,0)(0^1,0^3)(0,2x)</button>
-        </div>
-    </div>
-
-    <div class="preset-wrapper" style="width: 100%; margin-bottom: 10px;">
-        <div class="section-title">2本(入力例)</div>
-        <div class="preset-container">
-            <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
-            <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
-            <button class="preset-btn" onclick="applyPreset('(2x-,2x)(2x,2x-)')">(2x-,2x)(2x,2x-)</button>
-            <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
-        </div>
-    </div>
-
-    <div class="preset-wrapper" style="width: 100%; margin-bottom: 10px;">
-        <div class="section-title">3本(入力例)</div>
-        <div class="preset-container">
-            <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
-            <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
-            <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
-            <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)</button>
-        </div>
-    </div>
-
-    <div class="preset-wrapper" style="width: 100%;">
-        <div class="section-title">それ以上(入力例)</div>
-        <div class="preset-container">
-            <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,6x)')">(6x,2x)(2x,6x)</button>
-            <button class="preset-btn" onclick="applyPreset('(8,2x)(2x,8)')">(8,2x)(2x,8)</button>
-            <button class="preset-btn" onclick="applyPreset('(8,6x)(6x,8)')">(8,6x)(6x,8)</button>
-        </div>
-    </div>
-</div>
-    </div>
-</div>
-        <div class="info-box">
-            <strong>💡 現在の設定ルール</strong><br>
-            ・0があるとき、0*で片手が空くことでできるフラーリッシュ 例(2x,0*)(0*,2x)<br>
-            ・任意の数字-で叩きながらできるフラーリッシュ  例(2x-,0)(0,2x-)<br>
-            ・(0,0)があるとき、(0^3,0^1)で31HSパス  例(4x,0)(0^1,0^3)(0,2x)
-        </div>
-    </div>
-
+    <!-- =====================================
+         アニメーション
+         ===================================== -->
     <div class="canvas-container">
         <canvas id="simCanvas" width="800" height="600"></canvas>
     </div>
+
+    <!-- =====================================
+         入力UI
+         ===================================== -->
+    <div class="control-panel">
+
+        <div id="controls">
+
+            <!-- 入力 -->
+            <div style="width:100%; text-align:center;">
+                <label for="siteswapInput">パターン: </label>
+                <input type="text" id="siteswapInput" value="(2x,2x)">
+                <button id="startBtn">再生</button>
+            </div>
+
+            <!-- 1本 -->
+            <div class="preset-wrapper">
+                <div class="section-title">1本(入力例)</div>
+
+                <div class="preset-container">
+                    <button class="preset-btn"
+                        onclick="applyPreset('(2x,0)(0,2x)')">
+                        (2x,0)(0,2x)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(2x,0*)(0*,2x)')">
+                        (2x,0*)(0*,2x)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(2-,0)')">
+                        (2-,0)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(4x,0)(0^1,0^3)(0,2x)')">
+                        (4x,0)(0^1,0^3)(0,2x)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2本 -->
+            <div class="preset-wrapper">
+                <div class="section-title">2本(入力例)</div>
+
+                <div class="preset-container">
+                    <button class="preset-btn"
+                        onclick="applyPreset('(2x,2x)')">
+                        (2x,2x)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(4,2x)(2x,0)')">
+                        (4,2x)(2x,0)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(2x-,2x)(2x,2x-)')">
+                        (2x-,2x)(2x,2x-)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">
+                        (6,4x)(0^3,0^1)(2x,0)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3本 -->
+            <div class="preset-wrapper">
+                <div class="section-title">3本(入力例)</div>
+
+                <div class="preset-container">
+                    <button class="preset-btn"
+                        onclick="applyPreset('(4,2x)(2x,4)')">
+                        (4,2x)(2x,4)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(4x,2x)')">
+                        (4x,2x)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(6x,2x)(2x,2x)')">
+                        (6x,2x)(2x,2x)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">
+                        (4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)
+                    </button>
+                </div>
+            </div>
+
+            <!-- それ以上 -->
+            <div class="preset-wrapper">
+                <div class="section-title">それ以上(入力例)</div>
+
+                <div class="preset-container">
+                    <button class="preset-btn"
+                        onclick="applyPreset('(6x,2x)(2x,6x)')">
+                        (6x,2x)(2x,6x)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(8,2x)(2x,8)')">
+                        (8,2x)(2x,8)
+                    </button>
+
+                    <button class="preset-btn"
+                        onclick="applyPreset('(8,6x)(6x,8)')">
+                        (8,6x)(6x,8)
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =====================================
+             説明
+             ===================================== -->
+        <div class="info-box">
+            <strong>💡 現在の設定ルール</strong><br>
+
+            ・0があるとき、0*で片手が空くことでできるフラーリッシュ
+            例 (2x,0*)(0*,2x)<br>
+
+            ・任意の数字-で叩きながらできるフラーリッシュ
+            例 (2x-,0)(0,2x-)<br>
+
+            ・(0,0)があるとき、
+            (0^3,0^1)で31HSパス
+            例 (4x,0)(0^1,0^3)(0,2x)
+        </div>
+
+    </div>
+
 </div>
 
+
+
 <script>
+
 // =====================================
 // 定数・グローバル変数
 // =====================================
