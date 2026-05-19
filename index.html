@@ -2,51 +2,245 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Devilstick Siteswap Simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デビルスティック サイトスワップ シミュレーター</title>
     <style>
+        /* =====================================
+           基本スタイル（PC向け：縦並び構成）
+           ===================================== */
         body {
-            font-family: sans-serif;
-            background: #f0f0f0;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background: #f5f7fa;
+            color: #333;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            margin: 0;
+            box-sizing: border-box;
+            min-height: 100vh;
         }
+        
+        h1 {
+            font-size: 24px;
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* 全体を包むメインラッパー */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* 左側（または上側）の操作系をまとめるパネル */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 800px;
+        }
+
         #controls {
-            margin-bottom: 15px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
         }
+        
+        label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
         input[type="text"] {
-            padding: 5px;
+            padding: 8px 12px;
             font-size: 16px;
-            width: 250px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            width: 180px;
+            outline: none;
+            transition: border-color 0.2s;
         }
+        
+        input[type="text"]:focus {
+            border-color: #3182ce;
+        }
+        
         button {
-            padding: 5px 15px;
-            font-size: 16px;
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
         }
+        
+        button:hover {
+            background-color: #2b6cb0;
+        }
+        
+        .preset-container {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .preset-btn {
+            padding: 6px 10px;
+            font-size: 12px;
+            background-color: #e2e8f0;
+            color: #4a5568;
+            border-radius: 4px;
+        }
+        
+        .preset-btn:hover {
+            background-color: #cbd5e1;
+        }
+        
+        /* 描画キャンバス（レスポンシブ対応） */
+        .canvas-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: center;
+        }
+
         canvas {
             background: #ffffff;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            width: 100%;
+            height: auto;
+            aspect-ratio: 8 / 6; /* 縦横比を維持 */
+        }
+        
+        .info-box {
+            font-size: 13px;
+            color: #718096;
+            line-height: 1.6;
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* =====================================
+           📱 スマホ・タブレット向けスタイル（横並び構成へ切替）
+           画面幅が 768px 未満のときに適用
+           ===================================== */
+        @media (max-width: 767px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            .description {
+                margin-bottom: 10px;
+                font-size: 12px;
+            }
+            /* コンテナを横並び（左右2カラム）に変更 */
+            .main-container {
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: center;
+                gap: 15px;
+            }
+            /* 左側にコントロール、右側にCanvas */
+            .control-panel {
+                width: 40%;
+                flex-shrink: 0;
+            }
+            .canvas-container {
+                width: 60%;
+            }
+            #controls {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 10px;
+                gap: 8px;
+            }
+            input[type="text"] {
+                width: auto;
+            }
+            .preset-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            .preset-btn {
+                width: 100%;
+                text-align: center;
+            }
+            .info-box {
+                font-size: 11px;
+                padding: 10px;
+            }
         }
     </style>
 </head>
 <body>
 
-<div id="controls">
-    <label for="siteswapInput">siteswap: </label>
-    <input type="text" id="siteswapInput" value="(2x,2x)">
-    <button id="startBtn">描画</button>
-</div>
+<h1>デビルスティック サイトスワップ シミュレーター</h1>
+<div class="description">これを使って面白い技を作ってくれたら嬉しい</div>
 
-<canvas id="simCanvas" width="800" height="600"></canvas>
+<div class="main-container">
+    <div class="control-panel">
+        <div id="controls">
+            <label for="siteswapInput">サイトスワップ: </label>
+            <input type="text" id="siteswapInput" value="(2x,2x)">
+            <button id="startBtn">再生・描画</button>
+            
+            <div class="preset-container">
+                <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
+                <button class="preset-btn" onclick="applyPreset('(2x-,0*)(0*,2x-)')">(2x-,0*)(0*,2x-)</button>
+                <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)(2x,2x)(2x,2x)')">(6,4x)(0^3,0^1)...</button>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 現在の設定ルール</strong><br>
+            ・アルファベットは非対応<br>
+            ・0があるとき、0*で片手が空くことでできるフラーリッシュ 例(2x,0*)(0*,2x)<br>
+            ・任意の数字-で叩きながらできるフラーリッシュ  例(2x-,0)(0,2x-)<br>
+            ・(0,0)があるとき、(0^3,0^1)で31HSパス  例(4x,0)(0^1,0^3)(0,2x)
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="simCanvas" width="800" height="600"></canvas>
+    </div>
+</div>
 
 <script>
 // =====================================
 // 定数・グローバル変数
 // =====================================
 const BEAT_TIME = 0.7;
-const COLORS = ["red", "blue", "green", "orange", "purple"];
+const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5"];
 const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
 
 let table = null;
@@ -62,7 +256,7 @@ const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 
 // =====================================
-// サイトスワップ構文解析 (siteswap2.c の移植)
+// サイトスワップ構文解析
 // =====================================
 function parse(s) {
     let i = 0;
@@ -71,35 +265,51 @@ function parse(s) {
     while (i < s.length) {
         if (s[i] === '(') {
             i++;
-            let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0 };
+            let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0 };
 
-            // left number
+            // 左手の数値
             while (i < s.length && s[i] >= '0' && s[i] <= '9') {
                 t.a = t.a * 10 + parseInt(s[i]);
                 i++;
             }
 
-            // flags for left
+            // 左手のフラグ
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_a = 1; i++; continue; }
                 if (s[i] === '*') { if (t.a === 0) t.hs_a = HS_HAND1; i++; continue; }
                 if (s[i] === '-') { t.hs_a = HS_HAND2; i++; continue; }
+                if (s[i] === '^') { 
+                    i++; 
+                    if (i < s.length && s[i] >= '0' && s[i] <= '9') {
+                        t.mode_a = parseInt(s[i]);
+                        i++;
+                    }
+                    continue; 
+                }
                 break;
             }
 
             if (s[i] === ',') i++;
 
-            // right number
+            // 右手の数値
             while (i < s.length && s[i] >= '0' && s[i] <= '9') {
                 t.b = t.b * 10 + parseInt(s[i]);
                 i++;
             }
 
-            // flags for right
+            // 右手のフラグ
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_b = 1; i++; continue; }
                 if (s[i] === '*') { if (t.b === 0) t.hs_b = HS_HAND1; i++; continue; }
                 if (s[i] === '-') { t.hs_b = HS_HAND2; i++; continue; }
+                if (s[i] === '^') { 
+                    i++; 
+                    if (i < s.length && s[i] >= '0' && s[i] <= '9') {
+                        t.mode_b = parseInt(s[i]);
+                        i++;
+                    }
+                    continue; 
+                }
                 break;
             }
 
@@ -127,13 +337,11 @@ function build(seq, balls) {
 
     let ex = [];
     for (let t = 0; t < T; t++) {
-        // ディープコピーして周期パターンを展開
         ex.push({ ...seq[t % g_n] });
     }
 
     let ball = 0;
     for (let start_t = 0; start_t < T; start_t++) {
-        // a側 (左手)
         if (ex[start_t].a > 0) {
             let t = start_t;
             let side = 0;
@@ -160,7 +368,6 @@ function build(seq, balls) {
             ball++;
         }
 
-        // b側 (右手)
         if (ex[start_t].b > 0) {
             let t = start_t;
             let side = 1;
@@ -188,7 +395,6 @@ function build(seq, balls) {
         }
     }
 
-    // to補正
     for (let b = 0; b < balls; b++) {
         let first = -1;
         let prev = -1;
@@ -213,14 +419,15 @@ function make_siteswap_table(input) {
     if (g_n === 0) return 0;
 
     g_balls = object_count(g_seq);
-    T = g_n * g_balls * 4;
+    let calcBalls = g_balls > 0 ? g_balls : 1;
+    T = g_n * calcBalls * 4;
 
     build(g_seq, g_balls);
     return T;
 }
 
 // =====================================
-// モーション・描画系関数 (sim2.c の移植)
+// モーション・描画系関数
 // =====================================
 function triwave(u) {
     return (u < 0.5) ? (u * 2.0) : (2.0 - u * 2.0);
@@ -249,7 +456,7 @@ function draw_hand1(center, a, side) {
     const L = 140.0;
     let dx = Math.cos(angle) * (L / 2.0);
     let dy = Math.sin(angle) * (L / 2.0);
-    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "darkgray");
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "#718096");
 }
 
 function draw_hand2(center, a, side) {
@@ -258,7 +465,14 @@ function draw_hand2(center, a, side) {
     const L = 140.0;
     let dx = Math.cos(angle) * (L / 2.0);
     let dy = Math.sin(angle) * 12.0;
-    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "darkgray");
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "#718096");
+}
+
+function draw_stick(center, angle, color) {
+    const L = 140.0;
+    let dx = Math.cos(angle) * (L / 2.0);
+    let dy = Math.sin(angle) * (L / 2.0);
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, color);
 }
 
 function get_pos(id) {
@@ -297,19 +511,20 @@ function draw_devilstick(center, angle, color) {
     }
 
     const cap = 16.0;
-    drawLineEx({ x: x1, y: y1 }, { x: x1 + dx * cap, y: y1 + dy * cap }, 14, "black");
-    drawLineEx({ x: x2, y: y2 }, { x: x2 - dx * cap, y: y2 - dy * cap }, 14, "black");
+    drawLineEx({ x: x1, y: y1 }, { x: x1 + dx * cap, y: y1 + dy * cap }, 14, "#1a202c");
+    drawLineEx({ x: x2, y: y2 }, { x: x2 - dx * cap, y: y2 - dy * cap }, 14, "#1a202c");
 
     ctx.beginPath();
     ctx.arc(center.x, center.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "black";
+    ctx.fillStyle = "#1a202c";
     ctx.fill();
 }
 
 function draw_ball(balls, globalTime, color) {
+    if (!balls) return;
     for (let t = 0; t < T; t++) {
         let c = balls[t];
-        if (c.value <= 0) continue;
+        if (!c || c.value <= 0) continue;
 
         let startTime = t * BEAT_TIME;
         let duration = (c.value / 2.0) * BEAT_TIME;
@@ -358,7 +573,7 @@ function draw_ball(balls, globalTime, color) {
 // =====================================
 function update(timestamp) {
     if (!startTime) startTime = timestamp;
-    let t = (timestamp - startTime) / 1000.0; // 秒に変換
+    let t = (timestamp - startTime) / 1000.0;
 
     let totalTime = T * BEAT_TIME;
     let globalTime = t % totalTime;
@@ -366,46 +581,76 @@ function update(timestamp) {
     let beat = Math.floor(globalTime / BEAT_TIME) % g_n;
     let u = (globalTime % BEAT_TIME) / BEAT_TIME;
 
-    // 画面クリア
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 手の土台座標
     let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
-    let leftHS = calcHandMotion(t, BEAT_TIME, 0.0);
-    let rightHS = calcHandMotion(t, BEAT_TIME, 0.0);
-    let leftHY = handBaseY + leftHS * 20.0;
-    let rightHY = handBaseY + rightHS * 20.0;
+    let hs = calcHandMotion(t, BEAT_TIME, 0.0);
+    let leftHY = handBaseY + hs * 20.0;
+    let rightHY = handBaseY + hs * 20.0;
 
-    // 手の円描画
+    let leftHand = { x: leftBaseX, y: leftHY };
+    let rightHand = { x: rightBaseX, y: rightHY };
+
+    // 手のベース円の描画
     ctx.beginPath();
-    ctx.arc(leftBaseX, leftHY, 8, 0, Math.PI * 2);
-    ctx.fillStyle = "darkgray";
+    ctx.arc(leftHand.x, leftHand.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "#718096";
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(rightBaseX, rightHY, 8, 0, Math.PI * 2);
-    ctx.fillStyle = "darkgray";
+    ctx.arc(rightHand.x, rightHand.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "#718096";
     ctx.fill();
 
-    // ハンドスティック描画
     let tr = g_seq[beat];
-    if (tr) {
-        if (tr.hs_a === HS_HAND1) draw_hand1({ x: leftBaseX, y: leftHY }, u, 0);
-        if (tr.hs_a === HS_HAND2) draw_hand2({ x: leftBaseX, y: leftHY }, u, 0);
-        if (tr.hs_b === HS_HAND1) draw_hand1({ x: rightBaseX, y: rightHY }, u, 1);
-        if (tr.hs_b === HS_HAND2) draw_hand2({ x: rightBaseX, y: rightHY }, u, 1);
+
+    // =====================================
+    // hand3 (0^1, 0^3) 描画処理
+    // =====================================
+    if (tr && tr.a === 0 && tr.b === 0) {
+        if (tr.mode_a === 1) {
+            let passPos = lerp(leftHand, rightHand, u);
+            ctx.beginPath();
+            ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = "#718096";
+            ctx.fill();
+        } else if (tr.mode_a === 3) {
+            let spinPos = lerp(leftHand, rightHand, u);
+            spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+            let spinAngle = -u * Math.PI; 
+            draw_stick(spinPos, spinAngle, "#718096");
+        }
+
+        if (tr.mode_b === 1) {
+            let passPos = lerp(rightHand, leftHand, u);
+            ctx.beginPath();
+            ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2);
+            ctx.fillStyle = "#718096";
+            ctx.fill();
+        } else if (tr.mode_b === 3) {
+            let spinPos = lerp(rightHand, leftHand, u);
+            spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+            let spinAngle = u * Math.PI; 
+            draw_stick(spinPos, spinAngle, "#718096");
+        }
+    } 
+    else if (tr) {
+        if (tr.hs_a === HS_HAND1) draw_hand1(leftHand, u, 0);
+        if (tr.hs_a === HS_HAND2) draw_hand2(leftHand, u, 0);
+        if (tr.hs_b === HS_HAND1) draw_hand1(rightHand, u, 1);
+        if (tr.hs_b === HS_HAND2) draw_hand2(rightHand, u, 1);
     }
 
-    // デビルスティック(Ball)描画
-    for (let b = 0; b < g_balls; b++) {
-        let color = COLORS[b % COLORS.length];
-        draw_ball(table[b], globalTime, color);
+    if (g_balls > 0 && table) {
+        for (let b = 0; b < g_balls; b++) {
+            let color = COLORS[b % COLORS.length];
+            draw_ball(table[b], globalTime, color);
+        }
     }
 
     animationFrameId = requestAnimationFrame(update);
 }
 
-// 登録イベント
 function initSimulation() {
     if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -413,17 +658,22 @@ function initSimulation() {
     let inputStr = document.getElementById("siteswapInput").value;
     let parsedT = make_siteswap_table(inputStr);
     
-    if (parsedT > 0 && g_balls > 0) {
+    if (parsedT > 0) {
         startTime = 0;
         animationFrameId = requestAnimationFrame(update);
     } else {
-        alert("有効なサイトスワップを入力してください。例: (4x,4x)");
+        alert("有効なサイトスワップパターンを入力してください。(例: (0^3,0^1))");
     }
+}
+
+function applyPreset(val) {
+    document.getElementById("siteswapInput").value = val;
+    initSimulation();
 }
 
 document.getElementById("startBtn").addEventListener("click", initSimulation);
 
-// 初回実行
+// 初回起動
 initSimulation();
 </script>
 
