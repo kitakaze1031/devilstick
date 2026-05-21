@@ -529,6 +529,7 @@ function draw_horizontal_devilstick(center, angle, color) {
     ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
 }
 
+// 縦方向のデビルスティック描画
 function draw_devilstick(center, angle, color) {
     const L = 108.0;
     let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
@@ -665,7 +666,7 @@ function update(timestamp) {
             mediaRecorder.start();
         }
         
-        // 3周期（3ループ）分に達したら録画をストップ
+        // 3周期分に達したら録画をストップ
         if (t >= recordDuration) {
             isRecording = false;
             mediaRecorder.stop();
@@ -677,7 +678,7 @@ function update(timestamp) {
     let beat = Math.floor(globalTime / BEAT_TIME) % g_n;
     let u = (globalTime % BEAT_TIME) / BEAT_TIME;
 
-    // 【重要修正】通常時も録画時も、背景は一貫して白に設定（透過によるGit等での黒化を防ぐ）
+    // 背景は常に白に設定（透過によるGit等での暗転化を防ぐため完全に白で塗り潰す）
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -724,7 +725,7 @@ function update(timestamp) {
         }
     }
 
-    // 動画内（左上）にサイトスワップを常に濃いグレーの文字で表記
+    // 動画内（左上）にサイトスワップを常に表記
     let currentPattern = document.getElementById("siteswapInput").value;
     ctx.font = "bold 20px 'Helvetica Neue', Arial, sans-serif";
     ctx.fillStyle = "#2c3e50"; 
@@ -756,17 +757,22 @@ function applyPreset(val) {
     initSimulation();
 }
 
-// 録画処理を起動する関数
+// 【重要修正】一般的な「.mp4」動画ファイル形式に設定して録画を起動
 function startRecording() {
     if (isRecording) return;
     
-    // 1ループの時間(g_n * BEAT_TIME)の「3倍（3周期分）」の長さを設定
     recordDuration = (g_n * BEAT_TIME) * 3;
     recordedChunks = [];
     
     const stream = canvas.captureStream(60);
     
-    let options = { mimeType: 'video/webm;codecs=vp9' };
+    // スマホでの互換性が一番高い「video/mp4」形式を最優先で指定
+    let options = { mimeType: 'video/mp4;codecs=avc1' };
+    
+    // 万が一ブラウザ側がmp4録画に非対応だった場合は、代替可能な標準フォーマットに切り替え
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm;codecs=vp9' };
+    }
     if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options = { mimeType: 'video/webm;codecs=vp8' };
     }
@@ -790,7 +796,9 @@ function startRecording() {
         const a = document.createElement('a');
         a.href = url;
         const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
-        a.download = `devilstick_siteswap_${patternName}.webm`;
+        
+        // 拡張子を「.mp4」にしてスマホのギャラリーへ直接認識させやすくする
+        a.download = `devilstick_siteswap_${patternName}.mp4`;
         document.body.appendChild(a);
         a.click();
         
