@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>デビルスティック サイトスワップ シミュレーター (pプロペラ完全修正版)</title>
+<title>デビルスティック サイトスワップ シミュレーター (p・t 完全共存版)</title>
 
 <style>
 /* =====================================
@@ -143,9 +143,6 @@ button:hover {
     background-color: #cbd5e1;
 }
 
-/* =====================================
-   情報欄
-   ===================================== */
 .info-box {
     font-size: 13px;
     color: #718096;
@@ -177,9 +174,6 @@ button:hover {
         <canvas id="simCanvas" width="800" height="600"></canvas>
     </div>
 
-     <!-- =====================================
-         入力UI
-         ===================================== -->
     <div class="control-panel">
 
         <div id="controls">
@@ -312,6 +306,7 @@ button:hover {
             (0^3,0^1)で31HSパス
             例 (4x,0)(0^1,0^3)(0,2x)
         </div>
+
     </div>
 </div>
 
@@ -339,7 +334,7 @@ const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 
 // =====================================
-// サイトスワップ構文解析
+// サイトスワップ構文解析 (p=1, t=2 として分離保持)
 // =====================================
 function parse(s) {
     let i = 0;
@@ -349,7 +344,9 @@ function parse(s) {
             i++;
             let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0, a_propeller: 0, b_propeller: 0 };
             
+            // 左手
             if (s[i] === 'p') { t.a_propeller = 1; i++; }
+            else if (s[i] === 't') { t.a_propeller = 2; i++; }
             while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.a = t.a * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_a = 1; i++; continue; }
@@ -363,7 +360,9 @@ function parse(s) {
             }
             if (s[i] === ',') i++;
             
+            // 右手
             if (s[i] === 'p') { t.b_propeller = 1; i++; }
+            else if (s[i] === 't') { t.b_propeller = 2; i++; }
             while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.b = t.b * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_b = 1; i++; continue; }
@@ -388,13 +387,11 @@ function object_count(seq) {
     return Math.floor(sum / (2 * seq.length));
 }
 
-// 【修正】配列内のディープコピーとフラグ保持を完全に保証
 function build(seq, balls) {
     table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, propeller: 0 })) );
     
     let ex = [];
     for (let t = 0; t < T; t++) { 
-        // 毎回新しくオブジェクトを複製（参照の混ざりを防ぐ）
         let src = seq[t % g_n];
         ex.push({ 
             a: src.a, b: src.b, 
@@ -441,7 +438,6 @@ function build(seq, balls) {
         }
     }
 
-    // to / from の補完（propellerフラグを維持したまま上書き）
     for (let b = 0; b < balls; b++) {
         let first = -1; let prev = -1;
         for (let t = 0; t < T; t++) {
@@ -502,7 +498,7 @@ function get_pos(id) {
 }
 function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
 
-// 3D風 立体横回転描画
+// 【t用・p用共通】3D風 立体横回転描画
 function draw_horizontal_devilstick(center, angle, color) {
     const L = 108.0;
     const PITCH_SCALE = 0.25; 
@@ -551,7 +547,7 @@ function draw_devilstick(center, angle, color) {
 }
 
 // =====================================
-// ボール（CS）の軌道計算・描画
+// ボール（CS）の軌道計算・描画 (各仕様を完全独立)
 // =====================================
 function draw_ball(balls, globalTime, color) {
     if (!balls) return;
@@ -571,36 +567,75 @@ function draw_ball(balls, globalTime, color) {
         if (gt >= startTime && gt < endTime) {
             let a = (gt - startTime) / duration; 
             
-            // 【完全同期】2x かつ propeller フラグが立っている時のみ
-            let isHorizontal2x = (c.value === 2 && (c.from === 1 || c.from === 2) && c.propeller === 1);
+            // --------------------------------------------------------
+            // 1. 【pプロペラ完全修正版】のコードロジックを無改変で適用
+            // --------------------------------------------------------
+            if (c.propeller === 1) {
+                let isHorizontal2x = (c.value === 2 && (c.from === 1 || c.from === 2) && c.propeller === 1);
+                let p, angle;
 
-            let p, angle;
+                if (isHorizontal2x) {
+                    let p0, p1;
+                    if (c.from === 1) {
+                        p0 = g_leftHand; p1 = g_rightHand;
+                        angle = a * Math.PI; 
+                    } else {
+                        p0 = g_rightHand; p1 = g_leftHand;
+                        angle = -a * Math.PI; 
+                    }
+                    p = lerp(p0, p1, a);
+                    draw_horizontal_devilstick(p, angle, color);
+                } 
+                else {
+                    let p0 = get_pos(c.from); let p1 = get_pos(c.to);
+                    p = lerp(p0, p1, a);
+                    let s = Math.floor(c.value / 2);
+                    let bounce = Math.abs(Math.sin(a * Math.PI));
+                    p.y -= bounce * 60.0 * s;
 
-            if (isHorizontal2x) {
-                let p0, p1;
-                if (c.from === 1) {
-                    p0 = g_leftHand; p1 = g_rightHand;
-                    angle = a * Math.PI; 
-                } else {
-                    p0 = g_rightHand; p1 = g_leftHand;
-                    angle = -a * Math.PI; 
+                    angle = 0.0;
+                    let baseTilt = 25.0 * Math.PI / 180.0;
+                    if (c.from === 0) {
+                        angle = -baseTilt - a * Math.PI * s;
+                    } else if (c.from === 1 || c.from === 2) {
+                        let dir = (c.to > c.from) ? 1.0 : -1.0;
+                        let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                        let turns = 0.5 * s - 0.5;
+                        let spin = a * turns * Math.PI * 2.0;
+                        angle = dir * swing + dir * spin;
+                    } else if (c.from === 3) {
+                        angle = baseTilt + a * Math.PI * s;
+                    }
+                    draw_devilstick(p, angle, color);
                 }
-                p = lerp(p0, p1, a);
-                draw_horizontal_devilstick(p, angle, color);
             } 
-            else {
-                // p無しの通常放物線（縦スピン）
-                let p0 = get_pos(c.from);
-                let p1 = get_pos(c.to);
-                p = lerp(p0, p1, a);
+            // --------------------------------------------------------
+            // 2. 【回転方向完全統一版(t)】のコードロジックを無改変で適用
+            // --------------------------------------------------------
+            else if (c.propeller === 2) {
+                let p0 = get_pos(c.from); let p1 = get_pos(c.to);
+                let p = lerp(p0, p1, a);
 
                 let s = Math.floor(c.value / 2);
                 let bounce = Math.abs(Math.sin(a * Math.PI));
                 p.y -= bounce * 60.0 * s;
 
-                angle = 0.0;
-                let baseTilt = 25.0 * Math.PI / 180.0;
+                // tの確定仕様：すべてのプロペラ（t）技の回転方向を完全に同一方向（時計回り）に固定して横回転描画
+                let angle = a * Math.PI * s;
+                draw_horizontal_devilstick(p, angle, color);
+            }
+            // --------------------------------------------------------
+            // 3. モディファイアなしの通常デビルスティック
+            // --------------------------------------------------------
+            else {
+                let p0 = get_pos(c.from); let p1 = get_pos(c.to);
+                let p = lerp(p0, p1, a);
+                let s = Math.floor(c.value / 2);
+                let bounce = Math.abs(Math.sin(a * Math.PI));
+                p.y -= bounce * 60.0 * s;
 
+                let angle = 0.0;
+                let baseTilt = 25.0 * Math.PI / 180.0;
                 if (c.from === 0) {
                     angle = -baseTilt - a * Math.PI * s;
                 } else if (c.from === 1 || c.from === 2) {
@@ -612,7 +647,6 @@ function draw_ball(balls, globalTime, color) {
                 } else if (c.from === 3) {
                     angle = baseTilt + a * Math.PI * s;
                 }
-                
                 draw_devilstick(p, angle, color);
             }
             return;
