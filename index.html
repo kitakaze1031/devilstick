@@ -60,7 +60,7 @@ canvas {
 
 /* =====================================
    コントロール
-   ==================================== */
+   ===================================== */
 .control-panel {
     display: flex;
     flex-direction: column;
@@ -114,6 +114,19 @@ button:hover {
     background-color: #2b6cb0;
 }
 
+/* 録画ボタン用スタイル */
+#recordBtn {
+    background-color: #e53e3e;
+}
+#recordBtn:hover {
+    background-color: #c53030;
+}
+#recordBtn:disabled {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
 .section-title {
     font-size: 14px;
     font-weight: bold;
@@ -154,6 +167,50 @@ button:hover {
     box-sizing: border-box;
 }
 
+/* 自由利用を伝えるクレジットスタイルの調整 */
+footer {
+    margin-top: 20px;
+    padding: 20px;
+    font-size: 13px;
+    color: #718096;
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    box-sizing: border-box;
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+footer a {
+    color: #3182ce;
+    text-decoration: none;
+    font-weight: bold;
+    border-bottom: 1px dashed #3182ce;
+    transition: color 0.2s;
+}
+
+footer a:hover {
+    color: #2b6cb0;
+    border-bottom-style: solid;
+}
+
+.free-box {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #2f855a;
+    background: #f0fff4;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid #c6f6d5;
+    font-weight: 500;
+}
+
 @media (max-width: 767px) {
     body { padding: 10px; }
     h1 { font-size: 18px; }
@@ -174,21 +231,19 @@ button:hover {
         <canvas id="simCanvas" width="800" height="600"></canvas>
     </div>
 
-     <!-- =====================================
-         入力UI
-         ===================================== -->
-    <div class="control-panel">
+     <div class="control-panel">
 
         <div id="controls">
 
-            <!-- 入力 -->
-            <div style="width:100%; text-align:center;">
-                <label for="siteswapInput">パターン: </label>
-                <input type="text" id="siteswapInput" value="(2x,2x)">
+            <div style="width:100%; text-align:center; display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <label for="siteswapInput">パターン: </label>
+                    <input type="text" id="siteswapInput" value="(2x,2x)">
+                </div>
                 <button id="startBtn">再生</button>
+                <button id="recordBtn">動画を録画ダウンロード</button>
             </div>
 
-            <!-- 1本 -->
             <div class="preset-wrapper">
                 <div class="section-title">1本(入力例)</div>
 
@@ -215,7 +270,6 @@ button:hover {
                 </div>
             </div>
 
-            <!-- 2本 -->
             <div class="preset-wrapper">
                 <div class="section-title">2本(入力例)</div>
 
@@ -242,7 +296,6 @@ button:hover {
                 </div>
             </div>
 
-            <!-- 3本 -->
             <div class="preset-wrapper">
                 <div class="section-title">3本(入力例)</div>
 
@@ -269,7 +322,6 @@ button:hover {
                 </div>
             </div>
 
-            <!-- それ以上 -->
             <div class="preset-wrapper">
                 <div class="section-title">それ以上(入力例)</div>
 
@@ -293,9 +345,6 @@ button:hover {
 
         </div>
 
-        <!-- =====================================
-             説明
-             ===================================== -->
         <div class="info-box">
             <strong>💡 現在の設定ルール</strong><br>
 
@@ -311,6 +360,13 @@ button:hover {
         </div>
     </div>
 </div>
+
+<footer>
+    <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
+    <div class="free-box">
+        ✨ 録画した動画は、SNSやYouTube等への投稿・二次利用を含め、いつでも自由にお使いいただけます！
+    </div>
+</footer>
 
 <script>
 // =====================================
@@ -334,6 +390,13 @@ let g_rightHand = { x: 460, y: 400 };
 
 const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
+
+// 録画関連の変数
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recordStartTime = 0;
+let recordDuration = 0;
 
 // =====================================
 // サイトスワップ構文解析
@@ -471,7 +534,6 @@ function calcHandMotion(t, period, phase) {
     let u = ((t + phase) % period) / period; if (u < 0) u += 1.0; 
     let v = triwave(u); return -(v - 0.5) * 2.0;
 }
-// 汎用線描画
 function drawLineEx(p1, p2, thickness, color) {
     ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
     ctx.lineWidth = thickness; ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.stroke();
@@ -501,7 +563,6 @@ function get_pos(id) {
 }
 function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
 
-// 3D風 立体横回転描画
 function draw_horizontal_devilstick(center, angle, color) {
     const L = 108.0;
     const PITCH_SCALE = 0.25; 
@@ -534,7 +595,6 @@ function draw_horizontal_devilstick(center, angle, color) {
     ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
 }
 
-// 通常の縦回転用描画関数
 function draw_devilstick(center, angle, color) {
     const L = 108.0;
     let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
@@ -570,9 +630,6 @@ function draw_ball(balls, globalTime, color) {
         if (gt >= startTime && gt < endTime) {
             let a = (gt - startTime) / duration; 
             
-            // --------------------------------------------------------
-            // 1. 【pプロペラベース】のコードロジック（完全独立維持）
-            // --------------------------------------------------------
             if (c.propeller === 1) {
                 let isHorizontal2x = (c.value === 2 && (c.from === 1 || c.from === 2) && c.propeller === 1);
                 let p, angle;
@@ -612,45 +669,21 @@ function draw_ball(balls, globalTime, color) {
                     draw_devilstick(p, angle, color);
                 }
             } 
-            // --------------------------------------------------------
-            // 2. 【tプロペラベース】全トランジション対応中央ピーク統一
-            // --------------------------------------------------------
             else if (c.propeller === 2) {
                 let p;
                 let s = Math.floor(c.value / 2);
 
-                // tの軌道仕様：xであるかどうかにかかわらず、常に手の現在位置をもとに
-                // アニメーション進行度 a=0.5 の中間地点で最高点かつ中央に到達する処理
                 let handStart, handEnd;
-                
-                // 投げ出し側の手の判定
-                if (c.from === 0 || c.from === 1) {
-                    handStart = g_leftHand;
-                } else {
-                    handStart = g_rightHand;
-                }
+                if (c.from === 0 || c.from === 1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
+                if (c.to === 0 || c.to === 1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
 
-                // 受け取る側の手の判定
-                if (c.to === 0 || c.to === 1) {
-                    handEnd = g_leftHand;
-                } else {
-                    handEnd = g_rightHand;
-                }
-
-                // 左右の手のリアルタイム位置から直線補間
                 p = lerp(handStart, handEnd, a);
-                
-                // 放物線の最高点（ピーク）を完全に a=0.5 (中央) に一致させる
                 let peakBounce = Math.sin(a * Math.PI); 
                 p.y -= peakBounce * 60.0 * s;
 
-                // 時計回りに横回転
                 let angle = a * Math.PI * s;
                 draw_horizontal_devilstick(p, angle, color);
             }
-            // --------------------------------------------------------
-            // 3. モディファイアなしの通常デビルスティック
-            // --------------------------------------------------------
             else {
                 let p0 = get_pos(c.from); let p1 = get_pos(c.to);
                 let p = lerp(p0, p1, a);
@@ -687,6 +720,24 @@ function update(timestamp) {
 
     let totalTime = T * BEAT_TIME;
     let globalTime = t % totalTime;
+
+    // 録画制御用のロジック
+    if (isRecording) {
+        if (recordStartTime === 0) {
+            recordStartTime = t;
+            globalTime = 0;
+            startTime = timestamp;
+            t = 0;
+            mediaRecorder.start();
+        }
+        
+        if (t >= recordDuration) {
+            isRecording = false;
+            mediaRecorder.stop();
+            document.getElementById("recordBtn").innerText = "動画を録画ダウンロード";
+            document.getElementById("recordBtn").disabled = false;
+        }
+    }
 
     let beat = Math.floor(globalTime / BEAT_TIME) % g_n;
     let u = (globalTime % BEAT_TIME) / BEAT_TIME;
@@ -760,7 +811,58 @@ function applyPreset(val) {
     initSimulation();
 }
 
+// 録画処理を起動する関数
+function startRecording() {
+    if (isRecording) return;
+    
+    recordDuration = g_n * BEAT_TIME;
+    recordedChunks = [];
+    
+    const stream = canvas.captureStream(60);
+    
+    let options = { mimeType: 'video/webm;codecs=vp9' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm;codecs=vp8' };
+    }
+    
+    try {
+        mediaRecorder = new MediaRecorder(stream, options);
+    } catch (e) {
+        mediaRecorder = new MediaRecorder(stream);
+    }
+    
+    mediaRecorder.ondataavailable = function(e) {
+        if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+        }
+    };
+    
+    mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
+        a.download = `devilstick_siteswap_${patternName}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+    };
+    
+    recordStartTime = 0;
+    isRecording = true;
+    
+    document.getElementById("recordBtn").innerText = "録画中...";
+    document.getElementById("recordBtn").disabled = true;
+}
+
 document.getElementById("startBtn").addEventListener("click", initSimulation);
+document.getElementById("recordBtn").addEventListener("click", startRecording);
 
 initSimulation();
 </script>
