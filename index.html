@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>デビルスティック サイトスワップ シミュレーター</title>
+<title>デビルスティック サイトスワップ シミュレーター (pプロペラ完全修正版)</title>
 
 <style>
 /* =====================================
@@ -27,13 +27,6 @@ h1 {
     font-size: 24px;
     margin: 0 0 10px 0;
     color: #2c3e50;
-    text-align: center;
-}
-
-.description {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 20px;
     text-align: center;
 }
 
@@ -96,7 +89,7 @@ input[type="text"] {
     font-size: 16px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
-    width: 220px;
+    width: 250px;
     outline: none;
     transition: border-color 0.2s;
 }
@@ -164,45 +157,13 @@ button:hover {
     box-sizing: border-box;
 }
 
-/* =====================================
-   スマホ
-   ===================================== */
 @media (max-width: 767px) {
-
-    body {
-        padding: 10px;
-    }
-
-    h1 {
-        font-size: 18px;
-    }
-
-    .description {
-        font-size: 11px;
-        margin-bottom: 10px;
-    }
-
-    #controls {
-        padding: 12px;
-    }
-
-    input[type="text"] {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .preset-container {
-        flex-direction: column;
-    }
-
-    .preset-btn {
-        width: 100%;
-    }
-
-    .info-box {
-        font-size: 11px;
-        padding: 10px;
-    }
+    body { padding: 10px; }
+    h1 { font-size: 18px; }
+    #controls { padding: 12px; }
+    input[type="text"] { width: 100%; box-sizing: border-box; }
+    .preset-container { flex-direction: column; }
+    .preset-btn { width: 100%; }
 }
 </style>
 </head>
@@ -212,15 +173,11 @@ button:hover {
 <h1>デビルスティック サイトスワップ シミュレーター</h1>
 
 <div class="main-container">
-
-    <!-- =====================================
-         アニメーション
-         ===================================== -->
     <div class="canvas-container">
         <canvas id="simCanvas" width="800" height="600"></canvas>
     </div>
 
-    <!-- =====================================
+     <!-- =====================================
          入力UI
          ===================================== -->
     <div class="control-panel">
@@ -355,15 +312,10 @@ button:hover {
             (0^3,0^1)で31HSパス
             例 (4x,0)(0^1,0^3)(0,2x)
         </div>
-
     </div>
-
 </div>
 
-
-
 <script>
-
 // =====================================
 // 定数・グローバル変数
 // =====================================
@@ -380,6 +332,9 @@ let T = 0;
 let animationFrameId = null;
 let startTime = 0;
 
+let g_leftHand = { x: 340, y: 400 };
+let g_rightHand = { x: 460, y: 400 };
+
 const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -389,129 +344,96 @@ const ctx = canvas.getContext("2d");
 function parse(s) {
     let i = 0;
     let seq = [];
-    
     while (i < s.length) {
         if (s[i] === '(') {
             i++;
-            let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0 };
-
-            while (i < s.length && s[i] >= '0' && s[i] <= '9') {
-                t.a = t.a * 10 + parseInt(s[i]);
-                i++;
-            }
-
+            let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0, a_propeller: 0, b_propeller: 0 };
+            
+            if (s[i] === 'p') { t.a_propeller = 1; i++; }
+            while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.a = t.a * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_a = 1; i++; continue; }
                 if (s[i] === '*') { if (t.a === 0) t.hs_a = HS_HAND1; i++; continue; }
                 if (s[i] === '-') { t.hs_a = HS_HAND2; i++; continue; }
                 if (s[i] === '^') { 
-                    i++; 
-                    if (i < s.length && s[i] >= '0' && s[i] <= '9') {
-                        t.mode_a = parseInt(s[i]);
-                        i++;
-                    }
+                    i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_a = parseInt(s[i]); i++; }
                     continue; 
                 }
                 break;
             }
-
             if (s[i] === ',') i++;
-
-            while (i < s.length && s[i] >= '0' && s[i] <= '9') {
-                t.b = t.b * 10 + parseInt(s[i]);
-                i++;
-            }
-
+            
+            if (s[i] === 'p') { t.b_propeller = 1; i++; }
+            while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.b = t.b * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_b = 1; i++; continue; }
                 if (s[i] === '*') { if (t.b === 0) t.hs_b = HS_HAND1; i++; continue; }
                 if (s[i] === '-') { t.hs_b = HS_HAND2; i++; continue; }
                 if (s[i] === '^') { 
-                    i++; 
-                    if (i < s.length && s[i] >= '0' && s[i] <= '9') {
-                        t.mode_b = parseInt(s[i]);
-                        i++;
-                    }
+                    i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_b = parseInt(s[i]); i++; }
                     continue; 
                 }
                 break;
             }
-
             if (s[i] === ')') i++;
             seq.push(t);
-        } else {
-            i++;
-        }
+        } else { i++; }
     }
     return seq;
 }
 
 function object_count(seq) {
     let sum = 0;
-    for (let i = 0; i < seq.length; i++) {
-        sum += seq[i].a + seq[i].b;
-    }
+    for (let i = 0; i < seq.length; i++) { sum += seq[i].a + seq[i].b; }
     return Math.floor(sum / (2 * seq.length));
 }
 
+// 【修正】配列内のディープコピーとフラグ保持を完全に保証
 function build(seq, balls) {
-    table = Array.from({ length: balls }, () => 
-        Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1 }))
-    );
-
+    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, propeller: 0 })) );
+    
     let ex = [];
-    for (let t = 0; t < T; t++) {
-        ex.push({ ...seq[t % g_n] });
+    for (let t = 0; t < T; t++) { 
+        // 毎回新しくオブジェクトを複製（参照の混ざりを防ぐ）
+        let src = seq[t % g_n];
+        ex.push({ 
+            a: src.a, b: src.b, 
+            cross_a: src.cross_a, cross_b: src.cross_b, 
+            a_propeller: src.a_propeller, b_propeller: src.b_propeller 
+        }); 
     }
 
     let ball = 0;
     for (let start_t = 0; start_t < T; start_t++) {
         if (ex[start_t].a > 0) {
-            let t = start_t;
-            let side = 0;
+            let t = start_t; let side = 0;
             while (t < T) {
-                let tr = ex[t];
-                let value, from, to;
-
+                let tr = ex[t]; let value, from, to, propeller;
                 if (side === 0) {
-                    if (tr.a <= 0) break;
-                    value = tr.a;
-                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; }
-                    tr.a = -1;
+                    if (tr.a <= 0) break; value = tr.a; propeller = tr.a_propeller;
+                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; } tr.a = -1;
                 } else {
-                    if (tr.b <= 0) break;
-                    value = tr.b;
-                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; }
-                    tr.b = -1;
+                    if (tr.b <= 0) break; value = tr.b; propeller = tr.b_propeller;
+                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; } tr.b = -1;
                 }
-
-                table[ball][t] = { value, from, to };
+                table[ball][t] = { value, from, to, propeller };
                 t += Math.floor(value / 2);
                 if (to === 1 || to === 2) side ^= 1;
             }
             ball++;
         }
-
         if (ex[start_t].b > 0) {
-            let t = start_t;
-            let side = 1;
+            let t = start_t; let side = 1;
             while (t < T) {
-                let tr = ex[t];
-                let value, from, to;
-
+                let tr = ex[t]; let value, from, to, propeller;
                 if (side === 0) {
-                    if (tr.a <= 0) break;
-                    value = tr.a;
-                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; }
-                    tr.a = -1;
+                    if (tr.a <= 0) break; value = tr.a; propeller = tr.a_propeller;
+                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; } tr.a = -1;
                 } else {
-                    if (tr.b <= 0) break;
-                    value = tr.b;
-                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; }
-                    tr.b = -1;
+                    if (tr.b <= 0) break; value = tr.b; propeller = tr.b_propeller;
+                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; } tr.b = -1;
                 }
-
-                table[ball][t] = { value, from, to };
+                table[ball][t] = { value, from, to, propeller };
                 t += Math.floor(value / 2);
                 if (to === 1 || to === 2) side ^= 1;
             }
@@ -519,33 +441,26 @@ function build(seq, balls) {
         }
     }
 
+    // to / from の補完（propellerフラグを維持したまま上書き）
     for (let b = 0; b < balls; b++) {
-        let first = -1;
-        let prev = -1;
+        let first = -1; let prev = -1;
         for (let t = 0; t < T; t++) {
             if (table[b][t].value > 0) {
                 if (first === -1) first = t;
-                if (prev !== -1) {
-                    table[b][prev].to = table[b][t].from;
-                }
+                if (prev !== -1) { table[b][prev].to = table[b][t].from; }
                 prev = t;
             }
         }
-        if (prev !== -1 && first !== -1) {
-            table[b][prev].to = table[b][first].from;
-        }
+        if (prev !== -1 && first !== -1) { table[b][prev].to = table[b][first].from; }
     }
 }
 
 function make_siteswap_table(input) {
-    g_seq = parse(input);
-    g_n = g_seq.length;
+    g_seq = parse(input); g_n = g_seq.length;
     if (g_n === 0) return 0;
-
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
     T = g_n * calcBalls * 4;
-
     build(g_seq, g_balls);
     return T;
 }
@@ -553,52 +468,29 @@ function make_siteswap_table(input) {
 // =====================================
 // モーション・描画系関数
 // =====================================
-function triwave(u) {
-    return (u < 0.5) ? (u * 2.0) : (2.0 - u * 2.0);
-}
-
+function triwave(u) { return (u < 0.5) ? (u * 2.0) : (2.0 - u * 2.0); }
 function calcHandMotion(t, period, phase) {
-    let u = ((t + phase) % period) / period;
-    if (u < 0) u += 1.0; 
-    let v = triwave(u);
-    return -(v - 0.5) * 2.0;
+    let u = ((t + phase) % period) / period; if (u < 0) u += 1.0; 
+    let v = triwave(u); return -(v - 0.5) * 2.0;
 }
-
 function drawLineEx(p1, p2, thickness, color) {
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
-    ctx.lineWidth = thickness;
-    ctx.strokeStyle = color;
-    ctx.lineCap = "round";
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    ctx.lineWidth = thickness; ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.stroke();
 }
-
 function draw_hand1(center, a, side) {
-    let angle = a * Math.PI * 2.0;
-    if (side === 0) angle = -angle;
-    const L = 140.0;
-    let dx = Math.cos(angle) * (L / 2.0);
-    let dy = Math.sin(angle) * (L / 2.0);
+    let angle = a * Math.PI * 2.0; if (side === 0) angle = -angle;
+    const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * (L / 2.0);
     drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "#718096");
 }
-
 function draw_hand2(center, a, side) {
-    let angle = a * Math.PI;
-    if (side === 0) angle = -angle;
-    const L = 140.0;
-    let dx = Math.cos(angle) * (L / 2.0);
-    let dy = Math.sin(angle) * 12.0;
+    let angle = a * Math.PI; if (side === 0) angle = -angle;
+    const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * 12.0;
     drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "#718096");
 }
-
 function draw_stick(center, angle, color) {
-    const L = 140.0;
-    let dx = Math.cos(angle) * (L / 2.0);
-    let dy = Math.sin(angle) * (L / 2.0);
+    const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * (L / 2.0);
     drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, color);
 }
-
 function get_pos(id) {
     switch(id) {
         case 0: return { x: 340, y: 400 };
@@ -608,42 +500,59 @@ function get_pos(id) {
     }
     return { x: 0, y: 0 };
 }
+function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
 
-function lerp(a, b, t) {
-    return {
-        x: a.x + (b.x - a.x) * t,
-        y: a.y + (b.y - a.y) * t
-    };
+// 3D風 立体横回転描画
+function draw_horizontal_devilstick(center, angle, color) {
+    const L = 108.0;
+    const PITCH_SCALE = 0.25; 
+    const TILT_ANGLE = 15 * Math.PI / 180; 
+
+    let x1_3d = L * Math.sin(angle);
+    let y1_3d = L * Math.cos(angle);
+    let x2_3d = -L * Math.sin(angle);
+    let y2_3d = -L * Math.cos(angle);
+
+    let cosT = Math.cos(TILT_ANGLE);
+
+    let scr_x1 = center.x + x1_3d;
+    let scr_y1 = center.y + (y1_3d * cosT) * PITCH_SCALE;
+    let scr_x2 = center.x + x2_3d;
+    let scr_y2 = center.y + (y2_3d * cosT) * PITCH_SCALE;
+
+    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x2, y: scr_y2 }, 9, color);
+    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x2, y: scr_y2 }, 3, "white");
+
+    let dx = scr_x2 - scr_x1;
+    let dy = scr_y2 - scr_y1;
+    let len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.0001) { dx /= len; dy /= len; }
+    const cap = 14.0;
+
+    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x1 + dx * cap, y: scr_y1 + dy * cap }, 15, "#1a202c");
+    drawLineEx({ x: scr_x2, y: scr_y2 }, { x: scr_x2 - dx * cap, y: scr_y2 - dy * cap }, 15, "#1a202c");
+
+    ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
 }
 
+// 通常の縦回転用描画関数
 function draw_devilstick(center, angle, color) {
     const L = 108.0;
-    let x1 = center.x + L * Math.sin(angle);
-    let y1 = center.y - L * Math.cos(angle);
-    let x2 = center.x - L * Math.sin(angle);
-    let y2 = center.y + L * Math.cos(angle);
-
+    let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
+    let x2 = center.x - L * Math.sin(angle); let y2 = center.y + L * Math.cos(angle);
     drawLineEx({ x: x1, y: y1 }, { x: x2, y: y2 }, 8, color);
     drawLineEx({ x: x1, y: y1 }, { x: x2, y: y2 }, 3, "white");
-
-    let dx = x2 - x1;
-    let dy = y2 - y1;
-    let len = Math.sqrt(dx * dx + dy * dy);
-    if (len > 0.0001) {
-        dx /= len;
-        dy /= len;
-    }
-
+    let dx = x2 - x1; let dy = y2 - y1; let len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.0001) { dx /= len; dy /= len; }
     const cap = 16.0;
     drawLineEx({ x: x1, y: y1 }, { x: x1 + dx * cap, y: y1 + dy * cap }, 14, "#1a202c");
     drawLineEx({ x: x2, y: y2 }, { x: x2 - dx * cap, y: y2 - dy * cap }, 14, "#1a202c");
-
-    ctx.beginPath();
-    ctx.arc(center.x, center.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#1a202c";
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
 }
 
+// =====================================
+// ボール（CS）の軌道計算・描画
+// =====================================
 function draw_ball(balls, globalTime, color) {
     if (!balls) return;
     for (let t = 0; t < T; t++) {
@@ -656,37 +565,56 @@ function draw_ball(balls, globalTime, color) {
         let gt = globalTime;
 
         if (endTime > T * BEAT_TIME) {
-            if (gt < startTime) {
-                gt += T * BEAT_TIME;
-            }
+            if (gt < startTime) { gt += T * BEAT_TIME; }
         }
 
         if (gt >= startTime && gt < endTime) {
-            let a = (gt - startTime) / duration;
-            let p0 = get_pos(c.from);
-            let p1 = get_pos(c.to);
-            let p = lerp(p0, p1, a);
+            let a = (gt - startTime) / duration; 
+            
+            // 【完全同期】2x かつ propeller フラグが立っている時のみ
+            let isHorizontal2x = (c.value === 2 && (c.from === 1 || c.from === 2) && c.propeller === 1);
 
-            let s = Math.floor(c.value / 2);
-            let bounce = Math.abs(Math.sin(a * Math.PI));
-            p.y -= bounce * 60.0 * s;
+            let p, angle;
 
-            let angle = 0.0;
-            let baseTilt = 25.0 * Math.PI / 180.0;
+            if (isHorizontal2x) {
+                let p0, p1;
+                if (c.from === 1) {
+                    p0 = g_leftHand; p1 = g_rightHand;
+                    angle = a * Math.PI; 
+                } else {
+                    p0 = g_rightHand; p1 = g_leftHand;
+                    angle = -a * Math.PI; 
+                }
+                p = lerp(p0, p1, a);
+                draw_horizontal_devilstick(p, angle, color);
+            } 
+            else {
+                // p無しの通常放物線（縦スピン）
+                let p0 = get_pos(c.from);
+                let p1 = get_pos(c.to);
+                p = lerp(p0, p1, a);
 
-            if (c.from === 0) {
-                angle = -baseTilt - a * Math.PI * s;
-            } else if (c.from === 1 || c.from === 2) {
-                let dir = (c.to > c.from) ? 1.0 : -1.0;
-                let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
-                let turns = 0.5 * s - 0.5;
-                let spin = a * turns * Math.PI * 2.0;
-                angle = dir * swing + dir * spin;
-            } else if (c.from === 3) {
-                angle = baseTilt + a * Math.PI * s;
+                let s = Math.floor(c.value / 2);
+                let bounce = Math.abs(Math.sin(a * Math.PI));
+                p.y -= bounce * 60.0 * s;
+
+                angle = 0.0;
+                let baseTilt = 25.0 * Math.PI / 180.0;
+
+                if (c.from === 0) {
+                    angle = -baseTilt - a * Math.PI * s;
+                } else if (c.from === 1 || c.from === 2) {
+                    let dir = (c.to > c.from) ? 1.0 : -1.0;
+                    let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                    let turns = 0.5 * s - 0.5;
+                    let spin = a * turns * Math.PI * 2.0;
+                    angle = dir * swing + dir * spin;
+                } else if (c.from === 3) {
+                    angle = baseTilt + a * Math.PI * s;
+                }
+                
+                draw_devilstick(p, angle, color);
             }
-
-            draw_devilstick(p, angle, color);
             return;
         }
     }
@@ -712,53 +640,35 @@ function update(timestamp) {
     let leftHY = handBaseY + hs * 20.0;
     let rightHY = handBaseY + hs * 20.0;
 
-    let leftHand = { x: leftBaseX, y: leftHY };
-    let rightHand = { x: rightBaseX, y: rightHY };
+    g_leftHand = { x: leftBaseX, y: leftHY };
+    g_rightHand = { x: rightBaseX, y: rightHY };
 
-    ctx.beginPath();
-    ctx.arc(leftHand.x, leftHand.y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = "#718096";
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(rightHand.x, rightHand.y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = "#718096";
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(g_leftHand.x, g_leftHand.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
+    ctx.beginPath(); ctx.arc(g_rightHand.x, g_rightHand.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
 
     let tr = g_seq[beat];
 
     if (tr && tr.a === 0 && tr.b === 0) {
         if (tr.mode_a === 1) {
-            let passPos = lerp(leftHand, rightHand, u);
-            ctx.beginPath();
-            ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2);
-            ctx.fillStyle = "#718096";
-            ctx.fill();
+            let passPos = lerp(g_leftHand, g_rightHand, u);
+            ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
         } else if (tr.mode_a === 3) {
-            let spinPos = lerp(leftHand, rightHand, u);
-            spinPos.y -= Math.sin(u * Math.PI) * 40.0;
-            let spinAngle = -u * Math.PI; 
-            draw_stick(spinPos, spinAngle, "#718096");
+            let spinPos = lerp(g_leftHand, g_rightHand, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+            let spinAngle = -u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
         }
-
         if (tr.mode_b === 1) {
-            let passPos = lerp(rightHand, leftHand, u);
-            ctx.beginPath();
-            ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2);
-            ctx.fillStyle = "#718096";
-            ctx.fill();
+            let passPos = lerp(g_rightHand, g_leftHand, u);
+            ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
         } else if (tr.mode_b === 3) {
-            let spinPos = lerp(rightHand, leftHand, u);
-            spinPos.y -= Math.sin(u * Math.PI) * 40.0;
-            let spinAngle = u * Math.PI; 
-            draw_stick(spinPos, spinAngle, "#718096");
+            let spinPos = lerp(g_rightHand, g_leftHand, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+            let spinAngle = u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
         }
     } 
     else if (tr) {
-        if (tr.hs_a === HS_HAND1) draw_hand1(leftHand, u, 0);
-        if (tr.hs_a === HS_HAND2) draw_hand2(leftHand, u, 0);
-        if (tr.hs_b === HS_HAND1) draw_hand1(rightHand, u, 1);
-        if (tr.hs_b === HS_HAND2) draw_hand2(rightHand, u, 1);
+        if (tr.hs_a === HS_HAND1) draw_hand1(g_leftHand, u, 0);
+        if (tr.hs_a === HS_HAND2) draw_hand2(g_leftHand, u, 0);
+        if (tr.hs_b === HS_HAND1) draw_hand1(g_rightHand, u, 1);
+        if (tr.hs_b === HS_HAND2) draw_hand2(g_rightHand, u, 1);
     }
 
     if (g_balls > 0 && table) {
@@ -775,9 +685,7 @@ function update(timestamp) {
 // 初期化・操作系イベント
 // =====================================
 function initSimulation() {
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-    }
+    if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
     let inputStr = document.getElementById("siteswapInput").value;
     let parsedT = make_siteswap_table(inputStr);
     
@@ -796,7 +704,6 @@ function applyPreset(val) {
 
 document.getElementById("startBtn").addEventListener("click", initSimulation);
 
-// 初回起動
 initSimulation();
 </script>
 
