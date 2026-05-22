@@ -56,6 +56,7 @@ canvas {
     width: 100%;
     height: auto;
     aspect-ratio: 8 / 6;
+    display: block;
 }
 
 /* =====================================
@@ -89,13 +90,52 @@ input[type="text"] {
     font-size: 16px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
-    width: 250px;
+    width: 200px;
     outline: none;
     transition: border-color 0.2s;
 }
 
 input[type="text"]:focus {
     border-color: #3182ce;
+}
+
+/* UIレイアウト用のコンテナ */
+.ui-row-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 5px 0;
+}
+
+.ui-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* スピード調整用スライダーのスタイル */
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #4a5568;
+    font-weight: bold;
+}
+
+#speedInput {
+    cursor: pointer;
+    width: 120px;
+}
+
+#speedVal {
+    min-width: 45px;
+    text-align: left;
+    color: #3182ce;
 }
 
 button {
@@ -125,6 +165,32 @@ button:hover {
     background-color: #cbd5e1;
     color: #94a3b8;
     cursor: not-allowed;
+}
+
+/* 録画結果表示エリア */
+.result-container {
+    display: none;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.result-container video {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 6px;
+    background: #000;
+}
+.result-hint {
+    font-size: 13px;
+    color: #e53e3e;
+    font-weight: bold;
+    text-align: center;
 }
 
 .section-title {
@@ -215,6 +281,7 @@ footer a:hover {
     h1 { font-size: 18px; }
     #controls { padding: 12px; }
     input[type="text"] { width: 100%; box-sizing: border-box; }
+    .ui-row { flex-direction: column; width: 100%; gap: 10px; }
     .preset-container { flex-direction: column; }
     .preset-btn { width: 100%; }
 }
@@ -234,18 +301,33 @@ footer a:hover {
 
         <div id="controls">
 
-            <div style="width:100%; text-align:center; display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <div>
-                    <label for="siteswapInput">パターン: </label>
-                    <input type="text" id="siteswapInput" value="(2x,2x)">
+            <div class="ui-row-container">
+                <div class="ui-row">
+                    <div>
+                        <label for="siteswapInput">パターン: </label>
+                        <input type="text" id="siteswapInput" value="(2x,2x)">
+                    </div>
+                    <button id="startBtn">再生</button>
                 </div>
-                <button id="startBtn">再生</button>
-                <button id="recordBtn">動画を録画ダウンロード</button>
+                
+                <div class="ui-row">
+                    <div class="speed-control">
+                        <label for="speedInput">スピード: </label>
+                        <input type="range" id="speedInput" min="0.25" max="2.0" step="0.05" value="1.0">
+                        <span id="speedVal">1.00x</span>
+                    </div>
+                    <button id="recordBtn">動画を録画する</button>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="result-container">
+                <div class="section-title">🎥 録画が完了しました！</div>
+                <video id="resultVideo" controls playsinline></video>
+                <div class="result-hint">【スマホの方】動画を長押し、またはシェアボタンから「ビデオを保存」を選択して写真アプリに保存してください。</div>
             </div>
 
             <div class="preset-wrapper">
                 <div class="section-title">1本(入力例)</div>
-
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
@@ -256,7 +338,6 @@ footer a:hover {
 
             <div class="preset-wrapper">
                 <div class="section-title">2本(入力例)</div>
-
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
@@ -267,7 +348,6 @@ footer a:hover {
 
             <div class="preset-wrapper">
                 <div class="section-title">3本(入力例)</div>
-
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
                     <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
@@ -278,7 +358,6 @@ footer a:hover {
 
             <div class="preset-wrapper">
                 <div class="section-title">それ以上(入力例)</div>
-
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,6x)')">(6x,2x)(2x,6x)</button>
                     <button class="preset-btn" onclick="applyPreset('(8,2x)(2x,8)')">(8,2x)(2x,8)</button>
@@ -312,6 +391,8 @@ const BEAT_TIME = 0.7;
 const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5"];
 const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
 
+let currentSpeed = 1.0;
+
 let table = null;
 let g_balls = 0;
 let g_seq = [];
@@ -319,7 +400,11 @@ let g_n = 0;
 let T = 0;
 
 let animationFrameId = null;
-let startTime = 0;
+let lastTimestamp = 0;
+let virtualTime = 0;
+
+// ★等倍ズームアウト用の変数
+let g_scale = 1.0; 
 
 let g_leftHand = { x: 340, y: 400 };
 let g_rightHand = { x: 460, y: 400 };
@@ -333,6 +418,7 @@ let recordedChunks = [];
 let isRecording = false;
 let recordStartTime = 0;
 let recordDuration = 0;
+let logicalTimeAccumulator = 0;
 
 // =====================================
 // サイトスワップ構文解析
@@ -453,6 +539,17 @@ function build(seq, balls) {
 function make_siteswap_table(input) {
     g_seq = parse(input); g_n = g_seq.length;
     if (g_n === 0) return 0;
+    
+    // ★ オートズーム（等倍縮小）の計算
+    let max_val = 0;
+    for (let i = 0; i < g_n; i++) {
+        if (g_seq[i].a > max_val) max_val = g_seq[i].a;
+        if (g_seq[i].b > max_val) max_val = g_seq[i].b;
+    }
+    let max_s = Math.floor(max_val / 2);
+    // 画面内に収まるように全体の倍率を計算（最大1.0倍）
+    g_scale = Math.min(1.0, 360 / (max_s * 60.0 + 60.0));
+
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
     T = g_n * calcBalls * 4;
@@ -649,27 +746,33 @@ function draw_ball(balls, globalTime, color) {
 // メインループ
 // =====================================
 function update(timestamp) {
-    if (!startTime) startTime = timestamp;
-    let t = (timestamp - startTime) / 1000.0;
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    
+    let dt = (timestamp - lastTimestamp) / 1000.0;
+    lastTimestamp = timestamp;
+
+    if (dt > 0.1) dt = 0.1;
+
+    virtualTime += dt * currentSpeed;
 
     let totalTime = T * BEAT_TIME;
-    let globalTime = t % totalTime;
+    let globalTime = virtualTime % totalTime;
 
-    // 録画制御用のロジック
     if (isRecording) {
         if (recordStartTime === 0) {
-            recordStartTime = t;
+            recordStartTime = timestamp;
+            virtualTime = 0;
             globalTime = 0;
-            startTime = timestamp;
-            t = 0;
+            logicalTimeAccumulator = 0;
             mediaRecorder.start();
         }
         
-        // 3周期（3ループ）分に達したら録画をストップ
-        if (t >= recordDuration) {
+        logicalTimeAccumulator += dt * currentSpeed;
+        
+        if (logicalTimeAccumulator >= recordDuration) {
             isRecording = false;
             mediaRecorder.stop();
-            document.getElementById("recordBtn").innerText = "動画を録画ダウンロード";
+            document.getElementById("recordBtn").innerText = "動画を録画する";
             document.getElementById("recordBtn").disabled = false;
         }
     }
@@ -677,12 +780,17 @@ function update(timestamp) {
     let beat = Math.floor(globalTime / BEAT_TIME) % g_n;
     let u = (globalTime % BEAT_TIME) / BEAT_TIME;
 
-    // 【重要修正】通常時も録画時も、背景は一貫して白に設定（透過によるGit等での黒化を防ぐ）
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // ★ ここから全体の自動等倍縮小（ズームアウト）を適用
+    ctx.save();
+    ctx.translate(400, 450); // 下部の中央付近をカメラの基準点に設定
+    ctx.scale(g_scale, g_scale);
+    ctx.translate(-400, -450);
+
     let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
-    let hs = calcHandMotion(t, BEAT_TIME, 0.0);
+    let hs = calcHandMotion(virtualTime, BEAT_TIME, 0.0);
     let leftHY = handBaseY + hs * 20.0;
     let rightHY = handBaseY + hs * 20.0;
 
@@ -724,7 +832,9 @@ function update(timestamp) {
         }
     }
 
-    // 動画内（左上）にサイトスワップを常に濃いグレーの文字で表記
+    // ★ 縮小処理をここまでで終了（文字は元の大きさを保つため）
+    ctx.restore();
+
     let currentPattern = document.getElementById("siteswapInput").value;
     ctx.font = "bold 20px 'Helvetica Neue', Arial, sans-serif";
     ctx.fillStyle = "#2c3e50"; 
@@ -744,7 +854,8 @@ function initSimulation() {
     let parsedT = make_siteswap_table(inputStr);
     
     if (parsedT > 0) {
-        startTime = 0;
+        lastTimestamp = 0;
+        virtualTime = 0;
         animationFrameId = requestAnimationFrame(update);
     } else {
         alert("有効なサイトスワップパターンを入力してください。");
@@ -756,11 +867,13 @@ function applyPreset(val) {
     initSimulation();
 }
 
-// 録画処理を起動する関数
+// ★ スマホ保存用のビデオプレイヤー表示方式
 function startRecording() {
     if (isRecording) return;
     
-    // 1ループの時間(g_n * BEAT_TIME)の「3倍（3周期分）」の長さを設定
+    // 録画結果表示エリアを一時的に隠す
+    document.getElementById("resultContainer").style.display = "none";
+    
     recordDuration = (g_n * BEAT_TIME) * 3;
     recordedChunks = [];
     
@@ -787,17 +900,11 @@ function startRecording() {
         const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
         const url = URL.createObjectURL(blob);
         
-        const a = document.createElement('a');
-        a.href = url;
-        const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
-        a.download = `devilstick_siteswap_${patternName}.webm`;
-        document.body.appendChild(a);
-        a.click();
+        // 画面上のビデオプレイヤーに録画した動画をセットして表示する
+        const videoEl = document.getElementById("resultVideo");
+        videoEl.src = url;
         
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 100);
+        document.getElementById("resultContainer").style.display = "flex";
     };
     
     recordStartTime = 0;
@@ -806,6 +913,939 @@ function startRecording() {
     document.getElementById("recordBtn").innerText = "録画中...";
     document.getElementById("recordBtn").disabled = true;
 }
+
+document.getElementById("speedInput").addEventListener("input", function(e) {
+    currentSpeed = parseFloat(e.target.value);
+    document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x";
+});
+
+document.getElementById("startBtn").addEventListener("click", initSimulation);
+document.getElementById("recordBtn").addEventListener("click", startRecording);
+
+initSimulation();
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デビルスティック サイトスワップ シミュレーター </title>
+
+<style>
+/* =====================================
+   基本スタイル
+   ===================================== */
+body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN',
+                 'Hiragino Sans', Meiryo, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+h1 {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* =====================================
+   キャンバス
+   ===================================== */
+.canvas-container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+}
+
+canvas {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    width: 100%;
+    height: auto;
+    aspect-ratio: 8 / 6;
+    display: block;
+}
+
+/* =====================================
+   コントロール
+   ===================================== */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 800px;
+}
+
+#controls {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    font-weight: bold;
+    color: #4a5568;
+}
+
+input[type="text"] {
+    padding: 8px 12px;
+    font-size: 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus {
+    border-color: #3182ce;
+}
+
+/* UIレイアウト用のコンテナ */
+.ui-row-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin: 5px 0;
+}
+
+.ui-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* スピード調整用スライダーのスタイル */
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #4a5568;
+    font-weight: bold;
+}
+
+#speedInput {
+    cursor: pointer;
+    width: 120px;
+}
+
+#speedVal {
+    min-width: 45px;
+    text-align: left;
+    color: #3182ce;
+}
+
+button {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #2b6cb0;
+}
+
+/* 録画ボタン用スタイル */
+#recordBtn {
+    background-color: #e53e3e;
+}
+#recordBtn:hover {
+    background-color: #c53030;
+}
+#recordBtn:disabled {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* 録画結果表示エリア */
+.result-container {
+    display: none;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.result-container video {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 6px;
+    background: #000;
+}
+.result-hint {
+    font-size: 13px;
+    color: #e53e3e;
+    font-weight: bold;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #2d3748;
+}
+
+.preset-container {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    background-color: #e2e8f0;
+    color: #4a5568;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.preset-btn:hover {
+    background-color: #cbd5e1;
+}
+
+.info-box {
+    font-size: 13px;
+    color: #718096;
+    line-height: 1.7;
+    background: #edf2f7;
+    padding: 15px;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+footer {
+    margin-top: 20px;
+    padding: 20px;
+    font-size: 13px;
+    color: #718096;
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    box-sizing: border-box;
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+footer a {
+    color: #3182ce;
+    text-decoration: none;
+    font-weight: bold;
+    border-bottom: 1px dashed #3182ce;
+    transition: color 0.2s;
+}
+
+footer a:hover {
+    color: #2b6cb0;
+    border-bottom-style: solid;
+}
+
+.free-box {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #2f855a;
+    background: #f0fff4;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid #c6f6d5;
+    font-weight: 500;
+}
+
+@media (max-width: 767px) {
+    body { padding: 10px; }
+    h1 { font-size: 18px; }
+    #controls { padding: 12px; }
+    input[type="text"] { width: 100%; box-sizing: border-box; }
+    .ui-row { flex-direction: column; width: 100%; gap: 10px; }
+    .preset-container { flex-direction: column; }
+    .preset-btn { width: 100%; }
+}
+</style>
+</head>
+
+<body>
+
+<h1>デビルスティック サイトスワップ シミュレーター</h1>
+
+<div class="main-container">
+    <div class="canvas-container">
+        <canvas id="simCanvas" width="800" height="600"></canvas>
+    </div>
+
+     <div class="control-panel">
+
+        <div id="controls">
+
+            <div class="ui-row-container">
+                <div class="ui-row">
+                    <div>
+                        <label for="siteswapInput">パターン: </label>
+                        <input type="text" id="siteswapInput" value="(2x,2x)">
+                    </div>
+                    <button id="startBtn">再生</button>
+                </div>
+                
+                <div class="ui-row">
+                    <div class="speed-control">
+                        <label for="speedInput">スピード: </label>
+                        <input type="range" id="speedInput" min="0.25" max="2.0" step="0.05" value="1.0">
+                        <span id="speedVal">1.00x</span>
+                    </div>
+                    <button id="recordBtn">動画を録画する</button>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="result-container">
+                <div class="section-title">🎥 録画が完了しました！</div>
+                <video id="resultVideo" controls playsinline></video>
+                <div class="result-hint">【スマホの方】動画を長押し、またはシェアボタンから「ビデオを保存」を選択して写真アプリに保存してください。</div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">1本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2-,0)')">(2-,0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4x,0)(0^1,0^3)(0,2x)')">(4x,0)(0^1,0^3)(0,2x)</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">2本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x-,2x)(2x,2x-)')">(2x-,2x)(2x,2x-)</button>
+                    <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">3本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">それ以上(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,6x)')">(6x,2x)(2x,6x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(8,2x)(2x,8)')">(8,2x)(2x,8)</button>
+                    <button class="preset-btn" onclick="applyPreset('(8,6x)(6x,8)')">(8,6x)(6x,8)</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="info-box">
+            <strong>💡 現在の設定ルール</strong><br>
+            ・0があるとき、0*で片手が空くことでできるフラーリッシュ　例 (2x,0*)(0*,2x)<br>
+            ・任意の数字-で叩きながらできるフラーリッシュ　例 (2x-,0)(0,2x-)<br>
+            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
+    <div class="free-box">
+        ✨ 録画した動画は、SNSやYouTube等への投稿・二次利用を含め、いつでも自由にお使いいただけます！
+    </div>
+</footer>
+
+<script>
+// =====================================
+// 定数・グローバル変数
+// =====================================
+const BEAT_TIME = 0.7;
+const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5"];
+const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
+
+let currentSpeed = 1.0;
+
+let table = null;
+let g_balls = 0;
+let g_seq = [];
+let g_n = 0;
+let T = 0;
+
+let animationFrameId = null;
+let lastTimestamp = 0;
+let virtualTime = 0;
+
+// ★等倍ズームアウト用の変数
+let g_scale = 1.0; 
+
+let g_leftHand = { x: 340, y: 400 };
+let g_rightHand = { x: 460, y: 400 };
+
+const canvas = document.getElementById("simCanvas");
+const ctx = canvas.getContext("2d");
+
+// 録画関連の変数
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recordStartTime = 0;
+let recordDuration = 0;
+let logicalTimeAccumulator = 0;
+
+// =====================================
+// サイトスワップ構文解析
+// =====================================
+function parse(s) {
+    let i = 0;
+    let seq = [];
+    while (i < s.length) {
+        if (s[i] === '(') {
+            i++;
+            let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0, a_propeller: 0, b_propeller: 0 };
+            
+            if (s[i] === 'p') { t.a_propeller = 1; i++; }
+            else if (s[i] === 't') { t.a_propeller = 2; i++; }
+            while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.a = t.a * 10 + parseInt(s[i]); i++; }
+            while (i < s.length) {
+                if (s[i] === 'x') { t.cross_a = 1; i++; continue; }
+                if (s[i] === '*') { if (t.a === 0) t.hs_a = HS_HAND1; i++; continue; }
+                if (s[i] === '-') { t.hs_a = HS_HAND2; i++; continue; }
+                if (s[i] === '^') { 
+                    i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_a = parseInt(s[i]); i++; }
+                    continue; 
+                }
+                break;
+            }
+            if (s[i] === ',') i++;
+            
+            if (s[i] === 'p') { t.b_propeller = 1; i++; }
+            else if (s[i] === 't') { t.b_propeller = 2; i++; }
+            while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.b = t.b * 10 + parseInt(s[i]); i++; }
+            while (i < s.length) {
+                if (s[i] === 'x') { t.cross_b = 1; i++; continue; }
+                if (s[i] === '*') { if (t.b === 0) t.hs_b = HS_HAND1; i++; continue; }
+                if (s[i] === '-') { t.hs_b = HS_HAND2; i++; continue; }
+                if (s[i] === '^') { 
+                    i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_b = parseInt(s[i]); i++; }
+                    continue; 
+                }
+                break;
+            }
+            if (s[i] === ')') i++;
+            seq.push(t);
+        } else { i++; }
+    }
+    return seq;
+}
+
+function object_count(seq) {
+    let sum = 0;
+    for (let i = 0; i < seq.length; i++) { sum += seq[i].a + seq[i].b; }
+    return Math.floor(sum / (2 * seq.length));
+}
+
+function build(seq, balls) {
+    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, propeller: 0 })) );
+    
+    let ex = [];
+    for (let t = 0; t < T; t++) { 
+        let src = seq[t % g_n];
+        ex.push({ 
+            a: src.a, b: src.b, 
+            cross_a: src.cross_a, cross_b: src.cross_b, 
+            a_propeller: src.a_propeller, b_propeller: src.b_propeller 
+        }); 
+    }
+
+    let ball = 0;
+    for (let start_t = 0; start_t < T; start_t++) {
+        if (ex[start_t].a > 0) {
+            let t = start_t; let side = 0;
+            while (t < T) {
+                let tr = ex[t]; let value, from, to, propeller;
+                if (side === 0) {
+                    if (tr.a <= 0) break; value = tr.a; propeller = tr.a_propeller;
+                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; } tr.a = -1;
+                } else {
+                    if (tr.b <= 0) break; value = tr.b; propeller = tr.b_propeller;
+                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; } tr.b = -1;
+                }
+                table[ball][t] = { value, from, to, propeller };
+                t += Math.floor(value / 2);
+                if (to === 1 || to === 2) side ^= 1;
+            }
+            ball++;
+        }
+        if (ex[start_t].b > 0) {
+            let t = start_t; let side = 1;
+            while (t < T) {
+                let tr = ex[t]; let value, from, to, propeller;
+                if (side === 0) {
+                    if (tr.a <= 0) break; value = tr.a; propeller = tr.a_propeller;
+                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; } tr.a = -1;
+                } else {
+                    if (tr.b <= 0) break; value = tr.b; propeller = tr.b_propeller;
+                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; } tr.b = -1;
+                }
+                table[ball][t] = { value, from, to, propeller };
+                t += Math.floor(value / 2);
+                if (to === 1 || to === 2) side ^= 1;
+            }
+            ball++;
+        }
+    }
+
+    for (let b = 0; b < balls; b++) {
+        let first = -1; let prev = -1;
+        for (let t = 0; t < T; t++) {
+            if (table[b][t].value > 0) {
+                if (first === -1) first = t;
+                if (prev !== -1) { table[b][prev].to = table[b][t].from; }
+                prev = t;
+            }
+        }
+        if (prev !== -1 && first !== -1) { table[b][prev].to = table[b][first].from; }
+    }
+}
+
+function make_siteswap_table(input) {
+    g_seq = parse(input); g_n = g_seq.length;
+    if (g_n === 0) return 0;
+    
+    // ★ オートズーム（等倍縮小）の計算
+    let max_val = 0;
+    for (let i = 0; i < g_n; i++) {
+        if (g_seq[i].a > max_val) max_val = g_seq[i].a;
+        if (g_seq[i].b > max_val) max_val = g_seq[i].b;
+    }
+    let max_s = Math.floor(max_val / 2);
+    // 画面内に収まるように全体の倍率を計算（最大1.0倍）
+    g_scale = Math.min(1.0, 360 / (max_s * 60.0 + 60.0));
+
+    g_balls = object_count(g_seq);
+    let calcBalls = g_balls > 0 ? g_balls : 1;
+    T = g_n * calcBalls * 4;
+    build(g_seq, g_balls);
+    return T;
+}
+
+// =====================================
+// モーション・描画系関数
+// =====================================
+function triwave(u) { return (u < 0.5) ? (u * 2.0) : (2.0 - u * 2.0); }
+function calcHandMotion(t, period, phase) {
+    let u = ((t + phase) % period) / period; if (u < 0) u += 1.0; 
+    let v = triwave(u); return -(v - 0.5) * 2.0;
+}
+function drawLineEx(p1, p2, thickness, color) {
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    ctx.lineWidth = thickness; ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.stroke();
+}
+function draw_hand1(center, a, side) {
+    let angle = a * Math.PI * 2.0; if (side === 0) angle = -angle;
+    const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * (L / 2.0);
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "#718096");
+}
+function draw_hand2(center, a, side) {
+    let angle = a * Math.PI; if (side === 0) angle = -angle;
+    const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * 12.0;
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, "#718096");
+}
+function draw_stick(center, angle, color) {
+    const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * (L / 2.0);
+    drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, color);
+}
+function get_pos(id) {
+    switch(id) {
+        case 0: return { x: 340, y: 400 };
+        case 1: return { x: 400, y: 460 };
+        case 2: return { x: 400, y: 460 };
+        case 3: return { x: 460, y: 400 };
+    }
+    return { x: 0, y: 0 };
+}
+function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
+
+function draw_horizontal_devilstick(center, angle, color) {
+    const L = 108.0;
+    const PITCH_SCALE = 0.25; 
+    const TILT_ANGLE = 15 * Math.PI / 180; 
+
+    let x1_3d = L * Math.sin(angle);
+    let y1_3d = L * Math.cos(angle);
+    let x2_3d = -L * Math.sin(angle);
+    let y2_3d = -L * Math.cos(angle);
+
+    let cosT = Math.cos(TILT_ANGLE);
+
+    let scr_x1 = center.x + x1_3d;
+    let scr_y1 = center.y + (y1_3d * cosT) * PITCH_SCALE;
+    let scr_x2 = center.x + x2_3d;
+    let scr_y2 = center.y + (y2_3d * cosT) * PITCH_SCALE;
+
+    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x2, y: scr_y2 }, 9, color);
+    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x2, y: scr_y2 }, 3, "white");
+
+    let dx = scr_x2 - scr_x1;
+    let dy = scr_y2 - scr_y1;
+    let len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.0001) { dx /= len; dy /= len; }
+    const cap = 14.0;
+
+    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x1 + dx * cap, y: scr_y1 + dy * cap }, 15, "#1a202c");
+    drawLineEx({ x: scr_x2, y: scr_y2 }, { x: scr_x2 - dx * cap, y: scr_y2 - dy * cap }, 15, "#1a202c");
+
+    ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
+}
+
+function draw_devilstick(center, angle, color) {
+    const L = 108.0;
+    let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
+    let x2 = center.x - L * Math.sin(angle); let y2 = center.y + L * Math.cos(angle);
+    drawLineEx({ x: x1, y: y1 }, { x: x2, y: y2 }, 8, color);
+    drawLineEx({ x: x1, y: y1 }, { x: x2, y: y2 }, 3, "white");
+    let dx = x2 - x1; let dy = y2 - y1; let len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.0001) { dx /= len; dy /= len; }
+    const cap = 16.0;
+    drawLineEx({ x: x1, y: y1 }, { x: x1 + dx * cap, y: y1 + dy * cap }, 14, "#1a202c");
+    drawLineEx({ x: x2, y: y2 }, { x: x2 - dx * cap, y: y2 - dy * cap }, 14, "#1a202c");
+    ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
+}
+
+// =====================================
+// ボール（CS）の軌道計算・描画
+// =====================================
+function draw_ball(balls, globalTime, color) {
+    if (!balls) return;
+    for (let t = 0; t < T; t++) {
+        let c = balls[t];
+        if (!c || c.value <= 0) continue;
+
+        let startTime = t * BEAT_TIME;
+        let duration = (c.value / 2.0) * BEAT_TIME;
+        let endTime = startTime + duration;
+        let gt = globalTime;
+
+        if (endTime > T * BEAT_TIME) {
+            if (gt < startTime) { gt += T * BEAT_TIME; }
+        }
+
+        if (gt >= startTime && gt < endTime) {
+            let a = (gt - startTime) / duration; 
+            
+            if (c.propeller === 1) {
+                let isHorizontal2x = (c.value === 2 && (c.from === 1 || c.from === 2) && c.propeller === 1);
+                let p, angle;
+
+                if (isHorizontal2x) {
+                    let p0, p1;
+                    if (c.from === 1) {
+                        p0 = g_leftHand; p1 = g_rightHand;
+                        angle = a * Math.PI; 
+                    } else {
+                        p0 = g_rightHand; p1 = g_leftHand;
+                        angle = -a * Math.PI; 
+                    }
+                    p = lerp(p0, p1, a);
+                    draw_horizontal_devilstick(p, angle, color);
+                } 
+                else {
+                    let p0 = get_pos(c.from); let p1 = get_pos(c.to);
+                    p = lerp(p0, p1, a);
+                    let s = Math.floor(c.value / 2);
+                    let bounce = Math.abs(Math.sin(a * Math.PI));
+                    p.y -= bounce * 60.0 * s;
+
+                    angle = 0.0;
+                    let baseTilt = 25.0 * Math.PI / 180.0;
+                    if (c.from === 0) {
+                        angle = -baseTilt - a * Math.PI * s;
+                    } else if (c.from === 1 || c.from === 2) {
+                        let dir = (c.to > c.from) ? 1.0 : -1.0;
+                        let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                        let turns = 0.5 * s - 0.5;
+                        let spin = a * turns * Math.PI * 2.0;
+                        angle = dir * swing + dir * spin;
+                    } else if (c.from === 3) {
+                        angle = baseTilt + a * Math.PI * s;
+                    }
+                    draw_devilstick(p, angle, color);
+                }
+            } 
+            else if (c.propeller === 2) {
+                let p;
+                let s = Math.floor(c.value / 2);
+
+                let handStart, handEnd;
+                if (c.from === 0 || c.from === 1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
+                if (c.to === 0 || c.to === 1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
+
+                p = lerp(handStart, handEnd, a);
+                let peakBounce = Math.sin(a * Math.PI); 
+                p.y -= peakBounce * 60.0 * s;
+
+                let angle = a * Math.PI * s;
+                draw_horizontal_devilstick(p, angle, color);
+            }
+            else {
+                let p0 = get_pos(c.from); let p1 = get_pos(c.to);
+                let p = lerp(p0, p1, a);
+                let s = Math.floor(c.value / 2);
+                let bounce = Math.abs(Math.sin(a * Math.PI));
+                p.y -= bounce * 60.0 * s;
+
+                let angle = 0.0;
+                let baseTilt = 25.0 * Math.PI / 180.0;
+                if (c.from === 0) {
+                    angle = -baseTilt - a * Math.PI * s;
+                } else if (c.from === 1 || c.from === 2) {
+                    let dir = (c.to > c.from) ? 1.0 : -1.0;
+                    let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                    let turns = 0.5 * s - 0.5;
+                    let spin = a * turns * Math.PI * 2.0;
+                    angle = dir * swing + dir * spin;
+                } else if (c.from === 3) {
+                    angle = baseTilt + a * Math.PI * s;
+                }
+                draw_devilstick(p, angle, color);
+            }
+            return;
+        }
+    }
+}
+
+// =====================================
+// メインループ
+// =====================================
+function update(timestamp) {
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    
+    let dt = (timestamp - lastTimestamp) / 1000.0;
+    lastTimestamp = timestamp;
+
+    if (dt > 0.1) dt = 0.1;
+
+    virtualTime += dt * currentSpeed;
+
+    let totalTime = T * BEAT_TIME;
+    let globalTime = virtualTime % totalTime;
+
+    if (isRecording) {
+        if (recordStartTime === 0) {
+            recordStartTime = timestamp;
+            virtualTime = 0;
+            globalTime = 0;
+            logicalTimeAccumulator = 0;
+            mediaRecorder.start();
+        }
+        
+        logicalTimeAccumulator += dt * currentSpeed;
+        
+        if (logicalTimeAccumulator >= recordDuration) {
+            isRecording = false;
+            mediaRecorder.stop();
+            document.getElementById("recordBtn").innerText = "動画を録画する";
+            document.getElementById("recordBtn").disabled = false;
+        }
+    }
+
+    let beat = Math.floor(globalTime / BEAT_TIME) % g_n;
+    let u = (globalTime % BEAT_TIME) / BEAT_TIME;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // ★ ここから全体の自動等倍縮小（ズームアウト）を適用
+    ctx.save();
+    ctx.translate(400, 450); // 下部の中央付近をカメラの基準点に設定
+    ctx.scale(g_scale, g_scale);
+    ctx.translate(-400, -450);
+
+    let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
+    let hs = calcHandMotion(virtualTime, BEAT_TIME, 0.0);
+    let leftHY = handBaseY + hs * 20.0;
+    let rightHY = handBaseY + hs * 20.0;
+
+    g_leftHand = { x: leftBaseX, y: leftHY };
+    g_rightHand = { x: rightBaseX, y: rightHY };
+
+    ctx.beginPath(); ctx.arc(g_leftHand.x, g_leftHand.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
+    ctx.beginPath(); ctx.arc(g_rightHand.x, g_rightHand.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
+
+    let tr = g_seq[beat];
+
+    if (tr && tr.a === 0 && tr.b === 0) {
+        if (tr.mode_a === 1) {
+            let passPos = lerp(g_leftHand, g_rightHand, u);
+            ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
+        } else if (tr.mode_a === 3) {
+            let spinPos = lerp(g_leftHand, g_rightHand, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+            let spinAngle = -u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
+        }
+        if (tr.mode_b === 1) {
+            let passPos = lerp(g_rightHand, g_leftHand, u);
+            ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
+        } else if (tr.mode_b === 3) {
+            let spinPos = lerp(g_rightHand, g_leftHand, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+            let spinAngle = u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
+        }
+    } 
+    else if (tr) {
+        if (tr.hs_a === HS_HAND1) draw_hand1(g_leftHand, u, 0);
+        if (tr.hs_a === HS_HAND2) draw_hand2(g_leftHand, u, 0);
+        if (tr.hs_b === HS_HAND1) draw_hand1(g_rightHand, u, 1);
+        if (tr.hs_b === HS_HAND2) draw_hand2(g_rightHand, u, 1);
+    }
+
+    if (g_balls > 0 && table) {
+        for (let b = 0; b < g_balls; b++) {
+            let color = COLORS[b % COLORS.length];
+            draw_ball(table[b], globalTime, color);
+        }
+    }
+
+    // ★ 縮小処理をここまでで終了（文字は元の大きさを保つため）
+    ctx.restore();
+
+    let currentPattern = document.getElementById("siteswapInput").value;
+    ctx.font = "bold 20px 'Helvetica Neue', Arial, sans-serif";
+    ctx.fillStyle = "#2c3e50"; 
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText("Siteswap: " + currentPattern, 20, 20);
+
+    animationFrameId = requestAnimationFrame(update);
+}
+
+// =====================================
+// 初期化・操作系イベント
+// =====================================
+function initSimulation() {
+    if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
+    let inputStr = document.getElementById("siteswapInput").value;
+    let parsedT = make_siteswap_table(inputStr);
+    
+    if (parsedT > 0) {
+        lastTimestamp = 0;
+        virtualTime = 0;
+        animationFrameId = requestAnimationFrame(update);
+    } else {
+        alert("有効なサイトスワップパターンを入力してください。");
+    }
+}
+
+function applyPreset(val) {
+    document.getElementById("siteswapInput").value = val;
+    initSimulation();
+}
+
+// ★ スマホ保存用のビデオプレイヤー表示方式
+function startRecording() {
+    if (isRecording) return;
+    
+    // 録画結果表示エリアを一時的に隠す
+    document.getElementById("resultContainer").style.display = "none";
+    
+    recordDuration = (g_n * BEAT_TIME) * 3;
+    recordedChunks = [];
+    
+    const stream = canvas.captureStream(60);
+    
+    let options = { mimeType: 'video/webm;codecs=vp9' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm;codecs=vp8' };
+    }
+    
+    try {
+        mediaRecorder = new MediaRecorder(stream, options);
+    } catch (e) {
+        mediaRecorder = new MediaRecorder(stream);
+    }
+    
+    mediaRecorder.ondataavailable = function(e) {
+        if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+        }
+    };
+    
+    mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+        const url = URL.createObjectURL(blob);
+        
+        // 画面上のビデオプレイヤーに録画した動画をセットして表示する
+        const videoEl = document.getElementById("resultVideo");
+        videoEl.src = url;
+        
+        document.getElementById("resultContainer").style.display = "flex";
+    };
+    
+    recordStartTime = 0;
+    isRecording = true;
+    
+    document.getElementById("recordBtn").innerText = "録画中...";
+    document.getElementById("recordBtn").disabled = true;
+}
+
+document.getElementById("speedInput").addEventListener("input", function(e) {
+    currentSpeed = parseFloat(e.target.value);
+    document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x";
+});
 
 document.getElementById("startBtn").addEventListener("click", initSimulation);
 document.getElementById("recordBtn").addEventListener("click", startRecording);
