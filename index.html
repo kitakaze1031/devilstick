@@ -867,6 +867,7 @@ function applyPreset(val) {
     initSimulation();
 }
 
+// 【重要修正】一般的な「.mp4」動画ファイル形式に設定して録画を起動
 function startRecording() {
     if (isRecording) return;
     
@@ -875,7 +876,13 @@ function startRecording() {
     
     const stream = canvas.captureStream(60);
     
-    let options = { mimeType: 'video/webm;codecs=vp9' };
+    // スマホでの互換性が一番高い「video/mp4」形式を最優先で指定
+    let options = { mimeType: 'video/mp4;codecs=avc1' };
+    
+    // 万が一ブラウザ側がmp4録画に非対応だった場合は、代替可能な標準フォーマットに切り替え
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm;codecs=vp9' };
+    }
     if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options = { mimeType: 'video/webm;codecs=vp8' };
     }
@@ -899,7 +906,9 @@ function startRecording() {
         const a = document.createElement('a');
         a.href = url;
         const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
-        a.download = `devilstick_siteswap_${patternName}.webm`;
+        
+        // 拡張子を「.mp4」にしてスマホのギャラリーへ直接認識させやすくする
+        a.download = `devilstick_siteswap_${patternName}.mp4`;
         document.body.appendChild(a);
         a.click();
         
@@ -912,7 +921,7 @@ function startRecording() {
     recordStartTime = 0;
     isRecording = true;
     
-    document.getElementById("recordBtn").innerText = "録画中...";
+    document.getElementById("recordBtn").innerText = "3周期録画中...";
     document.getElementById("recordBtn").disabled = true;
 }
 document.getElementById("speedInput").addEventListener("input", function(e) {
