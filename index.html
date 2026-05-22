@@ -89,52 +89,13 @@ input[type="text"] {
     font-size: 16px;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
-    width: 200px;
+    width: 250px;
     outline: none;
     transition: border-color 0.2s;
 }
 
 input[type="text"]:focus {
     border-color: #3182ce;
-}
-
-/* UIレイアウト用のコンテナ */
-.ui-row-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin: 5px 0;
-}
-
-.ui-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-/* スピード調整用スライダーのスタイル */
-.speed-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #4a5568;
-    font-weight: bold;
-}
-
-#speedInput {
-    cursor: pointer;
-    width: 120px;
-}
-
-#speedVal {
-    min-width: 45px;
-    text-align: left;
-    color: #3182ce;
 }
 
 button {
@@ -254,7 +215,6 @@ footer a:hover {
     h1 { font-size: 18px; }
     #controls { padding: 12px; }
     input[type="text"] { width: 100%; box-sizing: border-box; }
-    .ui-row { flex-direction: column; width: 100%; gap: 10px; }
     .preset-container { flex-direction: column; }
     .preset-btn { width: 100%; }
 }
@@ -274,27 +234,18 @@ footer a:hover {
 
         <div id="controls">
 
-            <div class="ui-row-container">
-                <div class="ui-row">
-                    <div>
-                        <label for="siteswapInput">パターン: </label>
-                        <input type="text" id="siteswapInput" value="(2x,2x)">
-                    </div>
-                    <button id="startBtn">再生</button>
+            <div style="width:100%; text-align:center; display: flex; justify-content: center; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <label for="siteswapInput">パターン: </label>
+                    <input type="text" id="siteswapInput" value="(2x,2x)">
                 </div>
-                
-                <div class="ui-row">
-                    <div class="speed-control">
-                        <label for="speedInput">スピード: </label>
-                        <input type="range" id="speedInput" min="0.25" max="2.0" step="0.05" value="1.0">
-                        <span id="speedVal">1.00x</span>
-                    </div>
-                    <button id="recordBtn">動画を録画ダウンロード</button>
-                </div>
+                <button id="startBtn">再生</button>
+                <button id="recordBtn">動画を録画ダウンロード</button>
             </div>
 
             <div class="preset-wrapper">
                 <div class="section-title">1本(入力例)</div>
+
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
@@ -305,6 +256,7 @@ footer a:hover {
 
             <div class="preset-wrapper">
                 <div class="section-title">2本(入力例)</div>
+
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
@@ -315,6 +267,7 @@ footer a:hover {
 
             <div class="preset-wrapper">
                 <div class="section-title">3本(入力例)</div>
+
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
                     <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
@@ -325,6 +278,7 @@ footer a:hover {
 
             <div class="preset-wrapper">
                 <div class="section-title">それ以上(入力例)</div>
+
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,6x)')">(6x,2x)(2x,6x)</button>
                     <button class="preset-btn" onclick="applyPreset('(8,2x)(2x,8)')">(8,2x)(2x,8)</button>
@@ -358,8 +312,6 @@ const BEAT_TIME = 0.7;
 const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5"];
 const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
 
-let currentSpeed = 1.0;
-
 let table = null;
 let g_balls = 0;
 let g_seq = [];
@@ -367,9 +319,7 @@ let g_n = 0;
 let T = 0;
 
 let animationFrameId = null;
-let lastTimestamp = 0;
-let virtualTime = 0;
-let g_scale = 1.0; // ★ 自動ズームアウト用の倍率変数
+let startTime = 0;
 
 let g_leftHand = { x: 340, y: 400 };
 let g_rightHand = { x: 460, y: 400 };
@@ -383,7 +333,6 @@ let recordedChunks = [];
 let isRecording = false;
 let recordStartTime = 0;
 let recordDuration = 0;
-let logicalTimeAccumulator = 0;
 
 // =====================================
 // サイトスワップ構文解析
@@ -504,19 +453,6 @@ function build(seq, balls) {
 function make_siteswap_table(input) {
     g_seq = parse(input); g_n = g_seq.length;
     if (g_n === 0) return 0;
-
-    // ★ パターン内の最大の数字を調べて、等倍縮小率（g_scale）を自動決定
-    let max_val = 0;
-    for (let i = 0; i < g_n; i++) {
-        if (g_seq[i].a > max_val) max_val = g_seq[i].a;
-        if (g_seq[i].b > max_val) max_val = g_seq[i].b;
-    }
-    let max_s = Math.floor(max_val / 2);
-    
-    // 基準となる最高の高さを計算し、画面内に収まるスケールを決定（ズームアウト）
-    // 通常(数字4など)は 1.0倍。大きな数字(8,10,12...)が入ると自動的にカメラが引きます
-    g_scale = Math.min(1.0, 360 / (max_s * 60.0 + 60.0));
-
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
     T = g_n * calcBalls * 4;
@@ -713,30 +649,24 @@ function draw_ball(balls, globalTime, color) {
 // メインループ
 // =====================================
 function update(timestamp) {
-    if (!lastTimestamp) lastTimestamp = timestamp;
-    
-    let dt = (timestamp - lastTimestamp) / 1000.0;
-    lastTimestamp = timestamp;
-
-    if (dt > 0.1) dt = 0.1;
-
-    virtualTime += dt * currentSpeed;
+    if (!startTime) startTime = timestamp;
+    let t = (timestamp - startTime) / 1000.0;
 
     let totalTime = T * BEAT_TIME;
-    let globalTime = virtualTime % totalTime;
+    let globalTime = t % totalTime;
 
+    // 録画制御用のロジック
     if (isRecording) {
         if (recordStartTime === 0) {
-            recordStartTime = timestamp;
-            virtualTime = 0;
+            recordStartTime = t;
             globalTime = 0;
-            logicalTimeAccumulator = 0;
+            startTime = timestamp;
+            t = 0;
             mediaRecorder.start();
         }
         
-        logicalTimeAccumulator += dt * currentSpeed;
-        
-        if (logicalTimeAccumulator >= recordDuration) {
+        // 3周期（3ループ）分に達したら録画をストップ
+        if (t >= recordDuration) {
             isRecording = false;
             mediaRecorder.stop();
             document.getElementById("recordBtn").innerText = "動画を録画ダウンロード";
@@ -747,17 +677,12 @@ function update(timestamp) {
     let beat = Math.floor(globalTime / BEAT_TIME) % g_n;
     let u = (globalTime % BEAT_TIME) / BEAT_TIME;
 
+    // 【重要修正】通常時も録画時も、背景は一貫して白に設定（透過によるGit等での黒化を防ぐ）
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // ★ ここから全体の自動等倍縮小（ズームアウト）トランスフォームを適用
-    ctx.save();
-    ctx.translate(400, 450); // 下部の中央付近をカメラの基準点に設定
-    ctx.scale(g_scale, g_scale);
-    ctx.translate(-400, -450);
-
     let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
-    let hs = calcHandMotion(virtualTime, BEAT_TIME, 0.0);
+    let hs = calcHandMotion(t, BEAT_TIME, 0.0);
     let leftHY = handBaseY + hs * 20.0;
     let rightHY = handBaseY + hs * 20.0;
 
@@ -799,9 +724,7 @@ function update(timestamp) {
         }
     }
 
-    // ★ 縮小処理をここまでで終了（左上のテキスト表示は元の大きさを保つため）
-    ctx.restore();
-
+    // 動画内（左上）にサイトスワップを常に濃いグレーの文字で表記
     let currentPattern = document.getElementById("siteswapInput").value;
     ctx.font = "bold 20px 'Helvetica Neue', Arial, sans-serif";
     ctx.fillStyle = "#2c3e50"; 
@@ -821,8 +744,7 @@ function initSimulation() {
     let parsedT = make_siteswap_table(inputStr);
     
     if (parsedT > 0) {
-        lastTimestamp = 0;
-        virtualTime = 0;
+        startTime = 0;
         animationFrameId = requestAnimationFrame(update);
     } else {
         alert("有効なサイトスワップパターンを入力してください。");
@@ -834,15 +756,16 @@ function applyPreset(val) {
     initSimulation();
 }
 
+// 録画処理を起動する関数
 function startRecording() {
     if (isRecording) return;
     
+    // 1ループの時間(g_n * BEAT_TIME)の「3倍（3周期分）」の長さを設定
     recordDuration = (g_n * BEAT_TIME) * 3;
     recordedChunks = [];
     
     const stream = canvas.captureStream(60);
     
-    // 基本はwebm形式で録画します（ブラウザの標準機能）
     let options = { mimeType: 'video/webm;codecs=vp9' };
     if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options = { mimeType: 'video/webm;codecs=vp8' };
@@ -861,16 +784,13 @@ function startRecording() {
     };
     
     mediaRecorder.onstop = function() {
-        // ダウンロード時のMIMEタイプを video/mp4 に見せかけます
-        const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+        const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
         const url = URL.createObjectURL(blob);
         
         const a = document.createElement('a');
         a.href = url;
         const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
-        
-        // ★拡張子を .webm から .mp4 に変更しました
-        a.download = `devilstick_siteswap_${patternName}.mp4`; 
+        a.download = `devilstick_siteswap_${patternName}.webm`;
         document.body.appendChild(a);
         a.click();
         
@@ -883,65 +803,9 @@ function startRecording() {
     recordStartTime = 0;
     isRecording = true;
     
-    document.getElementById("recordBtn").innerText = "録画中...";
-    document.getElementById("recordBtn").disabled = true;
-}function startRecording() {
-    if (isRecording) return;
-    
-    recordDuration = (g_n * BEAT_TIME) * 3;
-    recordedChunks = [];
-    
-    const stream = canvas.captureStream(60);
-    
-    // 基本はwebm形式で録画します（ブラウザの標準機能）
-    let options = { mimeType: 'video/webm;codecs=vp9' };
-    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options = { mimeType: 'video/webm;codecs=vp8' };
-    }
-    
-    try {
-        mediaRecorder = new MediaRecorder(stream, options);
-    } catch (e) {
-        mediaRecorder = new MediaRecorder(stream);
-    }
-    
-    mediaRecorder.ondataavailable = function(e) {
-        if (e.data && e.data.size > 0) {
-            recordedChunks.push(e.data);
-        }
-    };
-    
-    mediaRecorder.onstop = function() {
-        // ダウンロード時のMIMEタイプを video/mp4 に見せかけます
-        const blob = new Blob(recordedChunks, { type: 'video/mp4' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
-        
-        // ★拡張子を .webm から .mp4 に変更しました
-        a.download = `devilstick_siteswap_${patternName}.mp4`; 
-        document.body.appendChild(a);
-        a.click();
-        
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 100);
-    };
-    
-    recordStartTime = 0;
-    isRecording = true;
-    
-    document.getElementById("recordBtn").innerText = "録画中...";
+    document.getElementById("recordBtn").innerText = "3周期録画中...";
     document.getElementById("recordBtn").disabled = true;
 }
-
-document.getElementById("speedInput").addEventListener("input", function(e) {
-    currentSpeed = parseFloat(e.target.value);
-    document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x";
-});
 
 document.getElementById("startBtn").addEventListener("click", initSimulation);
 document.getElementById("recordBtn").addEventListener("click", startRecording);
