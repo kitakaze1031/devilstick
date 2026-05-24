@@ -7,7 +7,7 @@
 
 <style>
 /* =====================================
-   基本スタイル (変更なし)
+   基本スタイル
    ===================================== */
 body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f5f7fa; color: #333; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; box-sizing: border-box; min-height: 100vh; }
 h1 { font-size: 24px; margin: 0 0 10px 0; color: #2c3e50; text-align: center; }
@@ -205,9 +205,9 @@ const TRANSITIONS = {
 
     "-2axr": { "-2al": { to: -3, angleExpr: "(100+(a-1)*180)" }, "2al": { to: -4, angleExpr: "180a" }, "-2axl": { to: -4, angleExpr: "(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "(80+(a-1)*180)" } },
 
-    "2axl":  { "-2ar": { to: 3, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
+    "2axl":  { "-2ar": { to: 3, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: -3, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
 
-    "2axr":  { "-2al": { to: -3, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
+    "2axr":  { "-2al": { to: -3, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: 3, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
 };
 
 // =====================================
@@ -379,11 +379,17 @@ function build(seq, balls) {
             let curr_key = curr_throw.action_str;
             let next_key = next_throw.action_str;
 
+            // ★ 手入力で定義された表があればそれを優先し、なければ空気を読んで繋ぐ（フォールバック）
             if (TRANSITIONS[curr_key] && TRANSITIONS[curr_key][next_key]) {
                 let rule = TRANSITIONS[curr_key][next_key];
                 curr_throw.to = rule.to;
                 curr_throw.angleExpr = rule.angleExpr;
                 next_throw.from = rule.to;
+            } else {
+                let isNextLeft = next_key.endsWith('l');
+                curr_throw.to = isNextLeft ? -2 : 2;
+                curr_throw.angleExpr = isNextLeft ? "-180a" : "180a";
+                next_throw.from = curr_throw.to;
             }
         }
     }
@@ -485,9 +491,6 @@ function draw_devilstick(center, angle, color) {
 // =====================================
 // ★ ボールの描画（完全修正版）
 // =====================================
-// =====================================
-// ★ ボールの描画（回転量調整版）
-// =====================================
 function draw_ball(balls, globalTime, color) {
     if (!balls) return;
     for (let t = 0; t < T; t++) {
@@ -508,23 +511,10 @@ function draw_ball(balls, globalTime, color) {
             let timeRatio = (gt - startTime) / duration; // 進行度 (0.0 〜 1.0)
             let sv = c.value; // サイトスワップの値
             
-            // 遷移表による角度オーバーライドの計算
-            let angleOverride = null;
-            if (c.angleExpr) {
-                let totalRot = 0;
-                
-                // ★ ご提示いただいた通り、空中での回転量が多すぎないように調整（-1, -2）
-                if (c.angleExpr === "180a") totalRot = 180 * (sv /2); 
-                else if (c.angleExpr === "-180a") totalRot = -180 * (sv /2);
-                else if (c.angleExpr === "-(100+(a-1)*180)") totalRot = -(100 + (sv/2 - 1) * 180);
-                else if (c.angleExpr === "(100+(a-1)*180)") totalRot = (100 + (sv/2 - 1) * 180);
-                else if (c.angleExpr === "-(80+(a-1)*180)") totalRot = -(80 + (sv/2 ) * 180);
-                else if (c.angleExpr === "(80+(a-1)*180)") totalRot = (80 + (sv/2) * 180);
-                
-                let startData = get_data(c.from);
-                // 初期角度に、進行度(timeRatio)に応じた総回転量を足す
-                angleOverride = startData.angle + (totalRot * timeRatio * DEG_TO_RAD);
-            }
+            // ★ 高さを「2乗（放物線）」に比例させる (sv=2のとき高さ60になるよう係数は15.0)
+            let heightScale = 5.0 * (sv * sv);
+            let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
+            let hOffset = bounce * heightScale;
 
             if (c.propeller === 1) {
                 let isHorizontal2x = (c.value === 2 && (c.from === -1 || c.from === 1) && c.propeller === 1);
@@ -540,17 +530,15 @@ function draw_ball(balls, globalTime, color) {
                         angle = -timeRatio * Math.PI; 
                     }
                     p = lerp(p0, p1, timeRatio);
-                    if (angleOverride !== null) angle = angleOverride;
                     draw_horizontal_devilstick(p, angle, color);
                 } 
                 else {
                     let p0 = get_data(c.from); let p1 = get_data(c.to);
                     p = lerp(p0, p1, timeRatio);
-                    let s = Math.floor(c.value / 2);
-                    let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
-                    p.y -= bounce * 60.0 * s;
+                    p.y -= hOffset;
 
-                    angle = 0.0;
+                    let s = Math.floor(c.value / 2);
+                    let angle = 0.0;
                     let baseTilt = 25.0 * Math.PI / 180.0;
                     if (c.from <= -2) {
                         angle = -baseTilt - timeRatio * Math.PI * s;
@@ -563,7 +551,6 @@ function draw_ball(balls, globalTime, color) {
                     } else if (c.from >= 2) {
                         angle = baseTilt + timeRatio * Math.PI * s;
                     }
-                    if (angleOverride !== null) angle = angleOverride;
                     draw_devilstick(p, angle, color);
                 }
             } 
@@ -576,37 +563,49 @@ function draw_ball(balls, globalTime, color) {
                 if (c.to <= -1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
 
                 p = lerp(handStart, handEnd, timeRatio);
-                let peakBounce = Math.sin(timeRatio * Math.PI); 
-                p.y -= peakBounce * 60.0 * s;
+                p.y -= hOffset;
 
                 let angle = timeRatio * Math.PI * s;
-                if (angleOverride !== null) angle = angleOverride;
                 draw_horizontal_devilstick(p, angle, color);
             }
             else {
-                // 通常の投球
+                // 通常のトス ＆ 拡張機能のトス
                 let p0 = get_data(c.from); let p1 = get_data(c.to);
                 let p = lerp(p0, p1, timeRatio);
-                let s = Math.floor(c.value / 2);
-                let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
-                p.y -= bounce * 60.0 * s;
+                p.y -= hOffset;
 
-                let angle = 0.0;
-                let baseTilt = 25.0 * Math.PI / 180.0;
+                // ★ スナップ(飛び飛び)を完全に防ぐ、連続性保証の回転計算
+                let A_start = p0.angle;
+                let A_target = p1.angle;
+                let TotalRotDeg = 0;
 
-                if (c.from <= -2) {
-                    angle = -baseTilt - timeRatio * Math.PI * s;
-                } else if (c.from === -1 || c.from === 1) {
-                    let dir = (c.to > c.from) ? 1.0 : -1.0;
-                    let swing = 2 * Math.sin(timeRatio * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
-                    let turns = 0.5 * s - 0.5;
-                    let spin = timeRatio * turns * Math.PI * 2.0;
-                    angle = dir * swing + dir * spin;
-                } else if (c.from >= 2) {
-                    angle = baseTilt + timeRatio * Math.PI * s;
+                if (c.angleExpr) {
+                    if (c.angleExpr === "180a") TotalRotDeg = 180 * (sv/2);
+                    else if (c.angleExpr === "-180a") TotalRotDeg = -180 * (sv/2);
+                    else if (c.angleExpr === "-(100+(a-1)*180)") TotalRotDeg = -(100 + (sv/2 - 1) * 180);
+                    else if (c.angleExpr === "(100+(a-1)*180)") TotalRotDeg = (100 + (sv/2 - 1) * 180);
+                    else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (sv/2) * 180);
+                    else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (sv/2) * 180);
+                    else TotalRotDeg = 180 * (sv/2); // 未知の数式フォールバック
+                } else {
+                    // 遷移表を使わない標準パターンの回転
+                    let s = Math.floor(sv / 2);
+                    if (c.from <= -2) TotalRotDeg = -180 * s;
+                    else if (c.from >= 2) TotalRotDeg = 180 * s;
+                    else {
+                        let dir = (c.to > c.from) ? 1.0 : -1.0;
+                        TotalRotDeg = dir * 180 * s;
+                    }
                 }
 
-                if (angleOverride !== null) angle = angleOverride;
+                let totalRotRad = TotalRotDeg * DEG_TO_RAD;
+                // 目標角度(A_target)に対して、最も近い180度単位の着地角度を算出する（ワープ防止）
+                let k = Math.round( (A_start + totalRotRad - A_target) / Math.PI );
+                let actualEndAngle = A_target + k * Math.PI;
+
+                // 初期角度から正確な着地角度までなめらかに回す
+                let angle = A_start + (actualEndAngle - A_start) * timeRatio;
+                
                 draw_devilstick(p, angle, color);
             }
             return;
