@@ -193,9 +193,9 @@ function get_data(id) {
 // =====================================
 const TRANSITIONS = {
     "-2al":  { "-2al": { to: -3, angleExpr: "180a" }, "2al": { to: -4, angleExpr: "(100+(a-1)*180)" }, 
-"-2axl": { to: -4, angleExpr: "180a" }, "2axl": { to: 1, angleExpr: "180a" } },
+"-2axl": { to: -4, angleExpr: "180a" }, "2axl": { to: 1, angleExpr: "(100+(a-1)*180)" } },
 
-    "-2ar":  { "-2ar": { to: 3, angleExpr: "-180a" }, "2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "-2axr": { to: 4, angleExpr: "-180a" }, "2axr": { to: -1, angleExpr: "-180a" } },
+    "-2ar":  { "-2ar": { to: 3, angleExpr: "-180a" }, "2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "-2axr": { to: 4, angleExpr: "-180a" }, "2axr": { to: -1, angleExpr: "-(100+(a-1)*180)" } },
 
     "2al":   { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-180a" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-180a" } },
 
@@ -205,9 +205,9 @@ const TRANSITIONS = {
 
     "-2axr": { "-2al": { to: -3, angleExpr: "(100+(a-1)*180)" }, "2al": { to: -4, angleExpr: "180a" }, "-2axl": { to: -4, angleExpr: "(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "(80+(a-1)*180)" } },
 
-    "2axl":  { "-2ar": { to: 3, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
+    "2axl":  { "-2ar": { to: 2, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
 
-    "2axr":  { "-2al": { to: -3, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
+    "2axr":  { "-2al": { to: -2, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
 };
 
 // =====================================
