@@ -3,288 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>デビルスティック サイトスワップ シミュレーター </title>
+<title>デビルスティック サイトスワップ シミュレーター</title>
 
 <style>
 /* =====================================
-   基本スタイル
+   基本スタイル (変更なし)
    ===================================== */
-body {
-    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN',
-                 'Hiragino Sans', Meiryo, sans-serif;
-    background: #f5f7fa;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    margin: 0;
-    box-sizing: border-box;
-    min-height: 100vh;
-}
-
-h1 {
-    font-size: 24px;
-    margin: 0 0 10px 0;
-    color: #2c3e50;
-    text-align: center;
-}
-
-.main-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-}
-
-/* =====================================
-   キャンバス
-   ===================================== */
-.canvas-container {
-    width: 100%;
-    max-width: 800px;
-    display: flex;
-    justify-content: center;
-}
-
-canvas {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-    width: 100%;
-    height: auto;
-    aspect-ratio: 8 / 6;
-    display: block;
-}
-
-/* =====================================
-   コントロール
-   ===================================== */
-.control-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-    max-width: 800px;
-}
-
-#controls {
-    background: white;
-    padding: 15px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-label {
-    font-weight: bold;
-    color: #4a5568;
-}
-
-input[type="text"] {
-    padding: 8px 12px;
-    font-size: 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    width: 200px;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-input[type="text"]:focus {
-    border-color: #3182ce;
-}
-
-/* UIレイアウト用のコンテナ */
-.ui-row-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin: 5px 0;
-}
-
-.ui-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-/* スピード調整用スライダーのスタイル */
-.speed-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #4a5568;
-    font-weight: bold;
-}
-
-#speedInput {
-    cursor: pointer;
-    width: 120px;
-}
-
-#speedVal {
-    min-width: 45px;
-    text-align: left;
-    color: #3182ce;
-}
-
-button {
-    padding: 8px 16px;
-    font-size: 14px;
-    background-color: #3182ce;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: #2b6cb0;
-}
-
-/* 録画ボタン用スタイル */
-#recordBtn {
-    background-color: #e53e3e;
-}
-#recordBtn:hover {
-    background-color: #c53030;
-}
-#recordBtn:disabled {
-    background-color: #cbd5e1;
-    color: #94a3b8;
-    cursor: not-allowed;
-}
-
-/* 録画結果表示エリア */
-.result-container {
-    display: none;
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
-}
-.result-container video {
-    width: 100%;
-    max-width: 400px;
-    border-radius: 6px;
-    background: #000;
-}
-.result-hint {
-    font-size: 13px;
-    color: #e53e3e;
-    font-weight: bold;
-    text-align: center;
-}
-
-.section-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #2d3748;
-}
-
-.preset-container {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.preset-btn {
-    padding: 6px 10px;
-    font-size: 12px;
-    background-color: #e2e8f0;
-    color: #4a5568;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.preset-btn:hover {
-    background-color: #cbd5e1;
-}
-
-.info-box {
-    font-size: 13px;
-    color: #718096;
-    line-height: 1.7;
-    background: #edf2f7;
-    padding: 15px;
-    border-radius: 6px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-footer {
-    margin-top: 20px;
-    padding: 20px;
-    font-size: 13px;
-    color: #718096;
-    text-align: center;
-    width: 100%;
-    max-width: 800px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    box-sizing: border-box;
-}
-
-footer p {
-    margin: 5px 0;
-}
-
-footer a {
-    color: #3182ce;
-    text-decoration: none;
-    font-weight: bold;
-    border-bottom: 1px dashed #3182ce;
-    transition: color 0.2s;
-}
-
-footer a:hover {
-    color: #2b6cb0;
-    border-bottom-style: solid;
-}
-
-.free-box {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #2f855a;
-    background: #f0fff4;
-    padding: 8px 12px;
-    border-radius: 4px;
-    display: inline-block;
-    border: 1px solid #c6f6d5;
-    font-weight: 500;
-}
-
-@media (max-width: 767px) {
-    body { padding: 10px; }
-    h1 { font-size: 18px; }
-    #controls { padding: 12px; }
-    input[type="text"] { width: 100%; box-sizing: border-box; }
-    .ui-row { flex-direction: column; width: 100%; gap: 10px; }
-    .preset-container { flex-direction: column; }
-    .preset-btn { width: 100%; }
-}
+body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f5f7fa; color: #333; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; box-sizing: border-box; min-height: 100vh; }
+h1 { font-size: 24px; margin: 0 0 10px 0; color: #2c3e50; text-align: center; }
+.main-container { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 1200px; }
+.canvas-container { width: 100%; max-width: 800px; display: flex; justify-content: center; }
+canvas { background: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; height: auto; aspect-ratio: 8 / 6; display: block; }
+.control-panel { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 800px; }
+#controls { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; }
+label { font-weight: bold; color: #4a5568; }
+input[type="text"] { padding: 8px 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px; width: 200px; outline: none; transition: border-color 0.2s; }
+input[type="text"]:focus { border-color: #3182ce; }
+.ui-row-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 5px 0; }
+.ui-row { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+.speed-control { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4a5568; font-weight: bold; }
+#speedInput { cursor: pointer; width: 120px; }
+#speedVal { min-width: 45px; text-align: left; color: #3182ce; }
+button { padding: 8px 16px; font-size: 14px; background-color: #3182ce; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+button:hover { background-color: #2b6cb0; }
+#recordBtn { background-color: #e53e3e; }
+#recordBtn:hover { background-color: #c53030; }
+#recordBtn:disabled { background-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
+.result-container { display: none; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; }
+.result-container video { width: 100%; max-width: 400px; border-radius: 6px; background: #000; }
+.result-hint { font-size: 13px; color: #e53e3e; font-weight: bold; text-align: center; }
+.section-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2d3748; }
+.preset-container { display: flex; gap: 6px; flex-wrap: wrap; }
+.preset-btn { padding: 6px 10px; font-size: 12px; background-color: #e2e8f0; color: #4a5568; border-radius: 4px; border: none; cursor: pointer; font-weight: 500; transition: background-color 0.2s; }
+.preset-btn:hover { background-color: #cbd5e1; }
+.info-box { font-size: 13px; color: #718096; line-height: 1.7; background: #edf2f7; padding: 15px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+footer { margin-top: 20px; padding: 20px; font-size: 13px; color: #718096; text-align: center; width: 100%; max-width: 800px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box; }
+footer p { margin: 5px 0; }
+footer a { color: #3182ce; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #3182ce; transition: color 0.2s; }
+footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
+.free-box { margin-top: 10px; font-size: 12px; color: #2f855a; background: #f0fff4; padding: 8px 12px; border-radius: 4px; display: inline-block; border: 1px solid #c6f6d5; font-weight: 500; }
+@media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } }
 </style>
 </head>
 
@@ -298,14 +56,12 @@ footer a:hover {
     </div>
 
      <div class="control-panel">
-
         <div id="controls">
-
             <div class="ui-row-container">
                 <div class="ui-row">
                     <div>
                         <label for="siteswapInput">パターン: </label>
-                        <input type="text" id="siteswapInput" value="(2x,2x)">
+                        <input type="text" id="siteswapInput" value="(-2x,2x)">
                     </div>
                     <button id="startBtn">再生</button>
                 </div>
@@ -327,60 +83,30 @@ footer a:hover {
             </div>
 
             <div class="preset-wrapper">
-                <div class="section-title">1本(入力例)</div>
+                <div class="section-title">拡張機能テスト用</div>
                 <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(-2x,2x)')">(-2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(-2,2)')">(-2,2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(-2x,2)(-2,-2x)')">(-2x,2)(-2,-2x)</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">通常パターン確認用(正の整数)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2-,0)')">(2-,0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
                     <button class="preset-btn" onclick="applyPreset('(4x,0)(0^1,0^3)(0,2x)')">(4x,0)(0^1,0^3)(0,2x)</button>
                 </div>
             </div>
 
-            <div class="preset-wrapper">
-                <div class="section-title">2本(入力例)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2x-,2x)(2x,2x-)')">(2x-,2x)(2x,2x-)</button>
-                    <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
-                </div>
-            </div>
-
-            <div class="preset-wrapper">
-                <div class="section-title">3本(入力例)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)</button>
-                </div>
-            </div>
-
-            <div class="preset-wrapper">
-                <div class="section-title">それ以上(入力例)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,6x)')">(6x,2x)(2x,6x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(8,2x)(2x,8)')">(8,2x)(2x,8)</button>
-                    <button class="preset-btn" onclick="applyPreset('(8,6x)(6x,8)')">(8,6x)(6x,8)</button>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="info-box">
-            <strong>💡 現在の設定ルール</strong><br>
-            ・0があるとき、0*で片手が空くことでできるフラーリッシュ　例 (2x,0*)(0*,2x)<br>
-            ・任意の数字-で叩きながらできるフラーリッシュ　例 (2x-,0)(0,2x-)<br>
-            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)
         </div>
     </div>
 </div>
 
 <footer>
     <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
-    <div class="free-box">
-        ✨ 録画した動画は、SNSやYouTube等への投稿・二次利用を含め、いつでも自由にお使いいただけます！
-    </div>
 </footer>
 
 <script>
@@ -390,9 +116,9 @@ footer a:hover {
 const BEAT_TIME = 0.7;
 const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5"];
 const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
+const DEG_TO_RAD = Math.PI / 180;
 
 let currentSpeed = 1.0;
-
 let table = null;
 let g_balls = 0;
 let g_seq = [];
@@ -402,8 +128,6 @@ let T = 0;
 let animationFrameId = null;
 let lastTimestamp = 0;
 let virtualTime = 0;
-
-// ★等倍ズームアウト用の変数
 let g_scale = 1.0; 
 
 let g_leftHand = { x: 340, y: 400 };
@@ -412,13 +136,51 @@ let g_rightHand = { x: 460, y: 400 };
 const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 
-// 録画関連の変数
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording = false;
 let recordStartTime = 0;
 let recordDuration = 0;
 let logicalTimeAccumulator = 0;
+
+// =====================================
+// ★ 統合された座標・角度取得関数
+// =====================================
+function get_data(id) {
+    const data = {
+        "-4": { x: 300, y: 460, angle: 50 * DEG_TO_RAD },
+        "-3": { x: 340, y: 400, angle: 50 * DEG_TO_RAD },
+        "-2": { x: 340, y: 400, angle: -50 * DEG_TO_RAD }, // 左手
+        "-1": { x: 400, y: 460, angle: -50 * DEG_TO_RAD }, // センター左
+         "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },  // センター右
+         "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },  // 右手
+         "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
+         "4": { x: 500, y: 460, angle: -50 * DEG_TO_RAD }
+    };
+    return data[id] || { x: 400, y: 460, angle: 0 };
+}
+
+// =====================================
+// 状態遷移のルール表
+// =====================================
+const TRANSITIONS = {
+    "-2al":  { "-2al": { to: -3, angleExpr: "180a" }, "2al": { to: -4, angleExpr: "(100+(a-1)*180)" }, 
+"-2axl": { to: -4, angleExpr: "180a" }, "2axl": { to: 1, angleExpr: "180a" } },
+
+    "-2ar":  { "-2ar": { to: 3, angleExpr: "-180a" }, "2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "-2axr": { to: 4, angleExpr: "-180a" }, "2axr": { to: -1, angleExpr: "-180a" } },
+
+    "2al":   { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-180a" }, "-2axl": { to: 4, angleExpr: "-180a" }, "2axl": { to: -1, angleExpr: "-180a" } },
+
+    "2ar":   { "-2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "180a" }, "-2axr": { to: -4, angleExpr: "180a" }, "2axr": { to: 1, angleExpr: "180a" } },
+
+    "-2axl": { "-2ar": { to: 3, angleExpr: "-(100+(a-1)*180)" }, "2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "-2axr": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "-(80+(a-1)*180)" } },
+
+    "-2axr": { "-2al": { to: -3, angleExpr: "(100+(a-1)*180)" }, "2al": { to: -4, angleExpr: "(100+(a-1)*180)" }, "-2axl": { to: -4, angleExpr: "(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "(80+(a-1)*180)" } },
+
+    "2axl":  { "-2ar": { to: -3, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: -4, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
+
+    "2axr":  { "-2al": { to: 3, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
+};
 
 // =====================================
 // サイトスワップ構文解析
@@ -429,34 +191,30 @@ function parse(s) {
     while (i < s.length) {
         if (s[i] === '(') {
             i++;
-            let t = { a: 0, b: 0, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0, a_propeller: 0, b_propeller: 0 };
+            let t = { a: 0, b: 0, is_minus_a: false, is_minus_b: false, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0, a_propeller: 0, b_propeller: 0 };
             
-            if (s[i] === 'p') { t.a_propeller = 1; i++; }
-            else if (s[i] === 't') { t.a_propeller = 2; i++; }
+            if (s[i] === 'p') { t.a_propeller = 1; i++; } else if (s[i] === 't') { t.a_propeller = 2; i++; }
+            if (s[i] === '-') { t.is_minus_a = true; i++; } // 接頭辞マイナス判定
+            
             while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.a = t.a * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_a = 1; i++; continue; }
                 if (s[i] === '*') { if (t.a === 0) t.hs_a = HS_HAND1; i++; continue; }
                 if (s[i] === '-') { t.hs_a = HS_HAND2; i++; continue; }
-                if (s[i] === '^') { 
-                    i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_a = parseInt(s[i]); i++; }
-                    continue; 
-                }
+                if (s[i] === '^') { i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_a = parseInt(s[i]); i++; } continue; }
                 break;
             }
             if (s[i] === ',') i++;
             
-            if (s[i] === 'p') { t.b_propeller = 1; i++; }
-            else if (s[i] === 't') { t.b_propeller = 2; i++; }
+            if (s[i] === 'p') { t.b_propeller = 1; i++; } else if (s[i] === 't') { t.b_propeller = 2; i++; }
+            if (s[i] === '-') { t.is_minus_b = true; i++; } // 接頭辞マイナス判定
+            
             while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.b = t.b * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
                 if (s[i] === 'x') { t.cross_b = 1; i++; continue; }
                 if (s[i] === '*') { if (t.b === 0) t.hs_b = HS_HAND1; i++; continue; }
                 if (s[i] === '-') { t.hs_b = HS_HAND2; i++; continue; }
-                if (s[i] === '^') { 
-                    i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_b = parseInt(s[i]); i++; }
-                    continue; 
-                }
+                if (s[i] === '^') { i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { t.mode_b = parseInt(s[i]); i++; } continue; }
                 break;
             }
             if (s[i] === ')') i++;
@@ -472,14 +230,18 @@ function object_count(seq) {
     return Math.floor(sum / (2 * seq.length));
 }
 
+// =====================================
+// 軌道構築
+// =====================================
 function build(seq, balls) {
-    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, propeller: 0 })) );
+    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, angleExpr: "", action_str: "", propeller: 0 })) );
     
     let ex = [];
     for (let t = 0; t < T; t++) { 
         let src = seq[t % g_n];
         ex.push({ 
             a: src.a, b: src.b, 
+            is_minus_a: src.is_minus_a, is_minus_b: src.is_minus_b, 
             cross_a: src.cross_a, cross_b: src.cross_b, 
             a_propeller: src.a_propeller, b_propeller: src.b_propeller 
         }); 
@@ -490,49 +252,112 @@ function build(seq, balls) {
         if (ex[start_t].a > 0) {
             let t = start_t; let side = 0;
             while (t < T) {
-                let tr = ex[t]; let value, from, to, propeller;
+                let tr = ex[t]; 
                 if (side === 0) {
-                    if (tr.a <= 0) break; value = tr.a; propeller = tr.a_propeller;
-                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; } tr.a = -1;
+                    if (tr.a <= 0) break;
+                    let value = tr.a; let propeller = tr.a_propeller; let cross = tr.cross_a; let is_minus = tr.is_minus_a;
+                    tr.a = -1;
+                    
+                    let action_prefix = is_minus ? "-2" : "2";
+                    let action_cross = cross ? "ax" : "a";
+                    let action_str = action_prefix + action_cross + "l";
+                    
+                    let from = cross ? -1 : -2;
+                    let to = cross ? 1 : -2;
+                    
+                    table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller };
+                    t += Math.floor(value / 2);
+                    if (to === -1 || to === 1) side ^= 1;
                 } else {
-                    if (tr.b <= 0) break; value = tr.b; propeller = tr.b_propeller;
-                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; } tr.b = -1;
+                    if (tr.b <= 0) break;
+                    let value = tr.b; let propeller = tr.b_propeller; let cross = tr.cross_b; let is_minus = tr.is_minus_b;
+                    tr.b = -1;
+                    
+                    let action_prefix = is_minus ? "-2" : "2";
+                    let action_cross = cross ? "ax" : "a";
+                    let action_str = action_prefix + action_cross + "r";
+                    
+                    let from = cross ? 1 : 2;
+                    let to = cross ? -1 : 2;
+                    
+                    table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller };
+                    t += Math.floor(value / 2);
+                    if (to === -1 || to === 1) side ^= 1;
                 }
-                table[ball][t] = { value, from, to, propeller };
-                t += Math.floor(value / 2);
-                if (to === 1 || to === 2) side ^= 1;
             }
             ball++;
         }
         if (ex[start_t].b > 0) {
             let t = start_t; let side = 1;
             while (t < T) {
-                let tr = ex[t]; let value, from, to, propeller;
+                let tr = ex[t];
                 if (side === 0) {
-                    if (tr.a <= 0) break; value = tr.a; propeller = tr.a_propeller;
-                    if (tr.cross_a) { from = 1; to = 2; } else { from = 0; to = 0; } tr.a = -1;
+                    if (tr.a <= 0) break;
+                    let value = tr.a; let propeller = tr.a_propeller; let cross = tr.cross_a; let is_minus = tr.is_minus_a;
+                    tr.a = -1;
+                    
+                    let action_prefix = is_minus ? "-2" : "2";
+                    let action_cross = cross ? "ax" : "a";
+                    let action_str = action_prefix + action_cross + "l";
+                    
+                    let from = cross ? -1 : -2;
+                    let to = cross ? 1 : -2;
+                    
+                    table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller };
+                    t += Math.floor(value / 2);
+                    if (to === -1 || to === 1) side ^= 1;
                 } else {
-                    if (tr.b <= 0) break; value = tr.b; propeller = tr.b_propeller;
-                    if (tr.cross_b) { from = 2; to = 1; } else { from = 3; to = 3; } tr.b = -1;
+                    if (tr.b <= 0) break;
+                    let value = tr.b; let propeller = tr.b_propeller; let cross = tr.cross_b; let is_minus = tr.is_minus_b;
+                    tr.b = -1;
+                    
+                    let action_prefix = is_minus ? "-2" : "2";
+                    let action_cross = cross ? "ax" : "a";
+                    let action_str = action_prefix + action_cross + "r";
+                    
+                    let from = cross ? 1 : 2;
+                    let to = cross ? -1 : 2;
+                    
+                    table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller };
+                    t += Math.floor(value / 2);
+                    if (to === -1 || to === 1) side ^= 1;
                 }
-                table[ball][t] = { value, from, to, propeller };
-                t += Math.floor(value / 2);
-                if (to === 1 || to === 2) side ^= 1;
             }
             ball++;
         }
     }
 
+    // パスの連結と遷移表の適用
     for (let b = 0; b < balls; b++) {
-        let first = -1; let prev = -1;
+        let path = [];
         for (let t = 0; t < T; t++) {
-            if (table[b][t].value > 0) {
-                if (first === -1) first = t;
-                if (prev !== -1) { table[b][prev].to = table[b][t].from; }
-                prev = t;
+            if (table[b][t].value > 0) path.push(t);
+        }
+        if (path.length === 0) continue;
+
+        for (let i = 0; i < path.length; i++) {
+            let curr_t = path[i];
+            let next_t = path[(i + 1) % path.length];
+            table[b][next_t].from = table[b][curr_t].to;
+        }
+
+        for (let i = 0; i < path.length; i++) {
+            let curr_t = path[i];
+            let next_t = path[(i + 1) % path.length];
+            
+            let curr_throw = table[b][curr_t];
+            let next_throw = table[b][next_t];
+
+            let curr_key = curr_throw.action_str;
+            let next_key = next_throw.action_str;
+
+            if (TRANSITIONS[curr_key] && TRANSITIONS[curr_key][next_key]) {
+                let rule = TRANSITIONS[curr_key][next_key];
+                curr_throw.to = rule.to;
+                curr_throw.angleExpr = rule.angleExpr;
+                next_throw.from = rule.to;
             }
         }
-        if (prev !== -1 && first !== -1) { table[b][prev].to = table[b][first].from; }
     }
 }
 
@@ -540,14 +365,12 @@ function make_siteswap_table(input) {
     g_seq = parse(input); g_n = g_seq.length;
     if (g_n === 0) return 0;
     
-    // ★ オートズーム（等倍縮小）の計算
     let max_val = 0;
     for (let i = 0; i < g_n; i++) {
         if (g_seq[i].a > max_val) max_val = g_seq[i].a;
         if (g_seq[i].b > max_val) max_val = g_seq[i].b;
     }
     let max_s = Math.floor(max_val / 2);
-    // 画面内に収まるように全体の倍率を計算（最大1.0倍）
     g_scale = Math.min(1.0, 360 / (max_s * 60.0 + 60.0));
 
     g_balls = object_count(g_seq);
@@ -582,15 +405,6 @@ function draw_hand2(center, a, side) {
 function draw_stick(center, angle, color) {
     const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * (L / 2.0);
     drawLineEx({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 8, color);
-}
-function get_pos(id) {
-    switch(id) {
-        case 0: return { x: 340, y: 400 };
-        case 1: return { x: 400, y: 460 };
-        case 2: return { x: 400, y: 460 };
-        case 3: return { x: 460, y: 400 };
-    }
-    return { x: 0, y: 0 };
 }
 function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
 
@@ -641,7 +455,10 @@ function draw_devilstick(center, angle, color) {
 }
 
 // =====================================
-// ボール（CS）の軌道計算・描画
+// ★ ボールの描画（完全修正版）
+// =====================================
+// =====================================
+// ★ ボールの描画（回転量調整版）
 // =====================================
 function draw_ball(balls, globalTime, color) {
     if (!balls) return;
@@ -659,44 +476,66 @@ function draw_ball(balls, globalTime, color) {
         }
 
         if (gt >= startTime && gt < endTime) {
-            let a = (gt - startTime) / duration; 
             
+            let timeRatio = (gt - startTime) / duration; // 進行度 (0.0 〜 1.0)
+            let sv = c.value; // サイトスワップの値
+            
+            // 遷移表による角度オーバーライドの計算
+            let angleOverride = null;
+            if (c.angleExpr) {
+                let totalRot = 0;
+                
+                // ★ ご提示いただいた通り、空中での回転量が多すぎないように調整（-1, -2）
+                if (c.angleExpr === "180a") totalRot = 180 * (sv /2); 
+                else if (c.angleExpr === "-180a") totalRot = -180 * (sv /2);
+                else if (c.angleExpr === "-(100+(a-1)*180)") totalRot = -(100 + (sv/2 - 1) * 180);
+                else if (c.angleExpr === "(100+(a-1)*180)") totalRot = (100 + (sv/2 - 1) * 180);
+                else if (c.angleExpr === "-(80+(a-1)*180)") totalRot = -(80 + (sv/2 ) * 180);
+                else if (c.angleExpr === "(80+(a-1)*180)") totalRot = (80 + (sv/2) * 180);
+                
+                let startData = get_data(c.from);
+                // 初期角度に、進行度(timeRatio)に応じた総回転量を足す
+                angleOverride = startData.angle + (totalRot * timeRatio * DEG_TO_RAD);
+            }
+
             if (c.propeller === 1) {
-                let isHorizontal2x = (c.value === 2 && (c.from === 1 || c.from === 2) && c.propeller === 1);
+                let isHorizontal2x = (c.value === 2 && (c.from === -1 || c.from === 1) && c.propeller === 1);
                 let p, angle;
 
                 if (isHorizontal2x) {
                     let p0, p1;
-                    if (c.from === 1) {
+                    if (c.from === -1) {
                         p0 = g_leftHand; p1 = g_rightHand;
-                        angle = a * Math.PI; 
+                        angle = timeRatio * Math.PI; 
                     } else {
                         p0 = g_rightHand; p1 = g_leftHand;
-                        angle = -a * Math.PI; 
+                        angle = -timeRatio * Math.PI; 
                     }
-                    p = lerp(p0, p1, a);
+                    p = lerp(p0, p1, timeRatio);
+                    if (angleOverride !== null) angle = angleOverride;
                     draw_horizontal_devilstick(p, angle, color);
                 } 
                 else {
-                    let p0 = get_pos(c.from); let p1 = get_pos(c.to);
-                    p = lerp(p0, p1, a);
+                    let p0 = get_data(c.from); let p1 = get_data(c.to);
+                    p = lerp(p0, p1, timeRatio);
                     let s = Math.floor(c.value / 2);
-                    let bounce = Math.abs(Math.sin(a * Math.PI));
+                    let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
                     p.y -= bounce * 60.0 * s;
 
                     angle = 0.0;
                     let baseTilt = 25.0 * Math.PI / 180.0;
-                    if (c.from === 0) {
-                        angle = -baseTilt - a * Math.PI * s;
-                    } else if (c.from === 1 || c.from === 2) {
+                    if (c.from <= -2) {
+                        angle = -baseTilt - timeRatio * Math.PI * s;
+                    } else if (c.from === -1 || c.from === 1) {
                         let dir = (c.to > c.from) ? 1.0 : -1.0;
-                        let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                        let swing = 2 * Math.sin(timeRatio * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
                         let turns = 0.5 * s - 0.5;
-                        let spin = a * turns * Math.PI * 2.0;
+                        let spin = timeRatio * turns * Math.PI * 2.0;
                         angle = dir * swing + dir * spin;
-                    } else if (c.from === 3) {
-                        angle = baseTilt + a * Math.PI * s;
+                    } else if (c.from >= 2) {
+                        angle = baseTilt + timeRatio * Math.PI * s;
                     }
+                    if (angleOverride !== null) angle = angleOverride;
                     draw_devilstick(p, angle, color);
                 }
             } 
@@ -705,36 +544,41 @@ function draw_ball(balls, globalTime, color) {
                 let s = Math.floor(c.value / 2);
 
                 let handStart, handEnd;
-                if (c.from === 0 || c.from === 1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
-                if (c.to === 0 || c.to === 1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
+                if (c.from <= -1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
+                if (c.to <= -1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
 
-                p = lerp(handStart, handEnd, a);
-                let peakBounce = Math.sin(a * Math.PI); 
+                p = lerp(handStart, handEnd, timeRatio);
+                let peakBounce = Math.sin(timeRatio * Math.PI); 
                 p.y -= peakBounce * 60.0 * s;
 
-                let angle = a * Math.PI * s;
+                let angle = timeRatio * Math.PI * s;
+                if (angleOverride !== null) angle = angleOverride;
                 draw_horizontal_devilstick(p, angle, color);
             }
             else {
-                let p0 = get_pos(c.from); let p1 = get_pos(c.to);
-                let p = lerp(p0, p1, a);
+                // 通常の投球
+                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p = lerp(p0, p1, timeRatio);
                 let s = Math.floor(c.value / 2);
-                let bounce = Math.abs(Math.sin(a * Math.PI));
+                let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
                 p.y -= bounce * 60.0 * s;
 
                 let angle = 0.0;
                 let baseTilt = 25.0 * Math.PI / 180.0;
-                if (c.from === 0) {
-                    angle = -baseTilt - a * Math.PI * s;
-                } else if (c.from === 1 || c.from === 2) {
+
+                if (c.from <= -2) {
+                    angle = -baseTilt - timeRatio * Math.PI * s;
+                } else if (c.from === -1 || c.from === 1) {
                     let dir = (c.to > c.from) ? 1.0 : -1.0;
-                    let swing = 2 * Math.sin(a * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                    let swing = 2 * Math.sin(timeRatio * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
                     let turns = 0.5 * s - 0.5;
-                    let spin = a * turns * Math.PI * 2.0;
+                    let spin = timeRatio * turns * Math.PI * 2.0;
                     angle = dir * swing + dir * spin;
-                } else if (c.from === 3) {
-                    angle = baseTilt + a * Math.PI * s;
+                } else if (c.from >= 2) {
+                    angle = baseTilt + timeRatio * Math.PI * s;
                 }
+
+                if (angleOverride !== null) angle = angleOverride;
                 draw_devilstick(p, angle, color);
             }
             return;
@@ -783,9 +627,8 @@ function update(timestamp) {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // ★ ここから全体の自動等倍縮小（ズームアウト）を適用
     ctx.save();
-    ctx.translate(400, 450); // 下部の中央付近をカメラの基準点に設定
+    ctx.translate(400, 450); 
     ctx.scale(g_scale, g_scale);
     ctx.translate(-400, -450);
 
@@ -832,7 +675,6 @@ function update(timestamp) {
         }
     }
 
-    // ★ 縮小処理をここまでで終了（文字は元の大きさを保つため）
     ctx.restore();
 
     let currentPattern = document.getElementById("siteswapInput").value;
@@ -867,68 +709,32 @@ function applyPreset(val) {
     initSimulation();
 }
 
-// 【重要修正】一般的な「.mp4」動画ファイル形式に設定して録画を起動
 function startRecording() {
     if (isRecording) return;
-    
     recordDuration = (g_n * BEAT_TIME) * 3;
     recordedChunks = [];
-    
     const stream = canvas.captureStream(60);
-    
-    // スマホでの互換性が一番高い「video/mp4」形式を最優先で指定
     let options = { mimeType: 'video/mp4;codecs=avc1' };
-    
-    // 万が一ブラウザ側がmp4録画に非対応だった場合は、代替可能な標準フォーマットに切り替え
-    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options = { mimeType: 'video/webm;codecs=vp9' };
-    }
-    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options = { mimeType: 'video/webm;codecs=vp8' };
-    }
-    
-    try {
-        mediaRecorder = new MediaRecorder(stream, options);
-    } catch (e) {
-        mediaRecorder = new MediaRecorder(stream);
-    }
-    
-    mediaRecorder.ondataavailable = function(e) {
-        if (e.data && e.data.size > 0) {
-            recordedChunks.push(e.data);
-        }
-    };
-    
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm;codecs=vp9' }; }
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm;codecs=vp8' }; }
+    try { mediaRecorder = new MediaRecorder(stream, options); } catch (e) { mediaRecorder = new MediaRecorder(stream); }
+    mediaRecorder.ondataavailable = function(e) { if (e.data && e.data.size > 0) { recordedChunks.push(e.data); } };
     mediaRecorder.onstop = function() {
         const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
         const url = URL.createObjectURL(blob);
-        
         const a = document.createElement('a');
         a.href = url;
         const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
-        
-        // 拡張子を「.mp4」にしてスマホのギャラリーへ直接認識させやすくする
         a.download = `devilstick_siteswap_${patternName}.mp4`;
         document.body.appendChild(a);
         a.click();
-        
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 100);
+        setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
     };
-    
-    recordStartTime = 0;
-    isRecording = true;
-    
-    document.getElementById("recordBtn").innerText = "録画中...";
-    document.getElementById("recordBtn").disabled = true;
+    recordStartTime = 0; isRecording = true;
+    document.getElementById("recordBtn").innerText = "録画中..."; document.getElementById("recordBtn").disabled = true;
 }
-document.getElementById("speedInput").addEventListener("input", function(e) {
-    currentSpeed = parseFloat(e.target.value);
-    document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x";
-});
 
+document.getElementById("speedInput").addEventListener("input", function(e) { currentSpeed = parseFloat(e.target.value); document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x"; });
 document.getElementById("startBtn").addEventListener("click", initSimulation);
 document.getElementById("recordBtn").addEventListener("click", startRecording);
 
