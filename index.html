@@ -405,7 +405,7 @@ function make_siteswap_table(input) {
         if (g_seq[i].b > max_val) max_val = g_seq[i].b;
     }
     let max_s = Math.floor(max_val / 2);
-    g_scale = Math.min(1.0, 360 / (max_s * 60.0 + 60.0));
+    g_scale = Math.min(1.0, 360 / (4*max_s * max_s *15.0 + 60.0));
 
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
