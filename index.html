@@ -512,7 +512,7 @@ function draw_ball(balls, globalTime, color) {
             let sv = c.value; // サイトスワップの値
             
             // ★ 高さを「2乗（放物線）」に比例させる (sv=2のとき高さ60になるよう係数は15.0)
-            let heightScale = 5.0 * (sv * sv);
+            let heightScale = 15.0 * (sv * sv);
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
             let hOffset = bounce * heightScale;
 
