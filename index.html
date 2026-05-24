@@ -56,12 +56,14 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
     </div>
 
      <div class="control-panel">
+
         <div id="controls">
+
             <div class="ui-row-container">
                 <div class="ui-row">
                     <div>
                         <label for="siteswapInput">パターン: </label>
-                        <input type="text" id="siteswapInput" value="(-2x,2x)">
+                        <input type="text" id="siteswapInput" value="(2x,2x)">
                     </div>
                     <button id="startBtn">再生</button>
                 </div>
@@ -83,28 +85,54 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
             </div>
 
             <div class="preset-wrapper">
-                <div class="section-title">拡張機能テスト用</div>
+                <div class="section-title">1本(入力例)</div>
                 <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(-2x,2x)')">(-2x,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(-2,2)')">(-2,2)</button>
-                    <button class="preset-btn" onclick="applyPreset('(-2x,2)(-2,-2x)')">(-2x,2)(-2,-2x)</button>
-                </div>
-            </div>
-
-            <div class="preset-wrapper">
-                <div class="section-title">通常パターン確認用(正の整数)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2-,0)')">(2-,0)</button>
                     <button class="preset-btn" onclick="applyPreset('(4x,0)(0^1,0^3)(0,2x)')">(4x,0)(0^1,0^3)(0,2x)</button>
                 </div>
             </div>
 
+            <div class="preset-wrapper">
+                <div class="section-title">2本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x-,2x)(2x,2x-)')">(2x-,2x)(2x,2x-)</button>
+                    <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">3本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">それ以上(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,6x)')">(6x,2x)(2x,6x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(8,2x)(2x,8)')">(8,2x)(2x,8)</button>
+                    <button class="preset-btn" onclick="applyPreset('(8,6x)(6x,8)')">(8,6x)(6x,8)</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="info-box">
+            <strong>💡 現在の設定ルール</strong><br>
+            ・0があるとき、0*で片手が空くことでできるフラーリッシュ　例 (2x,0*)(0*,2x)<br>
+            ・任意の数字-で叩きながらできるフラーリッシュ　例 (2x-,0)(0,2x-)<br>
+            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)
         </div>
     </div>
 </div>
-
 <footer>
     <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
 </footer>
