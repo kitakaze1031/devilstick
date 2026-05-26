@@ -409,7 +409,7 @@ function make_siteswap_table(input) {
         if (g_seq[i].b > max_val) max_val = g_seq[i].b;
     }
     let max_s = Math.floor(max_val / 2);
-    g_scale = Math.min(1.0, 360 / (4*max_s * max_s *15.0 + 60.0));
+    g_scale = Math.min(1.0, 360 / (4*max_s * max_s *10.0 + 60.0));
 
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
@@ -515,8 +515,8 @@ function draw_ball(balls, globalTime, color) {
             let timeRatio = (gt - startTime) / duration; // 進行度 (0.0 〜 1.0)
             let sv = c.value; // サイトスワップの値
             
-            // ★ 高さを「2乗（放物線）」に比例させる (sv=2のとき高さ60になるよう係数は15.0)
-            let heightScale = 15.0 * (sv * sv);
+            // ★ 高さを「2乗（放物線）」に比例させる (sv=2のとき高さ40になるよう係数は10.0)
+            let heightScale = 10.0 * (sv * sv);
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
             let hOffset = bounce * heightScale;
 
