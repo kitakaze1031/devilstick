@@ -193,22 +193,26 @@ function get_data(id) {
 // =====================================
 const TRANSITIONS = {
     "-2al":  { "-2al": { to: -3, angleExpr: "180a" }, "2al": { to: -4, angleExpr: "(100+(a-1)*180)" }, 
-"-2axl": { to: -4, angleExpr: "180a" }, "2axl": { to: 1, angleExpr: "(100+(a-1)*180)" } },
+"-2axl": { to: -4, angleExpr: "180a" }, "2axl": { to: 1, angleExpr: "180a" } },
 
-    "-2ar":  { "-2ar": { to: 3, angleExpr: "-180a" }, "2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "-2axr": { to: 4, angleExpr: "-180a" }, "2axr": { to: -1, angleExpr: "-(100+(a-1)*180)" } },
+    "-2ar":  { "-2ar": { to: 3, angleExpr: "-180a" }, "2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, 
+"-2axr": { to: 4, angleExpr: "-180a" }, "2axr": { to: -1, angleExpr: "-180a" } },
 
-    "2al":   { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-180a" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-180a" } },
+    "2al":   { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-180a" }, 
+"-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-180a" } },
 
-    "2ar":   { "-2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "180a" }, "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "180a" } },
+    "2ar":   { "-2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "180a" },
+ "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "180a" } },
 
-    "-2axl": { "-2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "2ar": { to: 4, angleExpr: "-180a" }, "-2axr": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "-(80+(a-1)*180)" } },
+    "-2axl": { "-2ar": { to: 3, angleExpr: "-(100+(a-1)*180)" }, "2ar": { to: 4, angleExpr: "-180a" }, "-2axr": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "-180a" } },
 
-    "-2axr": { "-2al": { to: -4, angleExpr: "(100+(a-1)*180)" }, "2al": { to: -4, angleExpr: "180a" }, "-2axl": { to: -4, angleExpr: "(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "(80+(a-1)*180)" } },
+    "-2axr": { "-2al": { to: -3, angleExpr: "(100+(a-1)*180)" }, "2al": { to: -4, angleExpr: "180a" }, "-2axl": { to: -4, angleExpr: "(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "180a" } },
 
-    "2axl":  { "-2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
+    "2axl":  { "-2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: -1, angleExpr: "180a" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
 
-    "2axr":  { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
+    "2axr":  { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: 1, angleExpr: "-180a" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
 };
+
 
 // =====================================
 // サイトスワップ構文解析
@@ -584,8 +588,10 @@ function draw_ball(balls, globalTime, color) {
                     else if (c.angleExpr === "-180a") TotalRotDeg = -180 * (sv/2);
                     else if (c.angleExpr === "-(100+(a-1)*180)") TotalRotDeg = -(100 + (sv/2 - 1) * 180);
                     else if (c.angleExpr === "(100+(a-1)*180)") TotalRotDeg = (100 + (sv/2 - 1) * 180);
-                    else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (sv/2) * 180);
-                    else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (sv/2) * 180);
+                    else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (sv/2-1) * 180);
+                    else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (sv/2-1) * 180);
+                    
+                    
                     else TotalRotDeg = 180 * (sv/2); // 未知の数式フォールバック
                 } else {
                     // 遷移表を使わない標準パターンの回転
