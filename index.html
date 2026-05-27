@@ -98,6 +98,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="section-title">2本(入力例)</div>
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(f2x,2x)(2x,f2x)')">(f2x,2x)(2x,f2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x-,2x)(2x,2x-)')">(2x-,2x)(2x,2x-)</button>
                     <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
@@ -129,10 +130,13 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
             <strong>💡 現在の設定ルール</strong><br>
             ・0があるとき、0*で片手が空くことでできるフラーリッシュ　例 (2x,0*)(0*,2x)<br>
             ・任意の数字-で叩きながらできるフラーリッシュ　例 (2x-,0)(0,2x-)<br>
-            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)
+            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)<br>
+            ・任意の数字の前にfで水平維持移動　例 (f2x,2x)(2x,f2x)
         </div>
     </div>
-</div><footer>
+</div>
+
+<footer>
     <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
 </footer>
 
@@ -237,6 +241,7 @@ function parse(s) {
             
             if (s[i] === 'p') { t.a_propeller = 1; i++; } 
             else if (s[i] === 't') { t.a_propeller = 2; i++; }
+            else if (s[i] === 'f') { t.a_propeller = 5; i++; } // ★ f オプション（a側）の解析を追加
             else if (p_mode === 1 || p_mode === 2) { t.a_propeller = p_mode; }
             
             if (s[i] === '-') { t.is_minus_a = true; i++; } 
@@ -253,6 +258,7 @@ function parse(s) {
             
             if (s[i] === 'p') { t.b_propeller = 1; i++; } 
             else if (s[i] === 't') { t.b_propeller = 2; i++; }
+            else if (s[i] === 'f') { t.b_propeller = 5; i++; } // ★ f オプション（b側）の解析を追加
             else if (p_mode === 1 || p_mode === 2) { t.b_propeller = p_mode; }
             
             if (s[i] === '-') { t.is_minus_b = true; i++; } 
@@ -565,7 +571,7 @@ function draw_ball(balls, globalTime, color) {
             let timeRatio = (gt - startTime) / duration; 
             let sv = c.value; 
             
-            let heightScale = 10.0 * (sv * sv);
+            let heightScale = 15.0 * (sv * sv);
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
             let hOffset = bounce * heightScale;
 
@@ -621,6 +627,16 @@ function draw_ball(balls, globalTime, color) {
                 let angle = timeRatio * Math.PI * s;
                 draw_horizontal_devilstick(p, angle, color);
             }
+            // ★ 新設: f オプション（水平固定移動モード）の描画処理
+            else if (c.propeller === 5) {
+                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p = lerp(p0, p1, timeRatio);
+                p.y -= hOffset;
+
+                // 左手スタートなら 90°、右手スタートなら -90° で水平状態を維持
+                let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
+                draw_devilstick(p, angle, color);
+            }
             // ★ 修正: バウンドなし、1.5回転、角度の連続性を保証したフラットスピン
             else if (c.propeller === 3) {
                 let current_dt = gt - startTime;
@@ -652,12 +668,9 @@ function draw_ball(balls, globalTime, color) {
 
                     let flat_start = (isRightStart ? 90 : -90) * DEG_TO_RAD;
                     
-                    // 修正前（私が勝手に固定していた箇所）
-// let spin_dir = 1; 
-
-// 修正後（左右のスタートに応じて反転させる）
-let spin_dir = isRightStart ? -1 : 1;
-let flat_angle = flat_start + spin_dir * p_phase * Math.PI * 3;
+                    // 修正後（左右のスタートに応じて反転させる）
+                    let spin_dir = isRightStart ? -1 : 1;
+                    let flat_angle = flat_start + spin_dir * p_phase * Math.PI * 3;
 
                     draw_horizontal_devilstick(p, flat_angle, color);
                 }
