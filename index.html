@@ -565,7 +565,7 @@ function draw_ball(balls, globalTime, color) {
             let timeRatio = (gt - startTime) / duration; 
             let sv = c.value; 
             
-            let heightScale = 15.0 * (sv * sv);
+            let heightScale = 10.0 * (sv * sv);
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
             let hOffset = bounce * heightScale;
 
