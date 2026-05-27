@@ -132,8 +132,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
             ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)
         </div>
     </div>
-</div>
-<footer>
+</div><footer>
     <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
 </footer>
 
@@ -172,7 +171,7 @@ let recordDuration = 0;
 let logicalTimeAccumulator = 0;
 
 // =====================================
-// ★ 統合された座標・角度取得関数
+// 座標・角度取得関数
 // =====================================
 function get_data(id) {
     const data = {
@@ -188,7 +187,6 @@ function get_data(id) {
     return data[id] || { x: 400, y: 460, angle: 0 };
 }
 
-// =====================================
 // 状態遷移のルール表
 // =====================================
 const TRANSITIONS = {
@@ -213,20 +211,35 @@ const TRANSITIONS = {
     "2axr":  { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: 1, angleExpr: "-180a" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
 };
 
-
 // =====================================
 // サイトスワップ構文解析
 // =====================================
 function parse(s) {
     let i = 0;
     let seq = [];
+    let pending_prefix = '';
     while (i < s.length) {
+        if (s[i] === 's' || s[i] === 't' || s[i] === 'p') {
+            pending_prefix = s[i];
+            i++;
+            continue;
+        }
+
         if (s[i] === '(') {
             i++;
             let t = { a: 0, b: 0, is_minus_a: false, is_minus_b: false, cross_a: 0, cross_b: 0, hs_a: 0, hs_b: 0, mode_a: 0, mode_b: 0, a_propeller: 0, b_propeller: 0 };
             
-            if (s[i] === 'p') { t.a_propeller = 1; i++; } else if (s[i] === 't') { t.a_propeller = 2; i++; }
-            if (s[i] === '-') { t.is_minus_a = true; i++; } // 接頭辞マイナス判定
+            let p_mode = 0;
+            if (pending_prefix === 'p') p_mode = 1;
+            if (pending_prefix === 't') p_mode = 2;
+            if (pending_prefix === 's') p_mode = 3; 
+            pending_prefix = ''; 
+            
+            if (s[i] === 'p') { t.a_propeller = 1; i++; } 
+            else if (s[i] === 't') { t.a_propeller = 2; i++; }
+            else if (p_mode === 1 || p_mode === 2) { t.a_propeller = p_mode; }
+            
+            if (s[i] === '-') { t.is_minus_a = true; i++; } 
             
             while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.a = t.a * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
@@ -238,8 +251,11 @@ function parse(s) {
             }
             if (s[i] === ',') i++;
             
-            if (s[i] === 'p') { t.b_propeller = 1; i++; } else if (s[i] === 't') { t.b_propeller = 2; i++; }
-            if (s[i] === '-') { t.is_minus_b = true; i++; } // 接頭辞マイナス判定
+            if (s[i] === 'p') { t.b_propeller = 1; i++; } 
+            else if (s[i] === 't') { t.b_propeller = 2; i++; }
+            else if (p_mode === 1 || p_mode === 2) { t.b_propeller = p_mode; }
+            
+            if (s[i] === '-') { t.is_minus_b = true; i++; } 
             
             while (i < s.length && s[i] >= '0' && s[i] <= '9') { t.b = t.b * 10 + parseInt(s[i]); i++; }
             while (i < s.length) {
@@ -250,6 +266,18 @@ function parse(s) {
                 break;
             }
             if (s[i] === ')') i++;
+
+            if (p_mode === 3) {
+                if (t.a === 2 && t.cross_a === 1) t.a_propeller = 3;
+                if (t.b === 2 && t.cross_b === 1) t.b_propeller = 3;
+            }
+
+            if (i < s.length && s[i] === 'r') {
+                if (t.a === 2 && t.cross_a === 1) t.a_propeller = 4;
+                if (t.b === 2 && t.cross_b === 1) t.b_propeller = 4;
+                i++;
+            }
+
             seq.push(t);
         } else { i++; }
     }
@@ -359,7 +387,6 @@ function build(seq, balls) {
         }
     }
 
-    // パスの連結と遷移表の適用
     for (let b = 0; b < balls; b++) {
         let path = [];
         for (let t = 0; t < T; t++) {
@@ -383,7 +410,6 @@ function build(seq, balls) {
             let curr_key = curr_throw.action_str;
             let next_key = next_throw.action_str;
 
-            // ★ 手入力で定義された表があればそれを優先し、なければ空気を読んで繋ぐ（フォールバック）
             if (TRANSITIONS[curr_key] && TRANSITIONS[curr_key][next_key]) {
                 let rule = TRANSITIONS[curr_key][next_key];
                 curr_throw.to = rule.to;
@@ -409,7 +435,7 @@ function make_siteswap_table(input) {
         if (g_seq[i].b > max_val) max_val = g_seq[i].b;
     }
     let max_s = Math.floor(max_val / 2);
-    g_scale = Math.min(1.0, 360 / (4*max_s * max_s *10.0 + 60.0));
+    g_scale = Math.min(1.0, 360 / (4*max_s * max_s *10 + 60.0));
 
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
@@ -493,7 +519,7 @@ function draw_devilstick(center, angle, color) {
 }
 
 // =====================================
-// ★ ボールの描画（完全修正版）
+// ボールの描画
 // =====================================
 function draw_ball(balls, globalTime, color) {
     if (!balls) return;
@@ -501,22 +527,45 @@ function draw_ball(balls, globalTime, color) {
         let c = balls[t];
         if (!c || c.value <= 0) continue;
 
+        if (c.propeller === 4) continue;
+
         let startTime = t * BEAT_TIME;
         let duration = (c.value / 2.0) * BEAT_TIME;
         let endTime = startTime + duration;
-        let gt = globalTime;
 
+        if (c.propeller === 3) {
+            let t_s = t;
+            let t_r = -1;
+            for (let offset = 1; offset < T; offset++) {
+                let check_t = (t + offset) % T;
+                if (balls[check_t] && balls[check_t].propeller === 4 && balls[check_t].value > 0) {
+                    t_r = check_t;
+                    break;
+                }
+            }
+            if (t_r === -1) t_r = (t_s + 1) % T;
+
+            let total_beats = 0;
+            if (t_r >= t_s) {
+                total_beats = t_r - t_s + Math.floor(balls[t_r].value / 2);
+            } else {
+                total_beats = (t_r + T) - t_s + Math.floor(balls[t_r].value / 2);
+            }
+            duration = total_beats * BEAT_TIME;
+            endTime = startTime + duration;
+        }
+
+        let gt = globalTime;
         if (endTime > T * BEAT_TIME) {
             if (gt < startTime) { gt += T * BEAT_TIME; }
         }
 
         if (gt >= startTime && gt < endTime) {
             
-            let timeRatio = (gt - startTime) / duration; // 進行度 (0.0 〜 1.0)
-            let sv = c.value; // サイトスワップの値
+            let timeRatio = (gt - startTime) / duration; 
+            let sv = c.value; 
             
-            // ★ 高さを「2乗（放物線）」に比例させる (sv=2のとき高さ40になるよう係数は10.0)
-            let heightScale = 10.0 * (sv * sv);
+            let heightScale = 15.0 * (sv * sv);
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
             let hOffset = bounce * heightScale;
 
@@ -572,13 +621,64 @@ function draw_ball(balls, globalTime, color) {
                 let angle = timeRatio * Math.PI * s;
                 draw_horizontal_devilstick(p, angle, color);
             }
+            // ★ 修正: バウンドなし、1.5回転、角度の連続性を保証したフラットスピン
+            else if (c.propeller === 3) {
+                let current_dt = gt - startTime;
+                let spinRatio = current_dt / duration;
+                if (spinRatio > 1.0) spinRatio = 1.0;
+
+                // 位置の計算（センター固定、★バウンドはしないため高さを固定）
+                let centerX = (g_leftHand.x + g_rightHand.x) / 2;
+                let centerY = (g_leftHand.y + g_rightHand.y) / 2;
+                let p = { x: centerX, y: centerY - 20 }; // 少し手の上側に固定
+
+                // 初期状態の角度 (50° または -50°)
+                let A_start = get_data(c.from).angle;
+                let deg_start = A_start / DEG_TO_RAD;
+
+                // 右手スタート(50°)か左手スタート(-50°)か
+                let isRightStart = (deg_start > 0);
+
+                // 1. 進入 (最初の20%) : 50° から 40°倒れて 90° (水平) になる
+                if (spinRatio <= 0.20) {
+                    let p_phase = spinRatio / 0.20;
+                    let deg_horizontal = isRightStart ? 90 : -90;
+                    let deg = deg_start + (deg_horizontal - deg_start) * p_phase;
+                    draw_devilstick(p, deg * DEG_TO_RAD, color);
+                }
+                // 2. 回転 (中間の60%) : 水平状態を維持したまま、フラットスピンで「1.5回転」
+                else if (spinRatio <= 0.80) {
+                    let p_phase = (spinRatio - 0.20) / 0.60;
+
+                    let flat_start = (isRightStart ? 90 : -90) * DEG_TO_RAD;
+                    
+                    // 修正前（私が勝手に固定していた箇所）
+// let spin_dir = 1; 
+
+// 修正後（左右のスタートに応じて反転させる）
+let spin_dir = isRightStart ? -1 : 1;
+let flat_angle = flat_start + spin_dir * p_phase * Math.PI * 3;
+
+                    draw_horizontal_devilstick(p, flat_angle, color);
+                }
+                // 3. 退出 (最後の20%)
+                else {
+                    let p_phase = (spinRatio - 0.80) / 0.20;
+
+                    // 回転の向きが常に -1 なので、540引く
+                    let deg_flat_end = isRightStart ? (90 - 540) : (-90 - 540);
+                    // ★ご指定通り、右手スタートは対称に +140°、左手スタートは -140° 傾く
+                    let deg_end_target = isRightStart ? (deg_flat_end + 140) : (deg_flat_end - 140);
+
+                    let deg = deg_flat_end + (deg_end_target - deg_flat_end) * p_phase;
+                    draw_devilstick(p, deg * DEG_TO_RAD, color);
+                }
+            }
             else {
-                // 通常のトス ＆ 拡張機能のトス
                 let p0 = get_data(c.from); let p1 = get_data(c.to);
                 let p = lerp(p0, p1, timeRatio);
                 p.y -= hOffset;
 
-                // ★ スナップ(飛び飛び)を完全に防ぐ、連続性保証の回転計算
                 let A_start = p0.angle;
                 let A_target = p1.angle;
                 let TotalRotDeg = 0;
@@ -590,11 +690,8 @@ function draw_ball(balls, globalTime, color) {
                     else if (c.angleExpr === "(100+(a-1)*180)") TotalRotDeg = (100 + (sv/2 - 1) * 180);
                     else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (sv/2-1) * 180);
                     else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (sv/2-1) * 180);
-                    
-                    
-                    else TotalRotDeg = 180 * (sv/2); // 未知の数式フォールバック
+                    else TotalRotDeg = 180 * (sv/2); 
                 } else {
-                    // 遷移表を使わない標準パターンの回転
                     let s = Math.floor(sv / 2);
                     if (c.from <= -2) TotalRotDeg = -180 * s;
                     else if (c.from >= 2) TotalRotDeg = 180 * s;
@@ -605,11 +702,9 @@ function draw_ball(balls, globalTime, color) {
                 }
 
                 let totalRotRad = TotalRotDeg * DEG_TO_RAD;
-                // 目標角度(A_target)に対して、最も近い180度単位の着地角度を算出する（ワープ防止）
                 let k = Math.round( (A_start + totalRotRad - A_target) / Math.PI );
                 let actualEndAngle = A_target + k * Math.PI;
 
-                // 初期角度から正確な着地角度までなめらかに回す
                 let angle = A_start + (actualEndAngle - A_start) * timeRatio;
                 
                 draw_devilstick(p, angle, color);
@@ -618,7 +713,6 @@ function draw_ball(balls, globalTime, color) {
         }
     }
 }
-
 // =====================================
 // メインループ
 // =====================================
@@ -737,11 +831,13 @@ function initSimulation() {
     }
 }
 
+// プリセット適用
 function applyPreset(val) {
     document.getElementById("siteswapInput").value = val;
     initSimulation();
 }
 
+// 録画機能
 function startRecording() {
     if (isRecording) return;
     recordDuration = (g_n * BEAT_TIME) * 3;
