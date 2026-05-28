@@ -625,18 +625,18 @@ function draw_ball(balls, globalTime, color) {
                 draw_horizontal_devilstick(p, angle, color);
             }
             // ★ 新設: f オプション（水平固定移動モード）の描画処理
+            // ★ f オプション（水平固定移動モード）
             else if (c.propeller === 5) {
                 let p0 = get_data(c.from); let p1 = get_data(c.to);
                 let p = lerp(p0, p1, timeRatio);
                 
-                // ★ 基準の高さ（最下点）を HS と同じに設定
+                // 基準高さはそのまま（HSと同じ）
                 let centerY = (g_leftHand.y + g_rightHand.y) / 2;
                 p.y = centerY - 20; 
                 
-                // 放物線のバウンドを加算
+                // 振れ幅を通常のCSと同じ設定に戻す（* 0.2 を削除）
                 p.y -= hOffset;
 
-                // 左手スタートなら 90°、右手スタートなら -90° で水平状態を維持
                 let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
                 draw_devilstick(p, angle, color);
             }
