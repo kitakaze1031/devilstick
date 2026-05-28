@@ -98,7 +98,6 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="section-title">2本(入力例)</div>
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(f2x,2x)(2x,f2x)')">(f2x,2x)(2x,f2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x-,2x)(2x,2x-)')">(2x-,2x)(2x,2x-)</button>
                     <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
@@ -130,15 +129,13 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
             <strong>💡 現在の設定ルール</strong><br>
             ・0があるとき、0*で片手が空くことでできるフラーリッシュ　例 (2x,0*)(0*,2x)<br>
             ・任意の数字-で叩きながらできるフラーリッシュ　例 (2x-,0)(0,2x-)<br>
-            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)<br>
-            ・任意の数字の前にfで水平維持移動　例 (f2x,2x)(2x,f2x)
+            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)
         </div>
     </div>
-</div>
-
-<footer>
+</div><footer>
     <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
 </footer>
+
 
 <script>
 // =====================================
@@ -241,7 +238,7 @@ function parse(s) {
             
             if (s[i] === 'p') { t.a_propeller = 1; i++; } 
             else if (s[i] === 't') { t.a_propeller = 2; i++; }
-            else if (s[i] === 'f') { t.a_propeller = 5; i++; } // ★ f オプション（a側）の解析を追加
+            else if (s[i] === 'f') { t.a_propeller = 5; i++; } 
             else if (p_mode === 1 || p_mode === 2) { t.a_propeller = p_mode; }
             
             if (s[i] === '-') { t.is_minus_a = true; i++; } 
@@ -258,7 +255,7 @@ function parse(s) {
             
             if (s[i] === 'p') { t.b_propeller = 1; i++; } 
             else if (s[i] === 't') { t.b_propeller = 2; i++; }
-            else if (s[i] === 'f') { t.b_propeller = 5; i++; } // ★ f オプション（b側）の解析を追加
+            else if (s[i] === 'f') { t.b_propeller = 5; i++; } 
             else if (p_mode === 1 || p_mode === 2) { t.b_propeller = p_mode; }
             
             if (s[i] === '-') { t.is_minus_b = true; i++; } 
@@ -571,7 +568,7 @@ function draw_ball(balls, globalTime, color) {
             let timeRatio = (gt - startTime) / duration; 
             let sv = c.value; 
             
-            let heightScale = 15.0 * (sv * sv);
+            let heightScale = 10.0 * (sv * sv);
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
             let hOffset = bounce * heightScale;
 
@@ -631,58 +628,49 @@ function draw_ball(balls, globalTime, color) {
             else if (c.propeller === 5) {
                 let p0 = get_data(c.from); let p1 = get_data(c.to);
                 let p = lerp(p0, p1, timeRatio);
+                
+                // ★ 基準の高さ（最下点）を HS と同じに設定
+                let centerY = (g_leftHand.y + g_rightHand.y) / 2;
+                p.y = centerY - 20; 
+                
+                // 放物線のバウンドを加算
                 p.y -= hOffset;
 
                 // 左手スタートなら 90°、右手スタートなら -90° で水平状態を維持
                 let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
                 draw_devilstick(p, angle, color);
             }
-            // ★ 修正: バウンドなし、1.5回転、角度の連続性を保証したフラットスピン
             else if (c.propeller === 3) {
                 let current_dt = gt - startTime;
                 let spinRatio = current_dt / duration;
                 if (spinRatio > 1.0) spinRatio = 1.0;
 
-                // 位置の計算（センター固定、★バウンドはしないため高さを固定）
                 let centerX = (g_leftHand.x + g_rightHand.x) / 2;
                 let centerY = (g_leftHand.y + g_rightHand.y) / 2;
-                let p = { x: centerX, y: centerY - 20 }; // 少し手の上側に固定
+                let p = { x: centerX, y: centerY - 20 };
 
-                // 初期状態の角度 (50° または -50°)
                 let A_start = get_data(c.from).angle;
                 let deg_start = A_start / DEG_TO_RAD;
 
-                // 右手スタート(50°)か左手スタート(-50°)か
                 let isRightStart = (deg_start > 0);
 
-                // 1. 進入 (最初の20%) : 50° から 40°倒れて 90° (水平) になる
                 if (spinRatio <= 0.20) {
                     let p_phase = spinRatio / 0.20;
                     let deg_horizontal = isRightStart ? 90 : -90;
                     let deg = deg_start + (deg_horizontal - deg_start) * p_phase;
                     draw_devilstick(p, deg * DEG_TO_RAD, color);
                 }
-                // 2. 回転 (中間の60%) : 水平状態を維持したまま、フラットスピンで「1.5回転」
                 else if (spinRatio <= 0.80) {
                     let p_phase = (spinRatio - 0.20) / 0.60;
-
                     let flat_start = (isRightStart ? 90 : -90) * DEG_TO_RAD;
-                    
-                    // 修正後（左右のスタートに応じて反転させる）
                     let spin_dir = isRightStart ? -1 : 1;
                     let flat_angle = flat_start + spin_dir * p_phase * Math.PI * 3;
-
                     draw_horizontal_devilstick(p, flat_angle, color);
                 }
-                // 3. 退出 (最後の20%)
                 else {
                     let p_phase = (spinRatio - 0.80) / 0.20;
-
-                    // 回転の向きが常に -1 なので、540引く
                     let deg_flat_end = isRightStart ? (90 - 540) : (-90 - 540);
-                    // ★ご指定通り、右手スタートは対称に +140°、左手スタートは -140° 傾く
                     let deg_end_target = isRightStart ? (deg_flat_end + 140) : (deg_flat_end - 140);
-
                     let deg = deg_flat_end + (deg_end_target - deg_flat_end) * p_phase;
                     draw_devilstick(p, deg * DEG_TO_RAD, color);
                 }
@@ -715,10 +703,21 @@ function draw_ball(balls, globalTime, color) {
                 }
 
                 let totalRotRad = TotalRotDeg * DEG_TO_RAD;
-                let k = Math.round( (A_start + totalRotRad - A_target) / Math.PI );
-                let actualEndAngle = A_target + k * Math.PI;
-
-                let angle = A_start + (actualEndAngle - A_start) * timeRatio;
+                
+                // ワープ防止ロジックの条件分岐
+                let idealEndAngle = A_start + totalRotRad;
+                let k = Math.round((idealEndAngle - A_target) / Math.PI);
+                let safeEndAngle = A_target + k * Math.PI;
+                let diff = Math.abs(idealEndAngle - safeEndAngle);
+                
+                let angle;
+                if (diff <= 0.001) {
+                    // ワープしない（ズレがない）場合はそのまま回転
+                    angle = A_start + totalRotRad * timeRatio;
+                } else {
+                    // ズレが大きい場合のみ補正ロジックを適用
+                    angle = A_start + (safeEndAngle - A_start) * timeRatio;
+                }
                 
                 draw_devilstick(p, angle, color);
             }
