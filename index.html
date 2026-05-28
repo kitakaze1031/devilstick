@@ -26,6 +26,8 @@ input[type="text"]:focus { border-color: #3182ce; }
 #speedVal { min-width: 45px; text-align: left; color: #3182ce; }
 button { padding: 8px 16px; font-size: 14px; background-color: #3182ce; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
 button:hover { background-color: #2b6cb0; }
+#togglePadBtn { background-color: #4a5568; }
+#togglePadBtn:hover { background-color: #2d3748; }
 #recordBtn { background-color: #e53e3e; }
 #recordBtn:hover { background-color: #c53030; }
 #recordBtn:disabled { background-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
@@ -41,8 +43,25 @@ footer { margin-top: 20px; padding: 20px; font-size: 13px; color: #718096; text-
 footer p { margin: 5px 0; }
 footer a { color: #3182ce; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #3182ce; transition: color 0.2s; }
 footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
-.free-box { margin-top: 10px; font-size: 12px; color: #2f855a; background: #f0fff4; padding: 8px 12px; border-radius: 4px; display: inline-block; border: 1px solid #c6f6d5; font-weight: 500; }
-@media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } }
+
+/* =====================================
+   入力補助パッド用スタイル
+   ===================================== */
+.keyboard-pad { background: #edf2f7; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; flex-direction: column; gap: 8px; width: 100%; max-width: 550px; box-sizing: border-box; box-shadow: inset 0 2px 4px rgba(0,0,0,0.04); }
+.pad-row { display: flex; gap: 6px; justify-content: center; width: 100%; }
+.pad-btn { flex: 1; min-width: 32px; height: 40px; padding: 0; font-size: 15px; background-color: #ffffff; color: #2d3748; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: background-color 0.1s, transform 0.05s; user-select: none; }
+.pad-btn:hover { background-color: #f7fafc; border-color: #a0aec0; }
+.pad-btn:active { transform: scale(0.95); background-color: #e2e8f0; }
+.pad-btn.cmd { background-color: #cbd5e1; color: #2d3748; }
+.pad-btn.cmd.delete { background-color: #feb2b2; color: #9b2c2c; border-color: #f56565; }
+.pad-btn.cmd.delete:hover { background-color: #fed7d7; }
+.pad-btn.cmd.clear { background-color: #e2e8f0; color: #4a5568; }
+.pad-btn.action { background-color: #ebf8ff; color: #2b6cb0; border-color: #bee3f8; }
+.pad-btn.action:hover { background-color: #ebf8ff; border-color: #63b3ed; }
+.pad-btn.prefix { background-color: #feebc8; color: #9c4221; border-color: #fbd38d; }
+.pad-btn.prefix:hover { background-color: #feebc8; border-color: #f6ad55; }
+
+@media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } .pad-btn { height: 44px; font-size: 14px; } }
 </style>
 </head>
 
@@ -65,9 +84,40 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                         <label for="siteswapInput">パターン: </label>
                         <input type="text" id="siteswapInput" value="(2x,2x)">
                     </div>
+                    <button id="togglePadBtn">入力パッドを開く</button>
                     <button id="startBtn">再生</button>
                 </div>
                 
+                <div id="inputPad" class="keyboard-pad">
+                    <div class="pad-row">
+                        <button class="pad-btn cmd" onclick="moveCursor(-1)">◀ 左移動</button>
+                        <button class="pad-btn cmd" onclick="moveCursor(1)">▶ 右移動</button>
+                        <button class="pad-btn cmd delete" onclick="deleteAtCursor()">⌫ 消去</button>
+                        <button class="pad-btn cmd clear" onclick="clearInput()">クリア</button>
+                    </div>
+                    <div class="pad-row">
+                        <button class="pad-btn" onclick="insertAtCursor('(')">(</button>
+                        <button class="pad-btn" onclick="insertAtCursor(')')">)</button>
+                        <button class="pad-btn" onclick="insertAtCursor(',')">,</button>
+                        <button class="pad-btn" onclick="insertAtCursor('2')">2</button>
+                        <button class="pad-btn" onclick="insertAtCursor('4')">4</button>
+                        <button class="pad-btn" onclick="insertAtCursor('6')">6</button>
+                        <button class="pad-btn" onclick="insertAtCursor('8')">8</button>
+                        <button class="pad-btn" onclick="insertAtCursor('0')">0</button>
+                    </div>
+                    <div class="pad-row">
+                        <button class="pad-btn action" onclick="insertAtCursor('x')">x</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('*')">*</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('-')">-</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('^')">^</button>
+                        <button class="pad-btn prefix" onclick="insertAtCursor('p')">p</button>
+                        <button class="pad-btn prefix" onclick="insertAtCursor('t')">t</button>
+                        <button class="pad-btn prefix" onclick="insertAtCursor('f')">f</button>
+                        <button class="pad-btn prefix" onclick="insertAtCursor('s')">s</button>
+                        <button class="pad-btn prefix" onclick="insertAtCursor('r')">r</button>
+                    </div>
+                </div>
+
                 <div class="ui-row">
                     <div class="speed-control">
                         <label for="speedInput">スピード: </label>
@@ -220,9 +270,14 @@ function parse(s) {
     let seq = [];
     let pending_prefix = '';
     while (i < s.length) {
+        // ★ sr プレフィックスの解析を追加
         if (s[i] === 's' || s[i] === 't' || s[i] === 'p') {
             pending_prefix = s[i];
             i++;
+            if (pending_prefix === 's' && i < s.length && s[i] === 'r') {
+                pending_prefix = 'sr';
+                i++;
+            }
             continue;
         }
 
@@ -234,6 +289,7 @@ function parse(s) {
             if (pending_prefix === 'p') p_mode = 1;
             if (pending_prefix === 't') p_mode = 2;
             if (pending_prefix === 's') p_mode = 3; 
+            if (pending_prefix === 'sr') p_mode = 4; // sr の場合はモード4へ
             pending_prefix = ''; 
             
             if (s[i] === 'p') { t.a_propeller = 1; i++; } 
@@ -273,6 +329,12 @@ function parse(s) {
             if (p_mode === 3) {
                 if (t.a === 2 && t.cross_a === 1) t.a_propeller = 3;
                 if (t.b === 2 && t.cross_b === 1) t.b_propeller = 3;
+            }
+            
+            // ★ プレフィックス sr が指定された時のプロペラ設定を反映
+            if (p_mode === 4) {
+                if (t.a === 2 && t.cross_a === 1) t.a_propeller = 4;
+                if (t.b === 2 && t.cross_b === 1) t.b_propeller = 4;
             }
 
             if (i < s.length && s[i] === 'r') {
@@ -507,6 +569,9 @@ function draw_horizontal_devilstick(center, angle, color) {
     ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
 }
 
+// =====================================
+// 通常スティック描画
+// =====================================
 function draw_devilstick(center, angle, color) {
     const L = 108.0;
     let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
@@ -624,17 +689,12 @@ function draw_ball(balls, globalTime, color) {
                 let angle = timeRatio * Math.PI * s;
                 draw_horizontal_devilstick(p, angle, color);
             }
-            // ★ 新設: f オプション（水平固定移動モード）の描画処理
-            // ★ f オプション（水平固定移動モード）
             else if (c.propeller === 5) {
                 let p0 = get_data(c.from); let p1 = get_data(c.to);
                 let p = lerp(p0, p1, timeRatio);
                 
-                // 基準高さはそのまま（HSと同じ）
                 let centerY = (g_leftHand.y + g_rightHand.y) / 2;
                 p.y = centerY - 20; 
-                
-                // 振れ幅を通常のCSと同じ設定に戻す（* 0.2 を削除）
                 p.y -= hOffset;
 
                 let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
@@ -704,7 +764,6 @@ function draw_ball(balls, globalTime, color) {
 
                 let totalRotRad = TotalRotDeg * DEG_TO_RAD;
                 
-                // ワープ防止ロジックの条件分岐
                 let idealEndAngle = A_start + totalRotRad;
                 let k = Math.round((idealEndAngle - A_target) / Math.PI);
                 let safeEndAngle = A_target + k * Math.PI;
@@ -712,10 +771,8 @@ function draw_ball(balls, globalTime, color) {
                 
                 let angle;
                 if (diff <= 0.001) {
-                    // ワープしない（ズレがない）場合はそのまま回転
                     angle = A_start + totalRotRad * timeRatio;
                 } else {
-                    // ズレが大きい場合のみ補正ロジックを適用
                     angle = A_start + (safeEndAngle - A_start) * timeRatio;
                 }
                 
@@ -847,6 +904,62 @@ function initSimulation() {
 function applyPreset(val) {
     document.getElementById("siteswapInput").value = val;
     initSimulation();
+}
+
+// =====================================
+// 入力補助パッド制御系ロジック
+// =====================================
+document.getElementById("togglePadBtn").addEventListener("click", function() {
+    const pad = document.getElementById("inputPad");
+    if (pad.style.display === "none" || pad.style.display === "") {
+        pad.style.display = "flex";
+        this.innerText = "パッドを閉じる";
+    } else {
+        pad.style.display = "none";
+        this.innerText = "入力パッドを開く";
+    }
+});
+
+function insertAtCursor(text) {
+    const input = document.getElementById("siteswapInput");
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const val = input.value;
+    input.value = val.substring(0, start) + text + val.substring(end);
+    input.selectionStart = input.selectionEnd = start + text.length;
+    input.focus();
+}
+
+function moveCursor(dir) {
+    const input = document.getElementById("siteswapInput");
+    let pos = input.selectionStart + dir;
+    if (pos < 0) pos = 0;
+    if (pos > input.value.length) pos = input.value.length;
+    input.selectionStart = input.selectionEnd = pos;
+    input.focus();
+}
+
+function deleteAtCursor() {
+    const input = document.getElementById("siteswapInput");
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const val = input.value;
+    if (start === end) {
+        if (start > 0) {
+            input.value = val.substring(0, start - 1) + val.substring(end);
+            input.selectionStart = input.selectionEnd = start - 1;
+        }
+    } else {
+        input.value = val.substring(0, start) + val.substring(end);
+        input.selectionStart = input.selectionEnd = start;
+    }
+    input.focus();
+}
+
+function clearInput() {
+    const input = document.getElementById("siteswapInput");
+    input.value = "";
+    input.focus();
 }
 
 // 録画機能
