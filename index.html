@@ -67,7 +67,6 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 
 <body>
 
-
 <h1>デビルスティック サイトスワップ シミュレーター</h1>
 
 <div class="main-container">
@@ -604,12 +603,6 @@ function draw_devilstick(center, angle, color) {
 }
 
 // =====================================
-// ボールの描画
-// =====================================
-// =====================================
-// ボールの描画
-// =====================================
-// =====================================
 // ボールの描画 (ズレ機能削除版)
 // =====================================
 function draw_ball(balls, globalTime, color, ballIndex) {
@@ -806,8 +799,6 @@ function draw_ball(balls, globalTime, color, ballIndex) {
     }
 }
 
-
-
 // =====================================
 // メインループ
 // =====================================
@@ -918,11 +909,31 @@ function update(timestamp) {
 }
 
 // =====================================
+// アスタリスク(*)展開処理
+// =====================================
+function expandAsterisk(pattern) {
+    pattern = pattern.trim();
+    if (pattern.endsWith('*')) {
+        let base = pattern.slice(0, -1);
+        let flipped = base.replace(/\(([^,()]+),([^()]+)\)/g, function(match, left, right) {
+            return "(" + right.trim() + "," + left.trim() + ")";
+        });
+        return base + flipped;
+    }
+    return pattern;
+}
+
+// =====================================
 // 初期化・操作系イベント
 // =====================================
 function initSimulation() {
     if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
-    let inputStr = document.getElementById("siteswapInput").value;
+    
+    let inputEl = document.getElementById("siteswapInput");
+    // 再生時にアスタリスクがあれば自動展開してテキストボックスを更新
+    inputEl.value = expandAsterisk(inputEl.value);
+    
+    let inputStr = inputEl.value;
     let parsedT = make_siteswap_table(inputStr);
     
     if (parsedT > 0) {
@@ -999,6 +1010,10 @@ function clearInput() {
 // 録画機能
 function startRecording() {
     if (isRecording) return;
+    
+    // 録画前に最新の状態に更新（展開処理を確実に通すため）
+    initSimulation();
+    
     recordDuration = (g_n * BEAT_TIME) * 3;
     recordedChunks = [];
     const stream = canvas.captureStream(60);
