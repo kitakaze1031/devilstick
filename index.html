@@ -177,15 +177,14 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 
         <div class="info-box">
             <strong>💡 現在の設定ルール</strong><br>
-            ・0があるとき、0*で片手が空くことでできるフラーリッシュ　例 (2x,0*)(0*,2x)<br>
-            ・任意の数字-で叩きながらできるフラーリッシュ　例 (2x-,0)(0,2x-)<br>
-            ・(0,0)があるとき、(0^3,0^1)で31HSパス　例 (4x,0)(0^1,0^3)(0,2x)
+            ・0があるとき、0*で片手が空くことでできるフラーリッシュ 例 (2x,0*)(0*,2x)<br>
+            ・任意の数字-で叩きながらできるフラーリッシュ 例 (2x-,0)(0,2x-)<br>
+            ・(0,0)があるとき、(0^3,0^1)で31HSパス 例 (4x,0)(0^1,0^3)(0,2x)
         </div>
     </div>
 </div><footer>
     <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
 </footer>
-
 
 <script>
 // =====================================
@@ -238,29 +237,34 @@ function get_data(id) {
     return data[id] || { x: 400, y: 460, angle: 0 };
 }
 
-// 状態遷移のルール表
 // =====================================
-const TRANSITIONS = {
-    "-2al":  { "-2al": { to: -3, angleExpr: "180a" }, "2al": { to: -4, angleExpr: "(100+(a-1)*180)" }, 
-"-2axl": { to: -4, angleExpr: "180a" }, "2axl": { to: 1, angleExpr: "180a" } },
-
-    "-2ar":  { "-2ar": { to: 3, angleExpr: "-180a" }, "2ar": { to: 4, angleExpr: "-(100+(a-1)*180)" }, 
-"-2axr": { to: 4, angleExpr: "-180a" }, "2axr": { to: -1, angleExpr: "-180a" } },
-
-    "2al":   { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-180a" }, 
-"-2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "-180a" } },
-
-    "2ar":   { "-2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "180a" },
- "-2axr": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "180a" } },
-
-    "-2axl": { "-2ar": { to: 3, angleExpr: "-(100+(a-1)*180)" }, "2ar": { to: 4, angleExpr: "-180a" }, "-2axr": { to: 4, angleExpr: "-(100+(a-1)*180)" }, "2axr": { to: 1, angleExpr: "-180a" } },
-
-    "-2axr": { "-2al": { to: -3, angleExpr: "(100+(a-1)*180)" }, "2al": { to: -4, angleExpr: "180a" }, "-2axl": { to: -4, angleExpr: "(100+(a-1)*180)" }, "2axl": { to: -1, angleExpr: "180a" } },
-
-    "2axl":  { "-2ar": { to: 1, angleExpr: "(100+(a-1)*180)" }, "2ar": { to: 2, angleExpr: "(100+(a-1)*180)" }, "-2axr": { to: -1, angleExpr: "180a" }, "2axr": { to: 1, angleExpr: "(100+(a-1)*180)" } },
-
-    "2axr":  { "-2al": { to: -1, angleExpr: "-(100+(a-1)*180)" }, "2al": { to: -2, angleExpr: "-(100+(a-1)*180)" }, "-2axl": { to: 1, angleExpr: "-180a" }, "2axl": { to: -1, angleExpr: "-(100+(a-1)*180)" } }
+// 状態遷移のルール表 (行き先 to のみ決定)
+// =====================================
+const PATTERN_TRANSITIONS = {
+    "-2al":  { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
+    "-2ar":  { "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 } },
+    "2al":   { "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 } },
+    "2ar":   { "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 } },
+    "-2axl": { "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 } },
+    "-2axr": { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
+    "2axl":  { "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 } },
+    "2axr":  { "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 } }
 };
+
+// =====================================
+// 現在地(from)と行き先(to)から角度を決める表
+// =====================================
+const ANGLE_RULES = {
+    "-4": { "4": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "1": "-180a" , "3": "-(100+(a-1)*180)"},
+     "4": { "-4": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a", "-3": "(100+(a-1)*180)" },
+    "-3": { "-4": "180a","-3": "180a", "-1": "(80+(a-1)*180)", "1": "180a" },
+     "3": { "4": "-180a","3": "-180a", "1": "-(80+(a-1)*180)", "-1": "-180a" },
+    "-2": { "-2": "-180a","-1": "-180a", "1": "-(80+(a-1)*180)" },
+     "2": { "2": "180a","1": "180a", "-1": "(80+(a-1)*180)" },
+    "-1": { "-4": "(100+(a-1)*180)", "-1": "180a", "1": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "-3": "(100+(a-1)*180)" },
+     "1": { "4": "-(100+(a-1)*180)","1": "-180a", "-1": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "3": "-(100+(a-1)*180)" }
+};
+
 
 // =====================================
 // サイトスワップ構文解析
@@ -459,12 +463,9 @@ function build(seq, balls) {
         }
         if (path.length === 0) continue;
 
-        for (let i = 0; i < path.length; i++) {
-            let curr_t = path[i];
-            let next_t = path[(i + 1) % path.length];
-            table[b][next_t].from = table[b][curr_t].to;
-        }
-
+        // ==================================================
+        // ★ STEP 1: まず、全ての「行き先 (to)」を決定する
+        // ==================================================
         for (let i = 0; i < path.length; i++) {
             let curr_t = path[i];
             let next_t = path[(i + 1) % path.length];
@@ -475,16 +476,36 @@ function build(seq, balls) {
             let curr_key = curr_throw.action_str;
             let next_key = next_throw.action_str;
 
-            if (TRANSITIONS[curr_key] && TRANSITIONS[curr_key][next_key]) {
-                let rule = TRANSITIONS[curr_key][next_key];
-                curr_throw.to = rule.to;
-                curr_throw.angleExpr = rule.angleExpr;
-                next_throw.from = rule.to;
+            if (PATTERN_TRANSITIONS[curr_key] && PATTERN_TRANSITIONS[curr_key][next_key]) {
+                curr_throw.to = PATTERN_TRANSITIONS[curr_key][next_key].to;
             } else {
-                let isNextLeft = next_key.endsWith('l');
-                curr_throw.to = isNextLeft ? -2 : 2;
-                curr_throw.angleExpr = isNextLeft ? "-180a" : "180a";
-                next_throw.from = curr_throw.to;
+                // 表にない場合のデフォルトフォールバック
+                curr_throw.to = next_key.endsWith('l') ? -2 : 2;
+            }
+        }
+
+        // ==================================================
+        // ★ STEP 2: 行き先に基づいて from を繋ぎ直し、角度を決める
+        // ==================================================
+        for (let i = 0; i < path.length; i++) {
+            let prev_t = path[(i - 1 + path.length) % path.length];
+            let curr_t = path[i];
+            
+            let prev_throw = table[b][prev_t];
+            let curr_throw = table[b][curr_t];
+
+            // 直前の技の「行き先」が、今回の「出発地」になる
+            curr_throw.from = prev_throw.to;
+
+            let f = String(curr_throw.from);
+            let t = String(curr_throw.to);
+
+            // ANGLE_RULESの表から角度式を引っ張ってくる
+            if (ANGLE_RULES[f] && ANGLE_RULES[f][t] !== undefined) {
+                curr_throw.angleExpr = ANGLE_RULES[f][t];
+            } else {
+                // 万が一表に載っていない組み合わせが発生した時のデフォルト角度
+                curr_throw.angleExpr = (Number(t) <= -1) ? "-180a" : "180a";
             }
         }
     }
