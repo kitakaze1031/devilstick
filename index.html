@@ -179,7 +179,8 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
             <strong>💡 現在の設定ルール</strong><br>
             ・0があるとき、0*で片手が空くことでできるフラーリッシュ 例 (2x,0*)(0*,2x)<br>
             ・任意の数字-で叩きながらできるフラーリッシュ 例 (2x-,0)(0,2x-)<br>
-            ・(0,0)があるとき、(0^3,0^1)で31HSパス 例 (4x,0)(0^1,0^3)(0,2x)
+            ・(0,0)があるとき、(0^3,0^1)で31HSパス 例 (4x,0)(0^1,0^3)(0,2x)<br>
+            ・数値の後に「r＋数字」で半回転単位の回転数指定 例 (4xr3, 2x) は4xの高さで1.5回転
         </div>
     </div>
 </div><footer>
@@ -295,7 +296,7 @@ function parse(s) {
             pending_prefix = ''; 
 
             let parseSingleThrow = () => {
-                let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode };
+                let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null };
                 if (i < s.length && s[i] === 'p') { th.propeller = 1; i++; } 
                 else if (i < s.length && s[i] === 't') { th.propeller = 2; i++; }
                 else if (i < s.length && s[i] === 'f') { th.propeller = 5; i++; } 
@@ -315,6 +316,18 @@ function parse(s) {
                     else if (s[i] === '*') { if (th.val === 0) th.hs = HS_HAND1; i++; }
                     else if (s[i] === '-') { th.hs = HS_HAND2; i++; }
                     else if (s[i] === '^') { i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; } }
+                    else if (s[i] === 'r') { 
+                        i++; 
+                        let r_sign = 1;
+                        if (i < s.length && s[i] === '-') { r_sign = -1; i++; }
+                        let r_val = 0; let has_r = false;
+                        while(i < s.length && s[i] >= '0' && s[i] <= '9') { 
+                            r_val = r_val * 10 + parseInt(s[i]); 
+                            i++; 
+                            has_r = true; 
+                        }
+                        if(has_r) th.rot = r_val * r_sign; 
+                    }
                     else break;
                 }
                 return th;
@@ -387,7 +400,7 @@ function object_count(seq) {
 // 軌道構築 (マルチ対応版)
 // =====================================
 function build(seq, balls) {
-    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, angleExpr: "", action_str: "", propeller: 0 })) );
+    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, angleExpr: "", action_str: "", propeller: 0, rot: null })) );
     
     let ex = [];
     for (let t = 0; t < T; t++) { 
@@ -454,8 +467,9 @@ function build(seq, balls) {
 
             let from = (side === 0) ? (cross ? -1 : -2) : (cross ? 1 : 2);
             let to = (side === 0) ? (cross ? 1 : -2) : (cross ? -1 : 2);
+            let rot = th.rot;
 
-            table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller };
+            table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot };
 
             t += Math.floor(value / 2);
             if (to === -1 || to === 1) side ^= 1;
@@ -675,18 +689,19 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                     p.y -= hOffset;
 
                     let s = Math.floor(c.value / 2);
+                    let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
                     let angle = 0.0;
                     let baseTilt = 25.0 * Math.PI / 180.0;
                     if (c.from <= -2) {
-                        angle = -baseTilt - timeRatio * Math.PI * s;
+                        angle = -baseTilt - timeRatio * Math.PI * base_s;
                     } else if (c.from === -1 || c.from === 1) {
                         let dir = (c.to > c.from) ? 1.0 : -1.0;
                         let swing = 2 * Math.sin(timeRatio * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
-                        let turns = 0.5 * s - 0.5;
+                        let turns = 0.5 * base_s - 0.5;
                         let spin = timeRatio * turns * Math.PI * 2.0;
                         angle = dir * swing + dir * spin;
                     } else if (c.from >= 2) {
-                        angle = baseTilt + timeRatio * Math.PI * s;
+                        angle = baseTilt + timeRatio * Math.PI * base_s;
                     }
                     draw_devilstick(p, angle, color);
                 }
@@ -694,6 +709,7 @@ function draw_ball(balls, globalTime, color, ballIndex) {
             else if (c.propeller === 2) {
                 let p;
                 let s = Math.floor(c.value / 2);
+                let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
 
                 let handStart, handEnd;
                 if (c.from <= -1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
@@ -702,7 +718,7 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 p = lerp(handStart, handEnd, timeRatio);
                 p.y -= hOffset;
 
-                let angle = timeRatio * Math.PI * s;
+                let angle = timeRatio * Math.PI * base_s;
                 draw_horizontal_devilstick(p, angle, color);
             }
             else if (c.propeller === 5) {
@@ -760,21 +776,24 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 let A_target = p1.angle;
                 let TotalRotDeg = 0;
 
+                let default_a = sv / 2.0;
+                let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
+
                 if (c.angleExpr) {
-                    if (c.angleExpr === "180a") TotalRotDeg = 180 * (sv/2);
-                    else if (c.angleExpr === "-180a") TotalRotDeg = -180 * (sv/2);
-                    else if (c.angleExpr === "-(100+(a-1)*180)") TotalRotDeg = -(100 + (sv/2 - 1) * 180);
-                    else if (c.angleExpr === "(100+(a-1)*180)") TotalRotDeg = (100 + (sv/2 - 1) * 180);
-                    else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (sv/2-1) * 180);
-                    else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (sv/2-1) * 180);
-                    else TotalRotDeg = 180 * (sv/2); 
+                    if (c.angleExpr === "180a") TotalRotDeg = 180 * a_val;
+                    else if (c.angleExpr === "-180a") TotalRotDeg = -180 * a_val;
+                    else if (c.angleExpr === "-(100+(a-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "(100+(a-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    else TotalRotDeg = 180 * a_val; 
                 } else {
-                    let s = Math.floor(sv / 2);
-                    if (c.from <= -2) TotalRotDeg = -180 * s;
-                    else if (c.from >= 2) TotalRotDeg = 180 * s;
+                    let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : Math.floor(sv / 2);
+                    if (c.from <= -2) TotalRotDeg = -180 * s_val;
+                    else if (c.from >= 2) TotalRotDeg = 180 * s_val;
                     else {
                         let dir = (c.to > c.from) ? 1.0 : -1.0;
-                        TotalRotDeg = dir * 180 * s;
+                        TotalRotDeg = dir * 180 * s_val;
                     }
                 }
 
