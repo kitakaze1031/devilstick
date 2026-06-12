@@ -20,10 +20,13 @@ label { font-weight: bold; color: #4a5568; }
 input[type="text"] { padding: 8px 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px; width: 200px; outline: none; transition: border-color 0.2s; }
 input[type="text"]:focus { border-color: #3182ce; }
 .ui-row-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 5px 0; }
-.ui-row { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
-.speed-control { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4a5568; font-weight: bold; }
-#speedInput { cursor: pointer; width: 120px; }
-#speedVal { min-width: 45px; text-align: left; color: #3182ce; }
+.ui-row { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; }
+
+/* スライダー用スタイル */
+.slider-control { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4a5568; font-weight: bold; white-space: nowrap; }
+.slider-control input[type="range"] { cursor: pointer; width: 110px; }
+.val-label { min-width: 45px; text-align: left; color: #3182ce; }
+
 button { padding: 8px 16px; font-size: 14px; background-color: #3182ce; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
 button:hover { background-color: #2b6cb0; }
 #togglePadBtn { background-color: #4a5568; }
@@ -82,7 +85,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="ui-row">
                     <div>
                         <label for="siteswapInput">パターン: </label>
-                        <input type="text" id="siteswapInput" value="(2x,2x)">
+                        <input type="text" id="siteswapInput" value="3(r1)33">
                     </div>
                     <button id="togglePadBtn">入力パッドを開く</button>
                     <button id="startBtn">再生</button>
@@ -90,8 +93,8 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 
                 <div id="inputPad" class="keyboard-pad">
                     <div class="pad-row">
-                        <button class="pad-btn cmd" onclick="moveCursor(-1)">◀ 左移動</button>
-                        <button class="pad-btn cmd" onclick="moveCursor(1)">▶ 右移動</button>
+                        <button class="pad-btn cmd" onclick="moveCursor(-1)">◀ 左</button>
+                        <button class="pad-btn cmd" onclick="moveCursor(1)">▶ 右</button>
                         <button class="pad-btn cmd delete" onclick="deleteAtCursor()">⌫ 消去</button>
                         <button class="pad-btn cmd clear" onclick="clearInput()">クリア</button>
                     </div>
@@ -104,6 +107,13 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                         <button class="pad-btn" onclick="insertAtCursor('6')">6</button>
                         <button class="pad-btn" onclick="insertAtCursor('8')">8</button>
                         <button class="pad-btn" onclick="insertAtCursor('0')">0</button>
+                    </div>
+                    <div class="pad-row">
+                        <button class="pad-btn action" onclick="insertAtCursor('1')">1</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('3')">3</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('5')">5</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('7')">7</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('9')">9</button>
                     </div>
                     <div class="pad-row">
                         <button class="pad-btn action" onclick="insertAtCursor('x')">x</button>
@@ -119,10 +129,15 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 </div>
 
                 <div class="ui-row">
-                    <div class="speed-control">
+                    <div class="slider-control">
                         <label for="speedInput">スピード: </label>
                         <input type="range" id="speedInput" min="0.25" max="2.0" step="0.05" value="1.0">
-                        <span id="speedVal">1.00x</span>
+                        <span id="speedVal" class="val-label">1.00x</span>
+                    </div>
+                    <div class="slider-control">
+                        <label for="heightInput">高さ: </label>
+                        <input type="range" id="heightInput" min="0.0" max="1.0" step="0.05" value="1.0">
+                        <span id="heightVal" class="val-label">1.0x</span>
                     </div>
                     <button id="recordBtn">動画を録画する</button>
                 </div>
@@ -132,6 +147,16 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="section-title">🎥 録画が完了しました！</div>
                 <video id="resultVideo" controls playsinline></video>
                 <div class="result-hint">【スマホの方】動画を長押し、またはシェアボタンから「ビデオを保存」を選択して写真アプリに保存してください。</div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">アシンクロ(特殊入力対応)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('3(r1)33')">3(r1)33</button>
+                    <button class="preset-btn" onclick="applyPreset('5(f)31')">5(f)31</button>
+                    <button class="preset-btn" onclick="applyPreset('(f)531')">(f)531</button>
+                    <button class="preset-btn" onclick="applyPreset('531')">531</button>
+                </div>
             </div>
 
             <div class="preset-wrapper">
@@ -164,19 +189,11 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 </div>
             </div>
 
-            <div class="preset-wrapper">
-                <div class="section-title">それ以上(入力例)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,6x)')">(6x,2x)(2x,6x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(8,2x)(2x,8)')">(8,2x)(2x,8)</button>
-                    <button class="preset-btn" onclick="applyPreset('(8,6x)(6x,8)')">(8,6x)(6x,8)</button>
-                </div>
-            </div>
-
         </div>
 
         <div class="info-box">
             <strong>💡 現在の設定ルール</strong><br>
+            ・アシンクロ(コンマなし)では <b>3(r1)33</b> のように()で修飾子を囲むと正しく認識されます。<br>
             ・0があるとき、0*で片手が空くことでできるフラーリッシュ 例 (2x,0*)(0*,2x)<br>
             ・任意の数字-で叩きながらできるフラーリッシュ 例 (2x-,0)(0,2x-)<br>
             ・(0,0)があるとき、(0^3,0^1)で31HSパス 例 (4x,0)(0^1,0^3)(0,2x)<br>
@@ -197,11 +214,14 @@ const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
 const DEG_TO_RAD = Math.PI / 180;
 
 let currentSpeed = 1.0;
+let currentHeight = 1.0; // 高さ調整用グローバル変数
 let table = null;
 let g_balls = 0;
 let g_seq = [];
 let g_n = 0;
 let T = 0;
+
+let g_isAsync = false; 
 
 let animationFrameId = null;
 let lastTimestamp = 0;
@@ -238,6 +258,12 @@ function get_data(id) {
     return data[id] || { x: 400, y: 460, angle: 0 };
 }
 
+function getAsyncThrowCount(sv) {
+    // 非同期モードでは内部的に投擲値が2倍されているので、
+    // 2n 系と 2n-1 系を正しく扱うために実際の回転カウントを求める
+    return (sv % 4 === 0) ? sv / 4 : (sv + 2) / 4;
+}
+
 // =====================================
 // 状態遷移のルール表 (行き先 to のみ決定)
 // =====================================
@@ -267,11 +293,109 @@ const ANGLE_RULES = {
 };
 
 // =====================================
-// サイトスワップ構文解析 ([ ]対応版)
+// サイトスワップ構文解析 (()修飾子・アシンクロ両対応)
 // =====================================
 function parse(s) {
     let i = 0;
     let seq = [];
+    
+    // --- 【強化】アシンクロ（コンマなし）の解析モード ---
+    if (s.indexOf(',') === -1 && s.indexOf('[') === -1) {
+        g_isAsync = true;
+        let async_throws = [];
+        
+        while(i < s.length) {
+            if (s[i] === ' ') { i++; continue; }
+            
+            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null };
+            
+            while (i < s.length) {
+                if (s[i] === ' ' || s[i] === '(' || s[i] === ')') { i++; continue; }
+                if (s[i] >= '0' && s[i] <= '9') break;
+                
+                if (s[i] === 'p') { th.propeller = 1; i++; }
+                else if (s[i] === 't') { th.propeller = 2; i++; }
+                else if (s[i] === 'f') { th.propeller = 5; i++; }
+                else if (s[i] === 's') { th.propeller = 3; i++; }
+                else if (s[i] === '-') { th.is_minus = true; i++; }
+                else if (s[i] === 'r') {
+                    i++;
+                    let r_sign = 1; if(s[i] === '-') { r_sign = -1; i++; }
+                    let r_val = 0; let has_r = false;
+                    while (i < s.length && s[i] >= '0' && s[i] <= '9') {
+                        r_val = r_val * 10 + parseInt(s[i]); i++; has_r = true;
+                    }
+                    if (has_r) th.rot = r_val * r_sign;
+                }
+                else { i++; } 
+            }
+            
+            if (i < s.length && s[i] >= '0' && s[i] <= '9') {
+                th.val = parseInt(s[i]);
+                i++;
+            } else {
+                if(i >= s.length) break;
+                i++; continue;
+            }
+            
+            while (i < s.length) {
+                if (s[i] === ' ' || s[i] === '(' || s[i] === ')') { i++; continue; }
+                if (s[i] >= '0' && s[i] <= '9') break; 
+                
+                if (s[i] === 'x') { th.cross = 1; i++; }
+                else if (s[i] === '*') { th.hs = HS_HAND1; i++; }
+                else if (s[i] === '-') { th.hs = HS_HAND2; i++; }
+                else if (s[i] === '^') {
+                    i++;
+                    if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; }
+                }
+                else if (s[i] === 'r') {
+                    i++;
+                    let r_sign = 1; if(s[i] === '-') { r_sign = -1; i++; }
+                    let r_val = 0; let has_r = false;
+                    while(i < s.length && s[i] >= '0' && s[i] <= '9') {
+                        r_val = r_val * 10 + parseInt(s[i]); i++; has_r = true;
+                    }
+                    if(has_r) th.rot = r_val * r_sign;
+                }
+                else if (s[i] === 'p') { th.propeller = 1; i++; }
+                else if (s[i] === 't') { th.propeller = 2; i++; }
+                else if (s[i] === 'f') { th.propeller = 5; i++; }
+                else if (s[i] === 's') { th.propeller = 3; i++; }
+                else { i++; }
+            }
+            
+            if (th.cross === null) {
+                th.cross = (th.val % 2 !== 0) ? 1 : 0;
+            }
+            th.val = th.val * 2; 
+            
+            async_throws.push(th);
+        }
+        
+        if (async_throws.length === 0) return [];
+        
+        if (async_throws.length % 2 !== 0) {
+            async_throws = async_throws.concat(async_throws.map(t => ({...t})));
+        }
+        
+        // 【修正】手の割り当てを反転 (左手スタート)
+        for (let j = 0; j < async_throws.length; j++) {
+            let th = async_throws[j];
+            let empty_th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: 0, rot: null };
+            
+            if (j % 2 === 0) {
+                seq.push({ throws_a: [th], throws_b: [empty_th] });
+            } else {
+                seq.push({ throws_a: [empty_th], throws_b: [th] });
+            }
+        }
+        return seq;
+    }
+    // --- アシンクロ解析モードここまで ---
+
+    // --- 【既存】シンクロ（括弧あり）の解析モード ---
+    g_isAsync = false;
     let pending_prefix = '';
     while (i < s.length) {
         if (s[i] === 's' || s[i] === 't' || s[i] === 'p') {
@@ -338,15 +462,15 @@ function parse(s) {
                 while(i < s.length && s[i] === ' ') i++; 
                 
                 if (i < s.length && s[i] === '[') {
-                    i++; // '['をスキップ
+                    i++; 
                     while(i < s.length && s[i] !== ']') {
-                        while(i < s.length && s[i] === ' ') i++; // 内部のスペーススキップ
+                        while(i < s.length && s[i] === ' ') i++; 
                         if (s[i] === ']') break;
                         let th = parseSingleThrow();
                         if (th) throws.push(th);
                         else i++; 
                     }
-                    if (i < s.length && s[i] === ']') i++; // ']'をスキップ
+                    if (i < s.length && s[i] === ']') i++; 
                 } else {
                     let th = parseSingleThrow();
                     if (th) throws.push(th);
@@ -374,7 +498,6 @@ function parse(s) {
             }
             if (i < s.length && s[i] === ')') i++;
 
-            // プレフィックスの適用
             if (p_mode === 3 || p_mode === 4) {
                 let applyProp = (th) => { if (th.val === 2 && th.cross === 1) th.propeller = p_mode; };
                 t.throws_a.forEach(applyProp);
@@ -413,14 +536,12 @@ function build(seq, balls) {
 
     let ball = 0;
     for (let start_t = 0; start_t < T; start_t++) {
-        // 左手のマルチ探索
         for (let a_idx = 0; a_idx < ex[start_t].throws_a.length; a_idx++) {
             if (ex[start_t].throws_a[a_idx].val > 0) {
                 track_ball(start_t, 0, a_idx);
                 ball++;
             }
         }
-        // 右手のマルチ探索
         for (let b_idx = 0; b_idx < ex[start_t].throws_b.length; b_idx++) {
             if (ex[start_t].throws_b[b_idx].val > 0) {
                 track_ball(start_t, 1, b_idx);
@@ -476,7 +597,6 @@ function build(seq, balls) {
         }
     }
 
-    // STEP 1 & 2: 行き先と角度の決定
     for (let b = 0; b < balls; b++) {
         let path = [];
         for (let t = 0; t < T; t++) {
@@ -599,9 +719,6 @@ function draw_horizontal_devilstick(center, angle, color) {
     ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
 }
 
-// =====================================
-// 通常スティック描画
-// =====================================
 function draw_devilstick(center, angle, color) {
     const L = 108.0;
     let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
@@ -616,9 +733,6 @@ function draw_devilstick(center, angle, color) {
     ctx.beginPath(); ctx.arc(center.x, center.y, 4, 0, Math.PI * 2); ctx.fillStyle = "#1a202c"; ctx.fill();
 }
 
-// =====================================
-// ボールの描画 (ズレ機能削除版)
-// =====================================
 function draw_ball(balls, globalTime, color, ballIndex) {
     if (!balls) return;
     for (let t = 0; t < T; t++) {
@@ -663,9 +777,12 @@ function draw_ball(balls, globalTime, color, ballIndex) {
             let timeRatio = (gt - startTime) / duration; 
             let sv = c.value; 
             
-            let heightScale = 10.0 * (sv * sv);
+            // 【修正】アシンクロでは2は内部的に4になる。2(保持)の高さは0にする
+            let is_two = g_isAsync ? (sv === 4) : (sv === 2);
+            
+            let heightScale = 10.0 * (sv * sv) * currentHeight;
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
-            let hOffset = bounce * heightScale;
+            let hOffset = is_two ? 0 : bounce * heightScale;
 
             if (c.propeller === 1) {
                 let isHorizontal2x = (c.value === 2 && (c.from === -1 || c.from === 1) && c.propeller === 1);
@@ -776,24 +893,31 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 let A_target = p1.angle;
                 let TotalRotDeg = 0;
 
-                let default_a = sv / 2.0;
+                let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
                 let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
+                let isAsyncOdd = g_isAsync && (sv % 4 !== 0);
+                let asyncOddRot = 100 + 180 * (a_val - 1);
 
                 if (c.angleExpr) {
-                    if (c.angleExpr === "180a") TotalRotDeg = 180 * a_val;
-                    else if (c.angleExpr === "-180a") TotalRotDeg = -180 * a_val;
+                    if (c.angleExpr === "180a") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    else if (c.angleExpr === "-180a") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
                     else if (c.angleExpr === "-(100+(a-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
                     else if (c.angleExpr === "(100+(a-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
                     else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
                     else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
-                    else TotalRotDeg = 180 * a_val; 
+                    else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
                 } else {
-                    let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : Math.floor(sv / 2);
-                    if (c.from <= -2) TotalRotDeg = -180 * s_val;
-                    else if (c.from >= 2) TotalRotDeg = 180 * s_val;
+                    let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (g_isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
+                    let rot_base = 180 * s_val;
+                    if (g_isAsync && (sv % 4 !== 0)) {
+                        rot_base = 100 + 180 * (s_val - 1);
+                    }
+
+                    if (c.from <= -2) TotalRotDeg = -rot_base;
+                    else if (c.from >= 2) TotalRotDeg = rot_base;
                     else {
                         let dir = (c.to > c.from) ? 1.0 : -1.0;
-                        TotalRotDeg = dir * 180 * s_val;
+                        TotalRotDeg = dir * rot_base;
                     }
                 }
 
@@ -865,9 +989,17 @@ function update(timestamp) {
     ctx.translate(-400, -450);
 
     let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
-    let hs = calcHandMotion(virtualTime, BEAT_TIME, 0.0);
-    let leftHY = handBaseY + hs * 20.0;
-    let rightHY = handBaseY + hs * 20.0;
+    
+    // 【修正】手が交互に上下するように位相を設定（左手スタート）
+    let period = g_isAsync ? (BEAT_TIME * 2) : BEAT_TIME;
+    let left_phase = 0;
+    let right_phase = g_isAsync ? BEAT_TIME : 0;
+    
+    let left_hs = calcHandMotion(virtualTime, period, left_phase);
+    let right_hs = calcHandMotion(virtualTime, period, right_phase);
+    
+    let leftHY = handBaseY + left_hs * 20.0;
+    let rightHY = handBaseY + right_hs * 20.0;
 
     g_leftHand = { x: leftBaseX, y: leftHY };
     g_rightHand = { x: rightBaseX, y: rightHY };
@@ -949,7 +1081,6 @@ function initSimulation() {
     if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
     
     let inputEl = document.getElementById("siteswapInput");
-    // 再生時にアスタリスクがあれば自動展開してテキストボックスを更新
     inputEl.value = expandAsterisk(inputEl.value);
     
     let inputStr = inputEl.value;
@@ -964,7 +1095,6 @@ function initSimulation() {
     }
 }
 
-// プリセット適用
 function applyPreset(val) {
     document.getElementById("siteswapInput").value = val;
     initSimulation();
@@ -1029,8 +1159,6 @@ function clearInput() {
 // 録画機能
 function startRecording() {
     if (isRecording) return;
-    
-    // 録画前に最新の状態に更新（展開処理を確実に通すため）
     initSimulation();
     
     recordDuration = (g_n * BEAT_TIME) * 3;
@@ -1057,6 +1185,11 @@ function startRecording() {
 }
 
 document.getElementById("speedInput").addEventListener("input", function(e) { currentSpeed = parseFloat(e.target.value); document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x"; });
+document.getElementById("heightInput").addEventListener("input", function(e) { 
+    currentHeight = parseFloat(e.target.value); 
+    document.getElementById("heightVal").innerText = currentHeight.toFixed(1) + "x"; 
+});
+
 document.getElementById("startBtn").addEventListener("click", initSimulation);
 document.getElementById("recordBtn").addEventListener("click", startRecording);
 
