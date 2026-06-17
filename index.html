@@ -701,10 +701,8 @@ function make_siteswap_table(input) {
     }
     let max_s = Math.floor(max_val / 2);
     let patternScale = Math.min(1.0, 360 / (4*max_s * max_s *10 + 60.0));
-    // height に応じて拡大/縮小する。
-    // height を小さくすると拡大、大きくすると縮小する。倍率は [0.4, 2.0] に制限する。
-    let scaleByHeight = 1.0 / Math.max(0.1, currentHeight);
-    g_scale = Math.min(2.0, Math.max(0.4, patternScale * scaleByHeight));
+    // 高さスライダーは描画の高さにのみ影響し、描画スケールは変えない。
+    g_scale = Math.min(2.0, Math.max(0.4, patternScale));
 
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
