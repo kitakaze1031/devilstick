@@ -85,7 +85,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="ui-row">
                     <div>
                         <label for="siteswapInput">パターン: </label>
-                        <input type="text" id="siteswapInput" value="3(r1)33">
+                        <input type="text" id="siteswapInput" value="(2x,2x)">
                     </div>
                     <button id="togglePadBtn">入力パッドを開く</button>
                     <button id="startBtn">再生</button>
@@ -150,22 +150,12 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
             </div>
 
             <div class="preset-wrapper">
-                <div class="section-title">アシンクロ(特殊入力対応)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('3(r1)33')">3(r1)33</button>
-                    <button class="preset-btn" onclick="applyPreset('5(f)31')">5(f)31</button>
-                    <button class="preset-btn" onclick="applyPreset('(f)531')">(f)531</button>
-                    <button class="preset-btn" onclick="applyPreset('531')">531</button>
-                </div>
-            </div>
-
-            <div class="preset-wrapper">
                 <div class="section-title">1本(入力例)</div>
                 <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('1')">1</button>
+                    <button class="preset-btn" onclick="applyPreset('-1')">-1</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2-,0)')">(2-,0)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4x,0)(0^1,0^3)(0,2x)')">(4x,0)(0^1,0^3)(0,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2+,0)')">(2+,0)</button>
                 </div>
             </div>
 
@@ -173,9 +163,34 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="section-title">2本(入力例)</div>
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(-2x,2x)')">(2x,2x)(-2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(f2x,2x)')">(2x,2x)(f2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,f2x)(f2x,2x)')">(2x,f2x)(f2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(p2x,2x)(2x,p2x)')">(p2x,2x)(2x,p2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(t2,t2)')">(t2,t2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x+,2x+)')">(2x+,2x+)</button>
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2x-,2x)(2x,2x-)')">(2x-,2x)(2x,2x-)</button>
                     <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,2)')">(2,2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,2)(-2,-2)')">(2,2)(-2,-2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,-2)(-2,2)')">(2,-2)(-2,2)</button>
+                    <button class="preset-btn" onclick="applyPreset('31')">31</button>
+                    <button class="preset-btn" onclick="applyPreset('312')">312</button>
+                    <button class="preset-btn" onclick="applyPreset('2-2-22')">2-2-22</button>
+                    <button class="preset-btn" onclick="applyPreset('(f)2')">(f)2</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">3本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">(4,2x)(4,4)...(0*,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('3')">3</button>
+                    <button class="preset-btn" onclick="applyPreset('3(r1)')">3(r1)</button>
+                    <button class="preset-btn" onclick="applyPreset('531')">531</button>
                 </div>
             </div>
 
