@@ -265,9 +265,9 @@ function getAsyncThrowCount(sv) {
 }
 
 // =====================================
-// 状態遷移のルール表 (行き先 to のみ決定)
+// 同期用の状態遷移のルール表 (行き先 to のみ決定)
 // =====================================
-const PATTERN_TRANSITIONS = {
+const SYNC_PATTERN_TRANSITIONS = {
     "-2al":  { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
     "-2ar":  { "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 } },
     "2al":   { "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 } },
@@ -279,17 +279,45 @@ const PATTERN_TRANSITIONS = {
 };
 
 // =====================================
-// 現在地(from)と行き先(to)から角度を決める表
+// 非同期用の状態遷移のルール表 (行き先 to のみ決定)
 // =====================================
-const ANGLE_RULES = {
+const ASYNC_PATTERN_TRANSITIONS = {
+    "-2nl": { "-2nl": { to: -3 }, "2nl":  { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l":  { to: -1 } },
+    "2nl": { "-2nl": { to: -1 }, "2nl":  { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l":  { to: -1 } },
+    "-(2n-1)l": { "-2nr": { to: 3 }, "2nr":  { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r":  { to: 1 } },
+    "(2n-1)l": { "-2nr": { to: 1 }, "2nr":  { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r":  { to: 1 } },
+    "-2nr": { "-2nr": { to: 3 }, "2nr":  { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r":  { to: 1 } },
+    "2nr": { "-2nr": { to: 1 }, "2nr":  { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r":  { to: 1 } },
+    "-(2n-1)r": { "-2nl": { to: -3 }, "2nl":  { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l":  { to: -1 } },
+    "(2n-1)r": { "-2nl": { to: -1 }, "2nl":  { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l":  { to: -1 } }
+};
+
+// =====================================
+// 同期用の現在地(from)と行き先(to)から角度を決める表
+// =====================================
+const SYNC_ANGLE_RULES = {
     "-4": { "4": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "1": "-180a" },
      "4": { "-4": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a" },
-    "-3": { "-4": "180a", "-1": "(80+(a-1)*180)", "1": "180a" },
-     "3": { "4": "-180a", "1": "-(80+(a-1)*180)", "-1": "-180a" },
-    "-2": { "-1": "-180a", "1": "-(80+(a-1)*180)" },
-     "2": { "1": "180a", "-1": "(80+(a-1)*180)" },
+    "-3": { "-4": "180a", "-1": "(80+(a-1)*180)", "1": "180a" , "-3": "180a"},
+     "3": { "4": "-180a", "1": "-(80+(a-1)*180)", "-1": "-180a"  , "3": "-180a"},
+    "-2": { "-1": "-180a", "1": "-(80+(a-1)*180)" , "-2": "-180a"},
+     "2": { "1": "180a", "-1": "(80+(a-1)*180)" , "2": "180a"},
     "-1": { "-4": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "-3": "(100+(a-1)*180)" },
      "1": { "4": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "3": "-(100+(a-1)*180)" }
+};
+
+// =====================================
+// 非同期用の現在地(from)と行き先(to)から角度を決める表
+// =====================================
+const ASYNC_ANGLE_RULES = {
+    "-4": { "4": "-(100+(n-1)*180)", "-2": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)", "1": "-180n" },
+     "4": { "-4": "(100+(n-1)*180)", "2": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n" },
+    "-3": { "-4": "180n", "-1": "(80+(n-1)*180)", "1": "180n" , "-3": "180n"},
+     "3": { "4": "-180n", "1": "-(80+(n-1)*180)", "-1": "-180n"  , "3": "-180n"},
+    "-2": { "-1": "-180n", "1": "-(80+(n-1)*180)" , "-2": "-180n"},
+     "2": { "1": "180n", "-1": "(80+(n-1)*180)" , "2": "180n"},
+    "-1": { "-4": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "2": "(100+(n-1)*180)", "-3": "(100+(n-1)*180)" },
+     "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)", "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
 };
 
 // =====================================
@@ -317,7 +345,7 @@ function parse(s) {
                 else if (s[i] === 't') { th.propeller = 2; i++; }
                 else if (s[i] === 'f') { th.propeller = 5; i++; }
                 else if (s[i] === 's') { th.propeller = 3; i++; }
-                else if (s[i] === '-') { th.is_minus = true; i++; }
+                else if (s[i] === '-' || s[i] === '+') { th.is_minus = true; i++; }
                 else if (s[i] === 'r') {
                     i++;
                     let r_sign = 1; if(s[i] === '-') { r_sign = -1; i++; }
@@ -341,10 +369,10 @@ function parse(s) {
             while (i < s.length) {
                 if (s[i] === ' ' || s[i] === '(' || s[i] === ')') { i++; continue; }
                 if (s[i] >= '0' && s[i] <= '9') break; 
+                if ((s[i] === '-' || s[i] === '+') && i + 1 < s.length && s[i+1] >= '0' && s[i+1] <= '9') break;
                 
                 if (s[i] === 'x') { th.cross = 1; i++; }
                 else if (s[i] === '*') { th.hs = HS_HAND1; i++; }
-                else if (s[i] === '-') { th.hs = HS_HAND2; i++; }
                 else if (s[i] === '^') {
                     i++;
                     if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; }
@@ -438,7 +466,7 @@ function parse(s) {
                 while (i < s.length && s[i] !== ' ' && s[i] !== ',' && s[i] !== ')' && s[i] !== ']') {
                     if (s[i] === 'x') { th.cross = 1; i++; }
                     else if (s[i] === '*') { if (th.val === 0) th.hs = HS_HAND1; i++; }
-                    else if (s[i] === '-') { th.hs = HS_HAND2; i++; }
+                    else if (s[i] === '%') { th.hs = HS_HAND2; i++; }
                     else if (s[i] === '^') { i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; } }
                     else if (s[i] === 'r') { 
                         i++; 
@@ -582,9 +610,16 @@ function build(seq, balls) {
 
             th.val = -1; // 投擲済みにマーク
 
-            let action_prefix = is_minus ? "-2" : "2";
-            let action_cross = cross ? "ax" : "a";
-            let action_str = action_prefix + action_cross + (side === 0 ? "l" : "r");
+            let action_str;
+            if (g_isAsync) {
+                let action_prefix = is_minus ? "-" : "";
+                let action_type = cross ? "(2n-1)" : "2n";
+                action_str = action_prefix + action_type + (side === 0 ? "l" : "r");
+            } else {
+                let action_prefix = is_minus ? "-2" : "2";
+                let action_cross = cross ? "ax" : "a";
+                action_str = action_prefix + action_cross + (side === 0 ? "l" : "r");
+            }
 
             let from = (side === 0) ? (cross ? -1 : -2) : (cross ? 1 : 2);
             let to = (side === 0) ? (cross ? 1 : -2) : (cross ? -1 : 2);
@@ -613,8 +648,9 @@ function build(seq, balls) {
             let curr_key = curr_throw.action_str;
             let next_key = next_throw.action_str;
 
-            if (PATTERN_TRANSITIONS[curr_key] && PATTERN_TRANSITIONS[curr_key][next_key]) {
-                curr_throw.to = PATTERN_TRANSITIONS[curr_key][next_key].to;
+            let transitionTable = g_isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
+            if (transitionTable[curr_key] && transitionTable[curr_key][next_key]) {
+                curr_throw.to = transitionTable[curr_key][next_key].to;
             } else {
                 curr_throw.to = next_key.endsWith('l') ? -2 : 2;
             }
@@ -628,13 +664,14 @@ function build(seq, balls) {
 
             curr_throw.from = prev_throw.to;
 
+            let angleTable = g_isAsync ? ASYNC_ANGLE_RULES : SYNC_ANGLE_RULES;
             let f = String(curr_throw.from);
             let t = String(curr_throw.to);
 
-            if (ANGLE_RULES[f] && ANGLE_RULES[f][t] !== undefined) {
-                curr_throw.angleExpr = ANGLE_RULES[f][t];
+            if (angleTable[f] && angleTable[f][t] !== undefined) {
+                curr_throw.angleExpr = angleTable[f][t];
             } else {
-                curr_throw.angleExpr = (Number(t) <= -1) ? "-180a" : "180a";
+                curr_throw.angleExpr = g_isAsync ? ((Number(t) <= -1) ? "-180n" : "180n") : ((Number(t) <= -1) ? "-180a" : "180a");
             }
         }
     }
@@ -650,7 +687,11 @@ function make_siteswap_table(input) {
         g_seq[i].throws_b.forEach(th => { if (th.val > max_val) max_val = th.val; });
     }
     let max_s = Math.floor(max_val / 2);
-    g_scale = Math.min(1.0, 360 / (4*max_s * max_s *10 + 60.0));
+    let patternScale = Math.min(1.0, 360 / (4*max_s * max_s *10 + 60.0));
+    // height に応じて拡大/縮小する。
+    // height を小さくすると拡大、大きくすると縮小する。倍率は [0.4, 2.0] に制限する。
+    let scaleByHeight = 1.0 / Math.max(0.1, currentHeight);
+    g_scale = Math.min(2.0, Math.max(0.4, patternScale * scaleByHeight));
 
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
@@ -899,12 +940,12 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 let asyncOddRot = 100 + 180 * (a_val - 1);
 
                 if (c.angleExpr) {
-                    if (c.angleExpr === "180a") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
-                    else if (c.angleExpr === "-180a") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
-                    else if (c.angleExpr === "-(100+(a-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
-                    else if (c.angleExpr === "(100+(a-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
-                    else if (c.angleExpr === "-(80+(a-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
-                    else if (c.angleExpr === "(80+(a-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    else if (c.angleExpr === "-180a" || c.angleExpr === "-180n") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
+                    else if (c.angleExpr === "-(100+(a-1)*180)" || c.angleExpr === "-(100+(n-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
                     else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
                 } else {
                     let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (g_isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
@@ -953,7 +994,8 @@ function update(timestamp) {
 
     if (dt > 0.1) dt = 0.1;
 
-    virtualTime += dt * currentSpeed;
+    let asyncSpeedFactor = g_isAsync ? 2.0 : 1.0;
+    virtualTime += dt * currentSpeed * asyncSpeedFactor;
 
     let totalTime = T * BEAT_TIME;
     let globalTime = virtualTime % totalTime;
@@ -967,7 +1009,7 @@ function update(timestamp) {
             mediaRecorder.start();
         }
         
-        logicalTimeAccumulator += dt * currentSpeed;
+        logicalTimeAccumulator += dt * currentSpeed * asyncSpeedFactor;
         
         if (logicalTimeAccumulator >= recordDuration) {
             isRecording = false;
@@ -1188,6 +1230,7 @@ document.getElementById("speedInput").addEventListener("input", function(e) { cu
 document.getElementById("heightInput").addEventListener("input", function(e) { 
     currentHeight = parseFloat(e.target.value); 
     document.getElementById("heightVal").innerText = currentHeight.toFixed(1) + "x"; 
+    initSimulation();
 });
 
 document.getElementById("startBtn").addEventListener("click", initSimulation);
