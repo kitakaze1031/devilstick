@@ -85,7 +85,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="ui-row">
                     <div>
                         <label for="siteswapInput">パターン: </label>
-                        <input type="text" id="siteswapInput" value="[43]23">
+                        <input type="text" id="siteswapInput" value="(2x,2x)">
                     </div>
                     <button id="togglePadBtn">入力パッドを開く</button>
                     <button id="startBtn">再生</button>
@@ -101,8 +101,6 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                     <div class="pad-row">
                         <button class="pad-btn" onclick="insertAtCursor('(')">(</button>
                         <button class="pad-btn" onclick="insertAtCursor(')')">)</button>
-                        <button class="pad-btn" onclick="insertAtCursor('[')">[</button>
-                        <button class="pad-btn" onclick="insertAtCursor(']')">]</button>
                         <button class="pad-btn" onclick="insertAtCursor(',')">,</button>
                         <button class="pad-btn" onclick="insertAtCursor('2')">2</button>
                         <button class="pad-btn" onclick="insertAtCursor('4')">4</button>
@@ -121,7 +119,6 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                         <button class="pad-btn action" onclick="insertAtCursor('x')">x</button>
                         <button class="pad-btn action" onclick="insertAtCursor('*')">*</button>
                         <button class="pad-btn action" onclick="insertAtCursor('-')">-</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('+')">+</button>
                         <button class="pad-btn action" onclick="insertAtCursor('^')">^</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('p')">p</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('t')">t</button>
@@ -153,24 +150,11 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
             </div>
 
             <div class="preset-wrapper">
-                <div class="section-title">アシンクロ (特殊・マルチプレックス)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('531')">531</button>
-                    <button class="preset-btn" onclick="applyPreset('3(r1)33')">3(r1)33</button>
-                    <button class="preset-btn" onclick="applyPreset('5(f)31')">5(f)31</button>
-                    <button class="preset-btn" onclick="applyPreset('-222-2')">-222-2</button>
-                    <button class="preset-btn" onclick="applyPreset('[43]23')">[43]23 (マルチプレックス)</button>
-                    <button class="preset-btn" onclick="applyPreset('[54]21')">[54]21 (マルチプレックス)</button>
-                </div>
-            </div>
-
-            <div class="preset-wrapper">
                 <div class="section-title">1本(入力例)</div>
                 <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('1')">1</button>
+                    <button class="preset-btn" onclick="applyPreset('-1')">-1</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0*)(0*,2x)')">(2x,0*)(0*,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2+,0)')">(2+,0)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4x,0)(0^1,0^3)(0,2x)')">(4x,0)(0^1,0^3)(0,2x)</button>
                 </div>
             </div>
 
@@ -178,9 +162,38 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <div class="section-title">2本(入力例)</div>
                 <div class="preset-container">
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(-2x,2x)')">(2x,2x)(-2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(f2x,2x)')">(2x,2x)(f2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,f2x)(f2x,2x)')">(2x,f2x)(f2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(p2x,2x)(2x,p2x)')">(p2x,2x)(2x,p2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(t2,t2)')">(t2,t2)</button>
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2x+,2x)(2x,2x+)')">(2x+,2x)(2x,2x+)</button>
                     <button class="preset-btn" onclick="applyPreset('(6,4x)(0^3,0^1)(2x,0)')">(6,4x)(0^3,0^1)(2x,0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,2)')">(2,2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,2)(-2,-2)')">(2,2)(-2,-2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,-2)(-2,2)')">(2,-2)(-2,2)</button>
+                    <button class="preset-btn" onclick="applyPreset('31')">31</button>
+                    <button class="preset-btn" onclick="applyPreset('312')">312</button>
+                    <button class="preset-btn" onclick="applyPreset('2-2-22')">2-2-22</button>
+                    <button class="preset-btn" onclick="applyPreset('(f)2')">(f)2</button>
+                    <button class="preset-btn" onclick="applyPreset('2(+)')">2(+)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x+,2x)(2x,2x+)')">(2x+,2x)(2x,2x+)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(2,2x)([2,2x],0)')">(2x,2x)(2,2x)([2,2x],0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(2,2x)([2x,2],0)')">(2x,2x)(2,2x)([2x,2],0)</button>
+                    <button class="preset-btn" onclick="applyPreset('[1 -1]')">[1 -1]</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">3本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">(4,2x)(4,4)...(0*,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('3')">3</button>
+                    <button class="preset-btn" onclick="applyPreset('3(r1)')">3(r1)</button>
+                    <button class="preset-btn" onclick="applyPreset('531')">531</button>
                 </div>
             </div>
 
@@ -198,14 +211,11 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 
         <div class="info-box">
             <strong>💡 現在の設定ルール</strong><br>
-            ・アシンクロ(コンマなし)では <b>[43]23</b> のように [ ] で囲むと、マルチプレックス（同時投げ）として認識します。<br>
+            ・アシンクロ(コンマなし)では <b>3(r1)33</b> のように()で修飾子を囲むと正しく認識されます。<br>
             ・0があるとき、0*で片手が空くことでできるフラーリッシュ 例 (2x,0*)(0*,2x)<br>
-            ・任意の数字 <b>+</b> で叩きながらできるフラーリッシュ 例 (2x+,0)(0,2x+)<br>
+            ・任意の数字-で叩きながらできるフラーリッシュ 例 (2x-,0)(0,2x-)<br>
             ・(0,0)があるとき、(0^3,0^1)で31HSパス 例 (4x,0)(0^1,0^3)(0,2x)<br>
-            ・数値の後に「r＋数字」で半回転単位の回転数指定 例 (4xr3, 2x) は4xの高さで1.5回転<br>
-            ・<b>- (マイナス)</b> は逆回転などの負の数専用の記号です。<br>
-            ・<b>2</b>：左手で叩くと<b>反時計回り</b>、右手で叩くと<b>時計回り</b><br>
-            ・<b>-2</b>：左手で叩くと<b>時計回り</b>、右手で叩くと<b>反時計回り</b>
+            ・数値の後に「r＋数字」で半回転単位の回転数指定 例 (4xr3, 2x) は4xの高さで1.5回転
         </div>
     </div>
 </div><footer>
@@ -222,7 +232,7 @@ const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
 const DEG_TO_RAD = Math.PI / 180;
 
 let currentSpeed = 1.0;
-let currentHeight = 1.0; 
+let currentHeight = 1.0; // 高さ調整用グローバル変数
 let table = null;
 let g_balls = 0;
 let g_seq = [];
@@ -266,149 +276,133 @@ function get_data(id) {
     return data[id] || { x: 400, y: 460, angle: 0 };
 }
 
-// =====================================
-// 状態遷移のルール表 (完全一般化版: 2n / 2n-1)
-// =====================================
-const PATTERN_TRANSITIONS = {
-    // === 左手からの投擲 (末尾 l) ===
-    "-2nl": { 
-        "-2nl": { to: -3 }, 
-        "2nl":  { to: -4 }, 
-        "-(2n-1)l": { to: -4 }, 
-        "(2n-1)l":  { to: -1 } 
-    },
-    "2nl": { 
-        "-2nl": { to: -1 }, 
-        "2nl":  { to: -2 }, 
-        "-(2n-1)l": { to: 1 }, 
-        "(2n-1)l":  { to: -1 } 
-    },
-    "-(2n-1)l": { 
-        "-2nr": { to: 3 }, 
-        "2nr":  { to: 4 }, 
-        "-(2n-1)r": { to: 4 }, 
-        "(2n-1)r":  { to: 1 } 
-    },
-    "(2n-1)l": { 
-        "-2nr": { to: 1 }, 
-        "2nr":  { to: 2 }, 
-        "-(2n-1)r": { to: -1 }, 
-        "(2n-1)r":  { to: 1 } 
-    },
+function getAsyncThrowCount(sv) {
+    // 非同期モードでは内部的に投擲値が2倍されているので、
+    // 2n 系と 2n-1 系を正しく扱うために実際の回転カウントを求める
+    return (sv % 4 === 0) ? sv / 4 : (sv + 2) / 4;
+}
 
-    // === 右手からの投擲 (末尾 r) ===
-    "-2nr": { 
-        "-2nr": { to: 3 }, 
-        "2nr":  { to: 4 }, 
-        "-(2n-1)r": { to: 4 }, 
-        "(2n-1)r":  { to: 1 } 
-    },
-    "2nr": { 
-        "-2nr": { to: 1 }, 
-        "2nr":  { to: 2 }, 
-        "-(2n-1)r": { to: -1 }, 
-        "(2n-1)r":  { to: 1 } 
-    },
-    "-(2n-1)r": { 
-        "-2nl": { to: -3 }, 
-        "2nl":  { to: -4 }, 
-        "-(2n-1)l": { to: -4 }, 
-        "(2n-1)l":  { to: -1 } 
-    },
-    "(2n-1)r": { 
-        "-2nl": { to: -1 }, 
-        "2nl":  { to: -2 }, 
-        "-(2n-1)l": { to: 1 }, 
-        "(2n-1)l":  { to: -1 } 
-    }
+// =====================================
+// 同期用の状態遷移のルール表 (行き先 to のみ決定)
+// =====================================
+const SYNC_PATTERN_TRANSITIONS = {
+    "-2al":  { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
+    "-2ar":  { "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 } },
+    "2al":   { "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 } },
+    "2ar":   { "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 } },
+    "-2axl": { "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 } },
+    "-2axr": { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
+    "2axl":  { "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 } },
+    "2axr":  { "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 } }
 };
 
 // =====================================
-// 現在地(from)と行き先(to)から角度を決める表
+// 非同期用の状態遷移のルール表 (行き先 to のみ決定)
 // =====================================
-const ANGLE_RULES = {
+const ASYNC_PATTERN_TRANSITIONS = {
+    "-2nl": { "-2nl": { to: -3 }, "2nl":  { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l":  { to: -1 } },
+    "2nl": { "-2nl": { to: -1 }, "2nl":  { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l":  { to: -1 } },
+    "-(2n-1)l": { "-2nr": { to: 3 }, "2nr":  { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r":  { to: 1 } },
+    "(2n-1)l": { "-2nr": { to: 1 }, "2nr":  { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r":  { to: 1 } },
+    "-2nr": { "-2nr": { to: 3 }, "2nr":  { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r":  { to: 1 } },
+    "2nr": { "-2nr": { to: 1 }, "2nr":  { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r":  { to: 1 } },
+    "-(2n-1)r": { "-2nl": { to: -3 }, "2nl":  { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l":  { to: -1 } },
+    "(2n-1)r": { "-2nl": { to: -1 }, "2nl":  { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l":  { to: -1 } }
+};
+
+// =====================================
+// 同期用の現在地(from)と行き先(to)から角度を決める表
+// =====================================
+const SYNC_ANGLE_RULES = {
+    "-4": { "4": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "1": "-180a" },
+     "4": { "-4": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a" },
+    "-3": { "-4": "180a", "-1": "(80+(a-1)*180)", "1": "180a" , "-3": "180a"},
+     "3": { "4": "-180a", "1": "-(80+(a-1)*180)", "-1": "-180a"  , "3": "-180a"},
+    "-2": { "-1": "-180a", "1": "-(80+(a-1)*180)" , "-2": "-180a"},
+     "2": { "1": "180a", "-1": "(80+(a-1)*180)" , "2": "180a"},
+    "-1": { "-4": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "-3": "(100+(a-1)*180)" },
+     "1": { "4": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "3": "-(100+(a-1)*180)" }
+};
+
+// =====================================
+// 非同期用の現在地(from)と行き先(to)から角度を決める表
+// =====================================
+const ASYNC_ANGLE_RULES = {
     "-4": { "4": "-(100+(n-1)*180)", "-2": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)", "1": "-180n" },
      "4": { "-4": "(100+(n-1)*180)", "2": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n" },
-    "-3": { "-4": "180n", "-1": "(80+(n-1)*180)", "1": "180n" },
-     "3": { "4": "-180n", "1": "-(80+(n-1)*180)", "-1": "-180n" },
-    "-2": { "-1": "-180n", "1": "-(80+(n-1)*180)" },
-     "2": { "1": "180n", "-1": "(80+(n-1)*180)" },
+    "-3": { "-4": "180n", "-1": "(80+(n-1)*180)", "1": "180n" , "-3": "180n"},
+     "3": { "4": "-180n", "1": "-(80+(n-1)*180)", "-1": "-180n"  , "3": "-180n"},
+    "-2": { "-1": "-180n", "1": "-(80+(n-1)*180)" , "-2": "-180n"},
+     "2": { "1": "180n", "-1": "(80+(n-1)*180)" , "2": "180n"},
     "-1": { "-4": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "2": "(100+(n-1)*180)", "-3": "(100+(n-1)*180)" },
      "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)", "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
 };
 
 // =====================================
-// サイトスワップ構文解析
+// サイトスワップ構文解析 (()修飾子・アシンクロ両対応)
 // =====================================
 function parse(s) {
     let i = 0;
     let seq = [];
-
-    // === アシンクロ解析モード (マルチプレックス対応) ===
+    
+    // --- アシンクロ（コンマなし）の解析モード（マルチプレックス対応） ---
     if (s.indexOf(',') === -1) {
         g_isAsync = true;
         let async_beats = [];
-        
+
         let parseSingleAsyncThrow = () => {
             let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null };
-            
-            // プレフィックスの読み取り
             while (i < s.length) {
                 if (s[i] === ' ' || s[i] === '(' || s[i] === ')' || s[i] === '[' || s[i] === ']') { 
                     if (s[i] === '[' || s[i] === ']') break;
                     i++; continue; 
                 }
                 if (s[i] >= '0' && s[i] <= '9') break;
-                
                 if (s[i] === 'p') { th.propeller = 1; i++; }
                 else if (s[i] === 't') { th.propeller = 2; i++; }
                 else if (s[i] === 'f') { th.propeller = 5; i++; }
                 else if (s[i] === 's') { th.propeller = 3; i++; }
-                else if (s[i] === '-') { th.is_minus = true; i++; } // 負の数
+                else if (s[i] === '-') { th.is_minus = true; i++; }
                 else if (s[i] === 'r') {
                     i++;
-                    let r_sign = 1; if(i < s.length && s[i] === '-') { r_sign = -1; i++; }
+                    let r_sign = 1; if (i < s.length && s[i] === '-') { r_sign = -1; i++; }
                     let r_val = 0; let has_r = false;
                     while (i < s.length && s[i] >= '0' && s[i] <= '9') {
                         r_val = r_val * 10 + parseInt(s[i]); i++; has_r = true;
                     }
                     if (has_r) th.rot = r_val * r_sign;
                 }
-                else { i++; } 
+                else { i++; }
             }
-            
-            // 数値の読み取り
             if (i < s.length && s[i] >= '0' && s[i] <= '9') {
                 th.val = parseInt(s[i]);
                 i++;
             } else {
                 return null;
             }
-            
-            // サフィックスの読み取り
             while (i < s.length) {
                 if (s[i] === ' ' || s[i] === '(' || s[i] === ')' || s[i] === '[' || s[i] === ']') { 
                     if (s[i] === '[' || s[i] === ']') break;
                     i++; continue; 
                 }
-                if (s[i] >= '0' && s[i] <= '9') break; 
-                if (s[i] === '-' && i + 1 < s.length && s[i+1] >= '0' && s[i+1] <= '9') break; // 次の数値のマイナス
-                
+                if (s[i] >= '0' && s[i] <= '9') break;
+                if (s[i] === '-' && i + 1 < s.length && s[i+1] >= '0' && s[i+1] <= '9') break;
+
                 if (s[i] === 'x') { th.cross = 1; i++; }
                 else if (s[i] === '*') { th.hs = HS_HAND1; i++; }
-                else if (s[i] === '+') { th.hs = HS_HAND2; i++; } // + でフラーリッシュ
+                else if (s[i] === '+') { th.hs = HS_HAND2; i++; }
                 else if (s[i] === '^') {
                     i++;
                     if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; }
                 }
                 else if (s[i] === 'r') {
                     i++;
-                    let r_sign = 1; if(i < s.length && s[i] === '-') { r_sign = -1; i++; }
+                    let r_sign = 1; if (i < s.length && s[i] === '-') { r_sign = -1; i++; }
                     let r_val = 0; let has_r = false;
-                    while(i < s.length && s[i] >= '0' && s[i] <= '9') {
+                    while (i < s.length && s[i] >= '0' && s[i] <= '9') {
                         r_val = r_val * 10 + parseInt(s[i]); i++; has_r = true;
                     }
-                    if(has_r) th.rot = r_val * r_sign;
+                    if (has_r) th.rot = r_val * r_sign;
                 }
                 else if (s[i] === 'p') { th.propeller = 1; i++; }
                 else if (s[i] === 't') { th.propeller = 2; i++; }
@@ -416,19 +410,15 @@ function parse(s) {
                 else if (s[i] === 's') { th.propeller = 3; i++; }
                 else { i++; }
             }
-            
             if (th.cross === null) {
                 th.cross = (th.val % 2 !== 0) ? 1 : 0;
             }
-            th.val = th.val * 2; // 内部シミュ用の倍率処理
-            
+            th.val = th.val * 2;
             return th;
         };
 
         while(i < s.length) {
             if (s[i] === ' ') { i++; continue; }
-            
-            // マルチプレックスブロック [ ... ]
             if (s[i] === '[') {
                 i++;
                 let multiplex_throws = [];
@@ -436,10 +426,9 @@ function parse(s) {
                     if (s[i] === ' ') { i++; continue; }
                     let th = parseSingleAsyncThrow();
                     if (th) multiplex_throws.push(th);
-                    else i++; 
+                    else i++;
                 }
                 if (i < s.length && s[i] === ']') i++;
-                
                 if (multiplex_throws.length > 0) {
                     async_beats.push(multiplex_throws);
                 }
@@ -448,34 +437,31 @@ function parse(s) {
                 if (th) {
                     async_beats.push([th]);
                 } else {
-                    i++; 
+                    i++;
                 }
             }
         }
-        
+
         if (async_beats.length === 0) return [];
-        
         if (async_beats.length % 2 !== 0) {
             let copy = async_beats.map(beat => beat.map(th => ({...th})));
             async_beats = async_beats.concat(copy);
         }
-        
         for (let j = 0; j < async_beats.length; j++) {
             let b_throws = async_beats[j];
             let empty_th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: 0, rot: null };
-            
             let clone_throws = b_throws.map(th => ({...th}));
-            
             if (j % 2 === 0) {
-                seq.push({ throws_a: [empty_th], throws_b: clone_throws });
-            } else {
                 seq.push({ throws_a: clone_throws, throws_b: [empty_th] });
+            } else {
+                seq.push({ throws_a: [empty_th], throws_b: clone_throws });
             }
         }
         return seq;
     }
+    // --- アシンクロ解析モードここまで ---
 
-    // === シンクロ（括弧あり）の解析モード ===
+    // --- 【既存】シンクロ（括弧あり）の解析モード ---
     g_isAsync = false;
     let pending_prefix = '';
     while (i < s.length) {
@@ -506,7 +492,6 @@ function parse(s) {
                 else if (i < s.length && s[i] === 't') { th.propeller = 2; i++; }
                 else if (i < s.length && s[i] === 'f') { th.propeller = 5; i++; } 
                 
-                // マイナス(-)は負の数フラグ専用
                 if (i < s.length && s[i] === '-') { th.is_minus = true; i++; } 
                 
                 let hasNum = false;
@@ -520,8 +505,7 @@ function parse(s) {
                 while (i < s.length && s[i] !== ' ' && s[i] !== ',' && s[i] !== ')' && s[i] !== ']') {
                     if (s[i] === 'x') { th.cross = 1; i++; }
                     else if (s[i] === '*') { if (th.val === 0) th.hs = HS_HAND1; i++; }
-                    // プラス(+)はフラーリッシュ等の修飾子用
-                    else if (s[i] === '+') { th.hs = HS_HAND2; i++; } 
+                    else if (s[i] === '+') { th.hs = HS_HAND2; i++; }
                     else if (s[i] === '^') { i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; } }
                     else if (s[i] === 'r') { 
                         i++; 
@@ -603,10 +587,10 @@ function object_count(seq) {
 }
 
 // =====================================
-// 軌道構築
+// 軌道構築 (マルチ対応版)
 // =====================================
 function build(seq, balls) {
-    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, side: 0, is_minus: false, cross: 0, angleExpr: "", action_str: "", propeller: 0, rot: null })) );
+    table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, angleExpr: "", action_str: "", propeller: 0, rot: null })) );
     
     let ex = [];
     for (let t = 0; t < T; t++) { 
@@ -663,30 +647,34 @@ function build(seq, balls) {
             let cross = th.cross;
             let is_minus = th.is_minus;
 
-            th.val = -1; 
+            th.val = -1; // 投擲済みにマーク
 
-            let behaves_as_cross = cross ? true : false;
-            let type_str = behaves_as_cross ? "(2n-1)" : "2n";
-            let prefix_str = is_minus ? "-" : "";
-            let action_str = prefix_str + type_str + (side === 0 ? "l" : "r");
+            let action_str;
+            if (g_isAsync) {
+                let action_prefix = is_minus ? "-" : "";
+                let action_type = cross ? "(2n-1)" : "2n";
+                action_str = action_prefix + action_type + (side === 0 ? "l" : "r");
+            } else {
+                let action_prefix = is_minus ? "-2" : "2";
+                let action_cross = cross ? "ax" : "a";
+                action_str = action_prefix + action_cross + (side === 0 ? "l" : "r");
+            }
 
             let from = (side === 0) ? (cross ? -1 : -2) : (cross ? 1 : 2);
             let to = (side === 0) ? (cross ? 1 : -2) : (cross ? -1 : 2);
             let rot = th.rot;
 
-            if (ball < balls) {
-                table[ball][t] = { value, from, to, side, is_minus, cross, angleExpr: "", action_str, propeller, rot };
-            }
+            table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot };
 
             t += Math.floor(value / 2);
-            if (to === -1 || to === 1 || cross) side ^= 1;
+            if (to === -1 || to === 1) side ^= 1;
         }
     }
 
     for (let b = 0; b < balls; b++) {
         let path = [];
         for (let t = 0; t < T; t++) {
-            if (table[b][t] && table[b][t].value > 0) path.push(t);
+            if (table[b][t].value > 0) path.push(t);
         }
         if (path.length === 0) continue;
 
@@ -699,8 +687,9 @@ function build(seq, balls) {
             let curr_key = curr_throw.action_str;
             let next_key = next_throw.action_str;
 
-            if (PATTERN_TRANSITIONS[curr_key] && PATTERN_TRANSITIONS[curr_key][next_key]) {
-                curr_throw.to = PATTERN_TRANSITIONS[curr_key][next_key].to;
+            let transitionTable = g_isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
+            if (transitionTable[curr_key] && transitionTable[curr_key][next_key]) {
+                curr_throw.to = transitionTable[curr_key][next_key].to;
             } else {
                 curr_throw.to = next_key.endsWith('l') ? -2 : 2;
             }
@@ -714,13 +703,14 @@ function build(seq, balls) {
 
             curr_throw.from = prev_throw.to;
 
+            let angleTable = g_isAsync ? ASYNC_ANGLE_RULES : SYNC_ANGLE_RULES;
             let f = String(curr_throw.from);
             let t = String(curr_throw.to);
 
-            if (ANGLE_RULES[f] && ANGLE_RULES[f][t] !== undefined) {
-                curr_throw.angleExpr = ANGLE_RULES[f][t];
+            if (angleTable[f] && angleTable[f][t] !== undefined) {
+                curr_throw.angleExpr = angleTable[f][t];
             } else {
-                curr_throw.angleExpr = (Number(t) <= -1) ? "-180n" : "180n";
+                curr_throw.angleExpr = g_isAsync ? ((Number(t) <= -1) ? "-180n" : "180n") : ((Number(t) <= -1) ? "-180a" : "180a");
             }
         }
     }
@@ -736,8 +726,9 @@ function make_siteswap_table(input) {
         g_seq[i].throws_b.forEach(th => { if (th.val > max_val) max_val = th.val; });
     }
     let max_s = Math.floor(max_val / 2);
-    let patternScale = Math.min(1.0, 360 / (4*max_s * max_s *10 + 60.0));
-    g_scale = Math.min(2.0, Math.max(0.4, patternScale));
+    let baseScale = Math.min(1.0, 360 / (4*max_s * max_s * 10 + 60.0));
+    let heightFactor = 1.0 / Math.max(0.05, currentHeight);
+    g_scale = Math.min(1.0, Math.max(0.15, baseScale * heightFactor));
 
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
@@ -860,70 +851,94 @@ function draw_ball(balls, globalTime, color, ballIndex) {
         }
 
         if (gt >= startTime && gt < endTime) {
+            
             let timeRatio = (gt - startTime) / duration; 
+            let sv = c.value; 
             
-            let original_val = g_isAsync ? (c.value / 2) : c.value;
-            let abs_val = Math.abs(original_val);
+            // 【修正】アシンクロでは2は内部的に4になる。2(保持)の高さは0にする
+            let is_two = g_isAsync ? (sv === 4) : (sv === 2);
             
-            let h_val;
-            if (g_isAsync) {
-                h_val = abs_val;
-            } else {
-                h_val = (abs_val % 2 !== 0) ? (abs_val + 2) : abs_val; 
-            }
-            
-            let n = Math.ceil(abs_val / 2); 
-            
-            let is_tap = (abs_val === 2 && c.cross === 0 && c.rot === null);
-            let is_two = (abs_val === 2 && c.cross === 1); 
-            
-            let heightScale = 10.0 * (h_val * h_val) * currentHeight;
-            let tapHeightScale = 4.0 * (h_val * h_val) * currentHeight;
+            let heightScale = 10.0 * (sv * sv) * currentHeight;
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
-            let hOffset = is_two ? 0 : (is_tap ? bounce * tapHeightScale : bounce * heightScale);
-
-            let p0 = get_data(c.from);
-            let p1 = get_data(c.to);
-            let p = lerp(p0, p1, timeRatio);
-            p.y -= hOffset;
-
-            let angle = 0.0;
-            let baseTilt = 25.0 * Math.PI / 180.0;
+            let hOffset = is_two ? 0 : bounce * heightScale;
 
             if (c.propeller === 1) {
-                let isHorizontal2x = (abs_val === 2 && (c.from === -1 || c.from === 1));
+                let isHorizontal2x = (c.value === 2 && (c.from === -1 || c.from === 1) && c.propeller === 1);
+                let p, angle;
+
                 if (isHorizontal2x) {
-                    let angle_h = (c.from === -1) ? timeRatio * Math.PI : -timeRatio * Math.PI;
-                    draw_horizontal_devilstick(p, angle_h, color);
-                } else {
-                    let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : n;
-                    if (c.from <= -2) { angle = -baseTilt - timeRatio * Math.PI * base_s; } 
-                    else if (c.from === -1 || c.from === 1) {
+                    let p0, p1;
+                    if (c.from === -1) {
+                        p0 = g_leftHand; p1 = g_rightHand;
+                        angle = timeRatio * Math.PI; 
+                    } else {
+                        p0 = g_rightHand; p1 = g_leftHand;
+                        angle = -timeRatio * Math.PI; 
+                    }
+                    p = lerp(p0, p1, timeRatio);
+                    draw_horizontal_devilstick(p, angle, color);
+                } 
+                else {
+                    let p0 = get_data(c.from); let p1 = get_data(c.to);
+                    p = lerp(p0, p1, timeRatio);
+                    p.y -= hOffset;
+
+                    let s = Math.floor(c.value / 2);
+                    let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
+                    let angle = 0.0;
+                    let baseTilt = 25.0 * Math.PI / 180.0;
+                    if (c.from <= -2) {
+                        angle = -baseTilt - timeRatio * Math.PI * base_s;
+                    } else if (c.from === -1 || c.from === 1) {
                         let dir = (c.to > c.from) ? 1.0 : -1.0;
-                        let swing = 2 * Math.sin(timeRatio * Math.PI - Math.PI / 2) * baseTilt;
+                        let swing = 2 * Math.sin(timeRatio * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
                         let turns = 0.5 * base_s - 0.5;
-                        angle = dir * swing + dir * (timeRatio * turns * Math.PI * 2.0);
-                    } 
-                    else if (c.from >= 2) { angle = baseTilt + timeRatio * Math.PI * base_s; }
+                        let spin = timeRatio * turns * Math.PI * 2.0;
+                        angle = dir * swing + dir * spin;
+                    } else if (c.from >= 2) {
+                        angle = baseTilt + timeRatio * Math.PI * base_s;
+                    }
                     draw_devilstick(p, angle, color);
                 }
             } 
             else if (c.propeller === 2) {
-                let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : n;
-                draw_horizontal_devilstick(p, timeRatio * Math.PI * base_s, color);
+                let p;
+                let s = Math.floor(c.value / 2);
+                let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
+
+                let handStart, handEnd;
+                if (c.from <= -1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
+                if (c.to <= -1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
+
+                p = lerp(handStart, handEnd, timeRatio);
+                p.y -= hOffset;
+
+                let angle = timeRatio * Math.PI * base_s;
+                draw_horizontal_devilstick(p, angle, color);
             }
             else if (c.propeller === 5) {
-                p.y = ((g_leftHand.y + g_rightHand.y) / 2) - 20 - hOffset;
-                angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
+                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p = lerp(p0, p1, timeRatio);
+                
+                let centerY = (g_leftHand.y + g_rightHand.y) / 2;
+                p.y = centerY - 20; 
+                p.y -= hOffset;
+
+                let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
                 draw_devilstick(p, angle, color);
             }
             else if (c.propeller === 3) {
-                let spinRatio = Math.min((gt - startTime) / duration, 1.0);
+                let current_dt = gt - startTime;
+                let spinRatio = current_dt / duration;
+                if (spinRatio > 1.0) spinRatio = 1.0;
+
                 let centerX = (g_leftHand.x + g_rightHand.x) / 2;
                 let centerY = (g_leftHand.y + g_rightHand.y) / 2;
-                p = { x: centerX, y: centerY - 20 };
+                let p = { x: centerX, y: centerY - 20 };
+
                 let A_start = get_data(c.from).angle;
                 let deg_start = A_start / DEG_TO_RAD;
+
                 let isRightStart = (deg_start > 0);
 
                 if (spinRatio <= 0.20) {
@@ -936,7 +951,8 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                     let p_phase = (spinRatio - 0.20) / 0.60;
                     let flat_start = (isRightStart ? 90 : -90) * DEG_TO_RAD;
                     let spin_dir = isRightStart ? -1 : 1;
-                    draw_horizontal_devilstick(p, flat_start + spin_dir * p_phase * Math.PI * 3, color);
+                    let flat_angle = flat_start + spin_dir * p_phase * Math.PI * 3;
+                    draw_horizontal_devilstick(p, flat_angle, color);
                 }
                 else {
                     let p_phase = (spinRatio - 0.80) / 0.20;
@@ -947,34 +963,34 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 }
             }
             else {
-                // セルフタップの厳密な回転方向ロジック
-                if (is_tap) {
-                    let direction = 1.0; 
-                    if (c.side === 0) { direction = c.is_minus ? 1.0 : -1.0; } 
-                    else { direction = c.is_minus ? -1.0 : 1.0; }
-                    let startAngle = direction * baseTilt;
-                    angle = startAngle + direction * (timeRatio * Math.PI);
-                    draw_devilstick(p, angle, color);
-                    return;
-                }
+                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p = lerp(p0, p1, timeRatio);
+                p.y -= hOffset;
 
-                // 通常トスの回転ロジック
                 let A_start = p0.angle;
                 let A_target = p1.angle;
                 let TotalRotDeg = 0;
-                
-                let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : n;
+
+                let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
+                let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
+                let isAsyncOdd = g_isAsync && (sv % 4 !== 0);
+                let asyncOddRot = 100 + 180 * (a_val - 1);
 
                 if (c.angleExpr) {
-                    let expr = c.angleExpr;
-                    if (expr === "-(100+(n-1)*180)") TotalRotDeg = -(100 + (s_val - 1) * 180);
-                    else if (expr === "(100+(n-1)*180)") TotalRotDeg = (100 + (s_val - 1) * 180);
-                    else if (expr === "(80+(n-1)*180)") TotalRotDeg = (80 + (s_val - 1) * 180);
-                    else if (expr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (s_val - 1) * 180);
-                    else if (expr === "180n") TotalRotDeg = 180 * s_val;
-                    else if (expr === "-180n") TotalRotDeg = -180 * s_val;
+                    if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    else if (c.angleExpr === "-180a" || c.angleExpr === "-180n") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
+                    else if (c.angleExpr === "-(100+(a-1)*180)" || c.angleExpr === "-(100+(n-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
                 } else {
+                    let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (g_isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
                     let rot_base = 180 * s_val;
+                    if (g_isAsync && (sv % 4 !== 0)) {
+                        rot_base = 100 + 180 * (s_val - 1);
+                    }
+
                     if (c.from <= -2) TotalRotDeg = -rot_base;
                     else if (c.from >= 2) TotalRotDeg = rot_base;
                     else {
@@ -984,11 +1000,14 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 }
 
                 let totalRotRad = TotalRotDeg * DEG_TO_RAD;
+                
                 let idealEndAngle = A_start + totalRotRad;
                 let k = Math.round((idealEndAngle - A_target) / Math.PI);
                 let safeEndAngle = A_target + k * Math.PI;
+                let diff = Math.abs(idealEndAngle - safeEndAngle);
                 
-                if (Math.abs(idealEndAngle - safeEndAngle) <= 0.001) {
+                let angle;
+                if (diff <= 0.001) {
                     angle = A_start + totalRotRad * timeRatio;
                 } else {
                     angle = A_start + (safeEndAngle - A_start) * timeRatio;
@@ -1050,12 +1069,16 @@ function update(timestamp) {
 
     let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
     
+    // アシンクロでは左右の手の位相を反転させ、左手と右手を逆にする
     let period = g_isAsync ? (BEAT_TIME * 2) : BEAT_TIME;
-    let left_phase = 0;
-    let right_phase = g_isAsync ? BEAT_TIME : 0;
+    let left_phase = g_isAsync ? BEAT_TIME : 0;
+    let right_phase = 0;
     
     let left_hs = calcHandMotion(virtualTime, period, left_phase);
     let right_hs = calcHandMotion(virtualTime, period, right_phase);
+    if (g_isAsync) {
+        [left_hs, right_hs] = [right_hs, left_hs];
+    }
     
     let leftHY = handBaseY + left_hs * 20.0;
     let rightHY = handBaseY + right_hs * 20.0;
@@ -1247,6 +1270,7 @@ document.getElementById("speedInput").addEventListener("input", function(e) { cu
 document.getElementById("heightInput").addEventListener("input", function(e) { 
     currentHeight = parseFloat(e.target.value); 
     document.getElementById("heightVal").innerText = currentHeight.toFixed(1) + "x"; 
+    initSimulation();
 });
 
 document.getElementById("startBtn").addEventListener("click", initSimulation);
