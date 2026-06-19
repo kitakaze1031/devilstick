@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>サイトスワップ（Siteswap）解説ガイド</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        h1 {
+            font-size: 28px;
+            color: #1e3a8a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 20px;
+            color: #1e3a8a;
+            border-left: 5px solid #3b82f6;
+            padding-left: 12px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            font-size: 16px;
+            color: #2563eb;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        p {
+            margin-bottom: 1.5em;
+            text-align: justify;
+        }
+        ul, ol {
+            margin-bottom: 1.5em;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 0.5em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-weight: bold;
+        }
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+        .note {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: -15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .warning-box {
+            background-color: #fff7ed;
+            border: 1px solid #ffedd5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border-left: 5px solid #f97316;
+        }
+        .danger-box {
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border-left: 5px solid #ef4444;
+        }
+        .success-box {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border-left: 5px solid #22c55e;
+        }
+        .highlight {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+        }
+        .comparison-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 25px;
+        }
+        .sync-table th {
+            background-color: #e2e8f0;
+        }
+        .bg-group1 { background-color: #ffe4e6 !important; }
+        .bg-group2 { background-color: #dcfce7 !important; }
+        .bg-group3 { background-color: #fef9c3 !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>サイトスワップ（Siteswap）解説</h1>
+    
+    <p>サイトスワップとは、ジャグリングの投げ方を数字で表すための表記法です。数字はオブジェクトが空中に投げ出され、次にいつ戻ってくるか（何手先に投げられるか）を表現します。数字が大きいほど宙にいる時間が長い（＝より高く投げる）ことを意味します。例えば、「3」は3時刻目に、「4」は4時刻目に手に返ってくるということです。</p>
+    
+    <p>手の動かし方によって表記方法が異なり、交互に手を動かす「アシンクロ」と、同時に手を動かす「シンクロ」の2種類があります。</p>
+
+    <h2>アシンクロのサイトスワップ</h2>
+    <p>時刻ごとに左右の手を交互に動かしてオブジェクトを浮かせます。（デビルスティックの場合はハンドスティックを交互に動かしてたたいて浮かします。）</p>
+    <p>数字の性質として、<strong>偶数は同じ手</strong>、<strong>奇数は反対の手</strong>に戻ってきます。また、「0」「1」「2」は特殊な意味を持っています。</p>
+    
+    <div class="highlight">
+        <strong>【特殊な数字の意味】</strong>
+        <ul>
+            <li><strong>0</strong>：その時刻に動く手には何もない状態</li>
+            <li><strong>1</strong>：投げずに素早く反対の手へ手渡しする</li>
+            <li><strong>2</strong>：投げずに手に持ったまま保持する</li>
+        </ul>
+    </div>
+
+    <h3>例1：1 （111111... の省略）</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>…</td>
+        </tr>
+    </table>
+
+    <h3>例2：300 （300300... の省略）</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>なし</td><td>3(3-1)</td><td>3(3-1*2)</td><td>なし</td><td>3(3-1)</td><td>3(3-1*2)</td><td>なし</td><td>3(3-1)</td><td>3(3-1*2)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>3</td><td>0</td><td>0</td><td>3</td><td>0</td><td>0</td><td>3</td><td>0</td><td>0</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>…</td>
+        </tr>
+    </table>
+
+    <h3>例3：20</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>なし</td><td>2(2-1)</td><td>なし</td><td>2(2-1)</td><td>なし</td><td>2(2-1)</td><td>なし</td><td>2(2-1)</td><td>なし</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>2</td><td>0</td><td>2</td><td>0</td><td>2</td><td>0</td><td>2</td><td>0</td><td>2</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>…</td>
+        </tr>
+    </table>
+    <p class="note">※実際には、2は「手の中に持ったまま」という特殊な意味のため、オブジェクトは空中にありません。</p>
+
+    <h3>例4：312 （オブジェクト数：2つ）</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>なし</td><td>3(3-1)</td><td>3(3-1*2)</td><td>2(2-1)</td><td>3(3-1)</td><td>3(3-1*2)</td><td>2(2-1)</td><td>3(3-1)</td><td>3(3-1*2)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>3</td><td>1</td><td>2</td><td>3</td><td>1</td><td>2</td><td>3</td><td>1</td><td>2</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>…</td>
+        </tr>
+    </table>
+
+    <h2>シンクロのサイトスワップ</h2>
+    <p>シンクロのサイトスワップでは、時刻ごとに両手を同時に動かしてオブジェクトを浮かせます。これは、アシンクロにおける時刻 2n-1 と 2n の左手・右手の動きを、時刻 2n で同時に動かすようなイメージです。</p>
+    
+    <div class="comparison-box">
+        <p style="margin-top: 0; font-weight: bold;">【アシンクロとシンクロの時間対応表】</p>
+        <p style="font-size: 14px; color: #475569; margin-bottom: 10px;">アシンクロの2つの連続した時刻（2n-1 と 2n）が、シンクロでは1つの同時タイミング（2n）へとまとまります。同じ色のボックスが、統合されるタイミングを表しています。</p>
+        
+        <strong>■ アシンクロ（交互に動かすタイムライン）</strong>
+        <table class="sync-table" style="margin-bottom: 15px;">
+            <tr>
+                <th>時刻</th>
+                <td class="bg-group1">2n-1</td><td class="bg-group1">2n</td>
+                <td class="bg-group2">2n+1</td><td class="bg-group2">2n+2</td>
+                <td class="bg-group3">2n+3</td><td class="bg-group3">2n+4</td>
+                <td>…</td>
+            </tr>
+            <tr>
+                <th>手</th>
+                <td class="bg-group1">左</td><td class="bg-group1">右</td>
+                <td class="bg-group2">左</td><td class="bg-group2">右</td>
+                <td class="bg-group3">左</td><td class="bg-group3">右</td>
+                <td>…</td>
+            </tr>
+        </table>
+
+        <div style="text-align: center; font-size: 18px; margin: 10px 0; color: #64748b;">▼ 同時タイミング（2n）へギュッとまとめる</div>
+
+        <strong>■ シンクロ（同時に動かすタイムライン）</strong>
+        <table class="sync-table" style="margin-bottom: 0;">
+            <tr>
+                <th>時刻</th>
+                <td class="bg-group1">2n</td>
+                <td></td>
+                <td class="bg-group2">2(n+1)</td>
+                <td></td>
+                <td class="bg-group3">2(n+2)</td>
+                <td>…</td>
+            </tr>
+            <tr>
+                <th>手</th>
+                <td class="bg-group1"><strong>(左, 右)</strong></td>
+                <td></td>
+                <td class="bg-group2"><strong>(左, 右)</strong></td>
+                <td></td>
+                <td class="bg-group3"><strong>(左, 右)</strong></td>
+                <td>…</td>
+            </tr>
+        </table>
+    </div>
+
+    <p>同時に動かすことで奇数が使えなくなり、そのままでは反対の手へオブジェクトを移動できなくなります。そのため、シンクロでは以下の定義を用いて奇数の代用とします。</p>
+    
+    <ul>
+        <li><strong>通常の偶数</strong>：同じ手に移動する</li>
+        <li><strong>偶数に「x」を付ける</strong>：反対の手に移動する（例：2x, 4x）</li>
+    </ul>
+    
+    <p>表記の際は、<code>(記号1, 記号2)</code> のように括弧で囲み、<strong>記号1は左手</strong>、<strong>記号2は右手</strong>の動作を表します（例：<code>(2x, 2x)</code>、<code>(4, 2x)(2x, 4)</code> など）。</p>
+
+    <h3>例5：(2x,0)(0,2x)</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>2</td><td>4</td><td>6</td><td>8</td><td>10</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>2x(2-2)</td><td>2x(2-2)</td><td>2x(2-2)</td><td>2x(2-2)</td><td>2x(2-2)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>(2x, 0)</td><td>(0, 2x)</td><td>(2x, 0)</td><td>(0, 2x)</td><td>(2x, 0)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>…</td>
+        </tr>
+    </table>
+    <p class="note">※2は本来「手の中に保持する」意味ですが、「x」が付くことで「投げずに素早く反対の手へ手渡し（実質1の動き）」、または「非常に低いクロス投げ」として処理されます。</p>
+
+    <h3>例6：(2x,2x)</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>2</td><td>4</td><td>6</td><td>8</td><td>10</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>2x(2-2)</td><td>2x(2-2)</td><td>2x(2-2)</td><td>2x(2-2)</td><td>2x(2-2)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>(2x, 2x)</td><td>(2x, 2x)</td><td>(2x, 2x)</td><td>(2x, 2x)</td><td>(2x, 2x)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>…</td>
+        </tr>
+    </table>
+
+    <h3>例7：(2,2)</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>2</td><td>4</td><td>6</td><td>8</td><td>10</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>なし</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>(2, 2)</td><td>(2, 2)</td><td>(2, 2)</td><td>(2, 2)</td><td>(2, 2)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>…</td>
+        </tr>
+    </table>
+    <p class="note">※実際には、2は「手の中に持ったまま」という特殊な意味のため、オブジェクトは空中にありません。</p>
+
+    <h3>例8：(4,2x)(2x,4)</h3>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>2</td><td>4</td><td>6</td><td>8</td><td>10</td><td>…</td>
+        </tr>
+        <tr>
+            <th>空中</th>
+            <td>4(4-2), 2x(2-2)</td><td>4(4-2), 2x(2-2)</td><td>4(4-2), 2x(2-2)</td><td>4(4-2), 2x(2-2)</td><td>4(4-2), 2x(2-2)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>(4, 2x)</td><td>(2x, 4)</td><td>(4, 2x)</td><td>(2x, 4)</td><td>(4, 2x)</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>(左, 右)</td><td>…</td>
+        </tr>
+    </table>
+
+    <h2>通常のルールでは「成立しない」エラー（衝突）の例</h2>
+    <p>サイトスワップの数字を適当に並べると、ジャグリングの物理的な法則と矛盾してしまい、<b>技として成立しない（不可能な）数字の並び</b>が生まれます。</p>
+    <p>基本ルールである「1つの時刻に、1つの手は、1つのオブジェクトしか扱えない」という前提が崩れ、同じ手・同じタイミングに複数のオブジェクトが落ちてきてガチャンとぶつかってしまう<b>衝突（クラッシュ）の例「21」</b>を見てみましょう。</p>
+
+    <h3>衝突する不成立の例：21 （212121... の省略）</h3>
+    <p>このパターンをタイムラインに落とし込むと、時刻3のタイミングで「1つの手に2つのオブジェクトが同時に返ってくる」という矛盾が発生します。</p>
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>2</td><td>1</td><td>2</td><td>1</td><td>2</td><td>1</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>左</td><td>右</td><td>左</td><td>右</td><td>左</td><td>右</td><td>…</td>
+        </tr>
+        <tr>
+            <th>キャッチ状況</th>
+            <td>（スタート）</td>
+            <td></td>
+            <td style="background-color: #fee2e2; color: #991b1b; font-weight: bold;">
+                ①時刻1の「2」がそのまま留まる<br>
+                ②時刻2の「1」が反対の手から届く
+            </td>
+            <td></td>
+            <td style="background-color: #fee2e2; color: #991b1b; font-weight: bold;">
+                ①時刻3の「2」がそのまま留まる<br>
+                ②時刻4の「1」が反対の手から届く
+            </td>
+            <td></td>
+            <td>…</td>
+        </tr>
+    </table>
+    <div class="warning-box">
+        <strong>【解説】矛盾：2つのオブジェクトが1つの手で衝突する</strong><br>
+        ・時刻1に左手で処理した「2」は、投げずに手に持ったまま<b>時刻3（左手）</b>に持ち越されます。<br>
+        ・時刻2に右手から投げた「1」は、素早い手渡しで1ステップ後の<b>時刻3（左手）</b>に届きます。<br>
+        <br>
+        その結果、<b>時刻3の左手には「キープしていたボール」と「右手から手渡されたボール」の2つが同時に存在してしまい、ガチャンと衝突します。</b>通常のアシンクロルールでは1つの手につき1個しか処理できないため、この「21」はエラー（不成立）となります。
+    </div>
+
+    <h2>新ルール「マルチプレックス（マルチ）」による解決：21[21]</h2>
+    <p>通常ルールではエラー（衝突）になってしまう「21」の重なりですが、これを逆手に取り、<b>「2つ同時に同じ手に集まるなら、その2つを片手で同時に掴んで、2個一気にポイッと投げればいいのでは？」</b>という発想で解決するのが、<b>マルチプレックス（通称：マルチ）</b>という拡張ルールです。</p>
+
+    <h3>マルチプレックスの表記ルール</h3>
+    <p>1つの時刻（片手）で複数のオブジェクトを同時に処理するため、それらの数字をスクエアブラケット <code>[ ]</code> で一括りに囲んで表現します。</p>
+    <ul>
+        <li><code>[21]</code> ：片手から同時に2つのオブジェクトを処理する（1つは手にキープ「2」、もう1つは反対の手へ手渡し「1」）</li>
+    </ul>
+
+    <h3>解決例：21[21]</h3>
+    <p>先ほどの衝突エラーを解決するために、オブジェクトが2個重なるタイミング（時刻3、時刻5…）の動作を、マルチプレックスである <b>`[21]`</b> に置き換えたサイトスワップです。これにより、美しくジャグリングが成立します。</p>
+
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>1</td><td>2</td>
+            <td style="background-color: #f0fdf4;">3</td>
+            <td>4</td>
+            <td style="background-color: #f0fdf4;">5</td>
+            <td>6</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td>2</td><td>1</td>
+            <td style="background-color: #dcfce7; font-weight: bold; color: #15803d;">[21]</td>
+            <td>1</td>
+            <td style="background-color: #dcfce7; font-weight: bold; color: #15803d;">[21]</td>
+            <td>1</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>左</td><td>右</td>
+            <td>左（マルチ）</td>
+            <td>右</td>
+            <td>左（マルチ）</td>
+            <td>right</td><td>…</td>
+        </tr>
+        <tr>
+            <th>オブジェクトの動き</th>
+            <td>1個保持</td>
+            <td>左手へ1個渡す</td>
+            <td style="color: #166534;">
+                集まった2個を同時に処理！<br>
+                （1個は保持、1個は右手へ）
+            </td>
+            <td>左手へ1個渡す</td>
+            <td style="color: #166534;">
+                集まった2個を同時に処理！<br>
+                （1個は保持、1個は右手へ）
+            </td>
+            <td>左手へ1個渡す</td>
+            <td>…</td>
+        </tr>
+    </table>
+
+    <div class="success-box">
+        <strong>【解説】マルチプレックスによる衝突の回避</strong><br>
+        時刻3の左手に2個のボールが集まった瞬間、通常の「2」や「1」を単体で投げるのではなく、<b>`[21]` というマルチプレックス技</b>を発動します。掴んだ2個のうち、1個はそのまま左手にキープ（2）し、もう1個はすかさず右手へ手渡し（1）します。<br>
+        このように、エラーとなる重なりを「複数同時投げ（マルチ）」としてシステムに組み込むことで、サイトスワップは衝突を回避し、さらに無限の表現力を手に入れることができます。
+    </div>
+
+    <h2>マルチプレックスを導入しても「絶対に成立しない」エラー：投げる数と返る数の不一致</h2>
+    <p>マルチプレックスを使えば、オブジェクトが何個重なろうとも全て同時に処理して解決できるように思えます。しかし、それでもなお<b>絶対にジャグリングとして成立しない致命的なエラーパターン</b>が存在します。</p>
+    <p>それが、特定の周期全体、あるいはその時刻で<b>「投げるように指示されている数」と、空から実際に「返ってくる（キャッチできる）数」が一致しない（不一致）</b>というエラーです。</p>
+
+    <h3>不成立の例：[31]00 （[31]00[31]00... の省略）</h3>
+    <p>このサイトスワップをタイムラインに落とし込み、何個投げて何個戻ってくるかを追ってみましょう。周期の2周目（時刻5）で完全に破綻します。</p>
+
+    <table>
+        <tr>
+            <th>時刻</th>
+            <td>1</td><td>2</td><td>3</td><td>4</td>
+            <td style="background-color: #fef2f2;">5</td>
+            <td>6</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動作</th>
+            <td style="font-weight: bold; color: #2563eb;">[31]</td>
+            <td>0</td><td>0</td><td>0</td>
+            <td style="background-color: #fee2e2; font-weight: bold; color: #b91c1c;">[31]（指示）</td>
+            <td>0</td><td>…</td>
+        </tr>
+        <tr>
+            <th>動く手</th>
+            <td>左</td><td>右</td><td>左</td><td>右</td>
+            <td>左</td><td>右</td><td>…</td>
+        </tr>
+        <tr>
+            <th>投げる数</th>
+            <td><strong style="color: #2563eb;">2個</strong>（3と1を投げる）</td>
+            <td>0個</td><td>0個</td><td>0個</td>
+            <td><strong style="color: #b91c1c;">2個投げろ！</strong></td>
+            <td>0個</td><td>…</td>
+        </tr>
+        <tr>
+            <th>キャッチ状況</th>
+            <td>（スタート）</td>
+            <td>時刻1の「1」が届く</td>
+            <td>なし</td>
+            <td>時刻1 of 「3」が届く</td>
+            <td style="background-color: #fee2e2; color: #991b1b; font-weight: bold;">
+                戻ってきたのは「0個」！<br>
+                （2個足りない）
+            </td>
+            <td>なし</td><td>…</td>
+        </tr>
+    </table>
+
+    <div class="danger-box">
+        <strong>【解説】致命的な矛盾：空から戻る数と、投げたい数が合わない</strong><br>
+        ・時刻1（左手）で <code>[31]</code> を発動し、<b>2つのオブジェクトを同時に投げ出しました</b>。<br>
+        ・そのうち「1」は反対の手である時刻2（右手）に届きます。しかし、時刻2の指示は「0（何もしない）」なので、このボールは<b>キャッチされずに床に落ちてしまい、空中から消滅します</b>。<br>
+        ・もう一方の「3」は反対の手である時刻4（右手）に届きます。しかしここでも指示は「0」なため、やはり<b>キャッチされず床に落ちて消滅します</b>。<br>
+        <br>
+        そして運命の時刻5（左手）が巡ってきます。サイトスワップの指示は「<code>[31]</code>（2個同時に投げろ）」です。しかし、過去に投げたボールは時刻2と時刻4ですべて消滅（キャッチミス）しており、<b>時刻5の左手には空から戻ってくるオブジェクトが1個もありません（0個）。</b><br>
+        <br>
+        マルチプレックスは「2個戻ってきたから2個同時に投げる」という風に、<b>『その手に返ってきたオブジェクトの数 ＝ そこで投げるオブジェクトの数』</b>が完璧に一致しているからこそ成立する技です。このように、指示されたオブジェクトの数が物理的に手に存在しない状態になってしまう並びは、マルチを導入しても絶対に成立しません。
+    </div>
+</div>
+
+</body>
+</html>

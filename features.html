@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>シミュレーターの機能と使い方</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        h1 {
+            font-size: 28px;
+            color: #1e3a8a;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 20px;
+            color: #1e3a8a;
+            border-left: 5px solid #3b82f6;
+            padding-left: 12px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        h3 { font-size: 16px; color: #2563eb; margin-top: 25px; margin-bottom: 10px; }
+        p { margin-bottom: 1.5em; text-align: justify; }
+        ul { margin-bottom: 1.5em; padding-left: 20px; }
+        li { margin-bottom: 0.5em; }
+        .feature-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .feature-box strong { display: block; font-size: 18px; color: #0f172a; margin-bottom: 10px; }
+        .highlight {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 20px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>デビルスティック サイトスワップ シミュレーターの機能</h1>
+    
+    <p>このページでは、シミュレーターの基本機能と、サイトスワップを入力する際の高度な設定ルールについて解説します。</p>
+
+    <h2>基本機能</h2>
+
+    <div class="feature-box">
+        <strong>1. サイトスワップの入力と再生</strong>
+        <p>パターン入力欄に数値を入力し「再生」ボタンを押すことで、そのパターンの動きをアニメーションで確認できます。シンクロ・アシンクロの両方に対応しています。</p>
+    </div>
+
+    <div class="feature-box">
+        <strong>2. 専用入力パッド</strong>
+        <p>専用キーボードを使用することで、括弧や特殊文字をワンタップで入力可能です。スマートフォンでの操作に最適化されています。</p>
+    </div>
+
+    <div class="feature-box">
+        <strong>3. スピード・高さのリアルタイム調整</strong>
+        <p>シミュレーション中にスライダーで速度（0.25x〜2.0x）や高さ（0.0x〜1.0x）を自由に変更できます。</p>
+    </div>
+
+    <div class="feature-box">
+        <strong>4. プリセット機能</strong>
+        <p>用意されたプリセットボタンから、代表的な技のパターンを瞬時に読み込むことができます。</p>
+    </div>
+
+    <div class="feature-box">
+        <strong>5. 動画の録画と保存</strong>
+        <p>「動画を録画する」ボタンで、作成したパターンのアニメーションを動画として保存・共有可能です。</p>
+    </div>
+
+    <h2>高度な設定ルール（修飾子・仕様）</h2>
+    <div class="highlight">
+        <p style="font-size: 0.9em; color: #666; margin-bottom: 20px;">※本ページのルール解説および仕様説明は、まだちゃんと書いていないのでとりあえず、AIに書いてもらいました</p>
+
+        <h3>1. 基本的な数値の挙動</h3>
+        <ul>
+            <li><strong>正の整数 (1, 2, 3...)</strong>：スティックが滞空する時間を表します。数字が大きいほどスティックは高く上がり、滞空時間が長くなります。</li>
+            <li><strong>負の数の動き</strong>：スティックを投げずに保持したまま、または受け取った状態で特定の軌道を描くという特殊な動作を示唆します。</li>
+        </ul>
+
+        <h3>2. 数字と回転数の関係</h3>
+        <ul>
+            <li><strong>回転数調整 (r)</strong>：数値の後に「r＋数字」で半回転単位の回転数を指定します。<br>
+            例：<code>4r1</code> ＝ 4の高さで1回転。回転数を増やすことで、よりアクロバティックな投げ技をシミュレートできます。</li>
+        </ul>
+
+        <h3>3. 特殊修飾子一覧</h3>
+        <ul>
+            <li><strong>f (フラット)</strong>：スティックを水平（フラット）に保ったまま扱う動作。</li>
+            <li><strong>+ (フラーリッシュ)</strong>：叩きながら（ヒットさせながら）行うフラーリッシュ動作。連続した打撃を加える動きを表現します。</li>
+            <li><strong>0* (片手空きフラーリッシュ)</strong>：0があるとき、片手が空くタイミングで発生するフラーリッシュ。</li>
+            <li><strong>p (パタパタ)</strong>：スティックを小刻みに揺らす、あるいは往復させる動作。</li>
+            <li><strong>t (ヘリコプタータップ)</strong>：回転させながらタップする、複合的な打撃動作。</li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
