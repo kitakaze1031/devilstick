@@ -265,6 +265,9 @@ function get_data(id) {
         "-3": { x: 340, y: 400, angle: 50 * DEG_TO_RAD },
         "-2": { x: 340, y: 400, angle: -50 * DEG_TO_RAD }, // 左手
         "-1": { x: 400, y: 460, angle: -50 * DEG_TO_RAD }, // センター左
+        "f-1": { x: 340, y: 400, angle: 0 * DEG_TO_RAD }, // f: left-flat center
+        "f0": { x: 400, y: 400, angle: 0 * DEG_TO_RAD },  // f: center-flat
+        "f1": { x: 460, y: 400, angle: 0 * DEG_TO_RAD },  // f: right-flat
          "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },  // センター右
          "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },  // 右手
          "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
@@ -308,6 +311,20 @@ const ASYNC_PATTERN_TRANSITIONS = {
 };
 
 // =====================================
+// フラット(f)の遷移マッピング
+// =====================================
+const F_TRANSITION_MAP = {
+    "-2al": { "f-2al": "f-1", default: "f-1" },
+    "-2ar": { "f-2ar": "f1", default: "f1" },
+    "2al": { "f2al": "f-1", default: "f-1" },
+    "2ar": { "f2ar": "f1", default: "f1" },
+    "2axl": { "f2axr": "f0", default: "f0" },
+    "2axr": { "f2axl": "f0", default: "f0" },
+    "f2axl": { "2axr": "f2axr", "f2axr": "f0", "f2ar": "f1", default: "f0" },
+    "f2axr": { "2axl": "f2axl", "f2axl": "f0", "f2al": "f-1", default: "f0" }
+};
+
+// =====================================
 // 同期用の現在地(from)と行き先(to)から角度を決める表
 // =====================================
 const SYNC_ANGLE_RULES = {
@@ -317,8 +334,8 @@ const SYNC_ANGLE_RULES = {
      "3": { "4": "-180a", "1": "-(80+(a-1)*180)", "-1": "-180a"  , "3": "-180a"},
     "-2": { "-1": "-180a", "1": "-(80+(a-1)*180)" , "-2": "-180a"},
      "2": { "1": "180a", "-1": "(80+(a-1)*180)" , "2": "180a"},
-    "-1": { "-4": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "-3": "(100+(a-1)*180)" },
-     "1": { "4": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "3": "-(100+(a-1)*180)" }
+    "-1": { "-4": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a", "2": "(100+(a-1)*180)", "-3": "(100+(a-1)*180)" },
+     "1": { "4": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)","1": "-180a", "-2": "-(100+(a-1)*180)", "3": "-(100+(a-1)*180)" }
 };
 
 // =====================================
@@ -331,8 +348,8 @@ const ASYNC_ANGLE_RULES = {
      "3": { "4": "-180n", "1": "-(80+(n-1)*180)", "-1": "-180n"  , "3": "-180n"},
     "-2": { "-1": "-180n", "1": "-(80+(n-1)*180)" , "-2": "-180n"},
      "2": { "1": "180n", "-1": "(80+(n-1)*180)" , "2": "180n"},
-    "-1": { "-4": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "2": "(100+(n-1)*180)", "-3": "(100+(n-1)*180)" },
-     "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)", "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
+    "-1": { "-4": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n", "2": "(100+(n-1)*180)", "-3": "(100+(n-1)*180)" },
+     "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)","1": "-180n",  "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
 };
 
 // =====================================
@@ -661,7 +678,7 @@ function build(seq, balls) {
             let to = (side === 0) ? (cross ? 1 : -2) : (cross ? -1 : 2);
             let rot = th.rot;
 
-            table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot };
+            table[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot, handSide: side };
 
             t += Math.floor(value / 2);
             if (to === -1 || to === 1) side ^= 1;
@@ -914,14 +931,27 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 draw_horizontal_devilstick(p, angle, color);
             }
             else if (c.propeller === 5) {
-                let p0 = get_data(c.from); let p1 = get_data(c.to);
-                let p = lerp(p0, p1, timeRatio);
+                let fTargetId = "f0";
                 
-                let centerY = (g_leftHand.y + g_rightHand.y) / 2;
-                p.y = centerY - 20; 
+                let nextBallData = null;
+                for (let path_offset = 1; path_offset < T; path_offset++) {
+                    let next_t = (t + path_offset) % T;
+                    if (table[ballIndex][next_t] && table[ballIndex][next_t].value > 0) {
+                        nextBallData = table[ballIndex][next_t];
+                        break;
+                    }
+                }
+                
+                if (nextBallData && F_TRANSITION_MAP[c.action_str]) {
+                    let mapEntry = F_TRANSITION_MAP[c.action_str];
+                    fTargetId = mapEntry[nextBallData.action_str] || mapEntry.default || "f0";
+                }
+                
+                let p0 = get_data(fTargetId);
+                let p = { x: p0.x, y: p0.y };
                 p.y -= hOffset;
 
-                let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
+                let angle = (p0.x <= 400) ? 90 * DEG_TO_RAD : (p0.x >= 400 ? -90 * DEG_TO_RAD : 0);
                 draw_devilstick(p, angle, color);
             }
             else if (c.propeller === 3) {
@@ -962,6 +992,13 @@ function draw_ball(balls, globalTime, color, ballIndex) {
             else {
                 let p0 = get_data(c.from); let p1 = get_data(c.to);
                 let p = lerp(p0, p1, timeRatio);
+
+                let isCenterHit = (c.from === -1 && c.to === -1) || (c.from === 1 && c.to === 1);
+                if (isCenterHit) {
+                    const centerStrike = { x: 400, y: 460 };
+                    let strikeProgress = Math.sin(timeRatio * Math.PI);
+                    p = lerp(p0, centerStrike, strikeProgress);
+                }
                 p.y -= hOffset;
 
                 let A_start = p0.angle;
@@ -1020,6 +1057,54 @@ function draw_ball(balls, globalTime, color, ballIndex) {
 // =====================================
 // メインループ
 // =====================================
+function getCenterHitProgress(globalTime, handSide) {
+    if (!table) return null;
+    let totalTime = T * BEAT_TIME;
+
+    for (let b = 0; b < g_balls; b++) {
+        for (let t = 0; t < T; t++) {
+            let c = table[b][t];
+            if (!c || c.value <= 0) continue;
+            if (c.handSide !== handSide) continue;
+            if (c.from !== c.to) continue;
+            if (c.from !== -1 && c.from !== 1) continue;
+
+            let startTime = t * BEAT_TIME;
+            let duration = (c.value / 2.0) * BEAT_TIME;
+
+            if (c.propeller === 3) {
+                let t_s = t;
+                let t_r = -1;
+                for (let offset = 1; offset < T; offset++) {
+                    let check_t = (t + offset) % T;
+                    if (table[b][check_t] && table[b][check_t].propeller === 4 && table[b][check_t].value > 0) {
+                        t_r = check_t;
+                        break;
+                    }
+                }
+                if (t_r === -1) t_r = (t_s + 1) % T;
+                let total_beats = 0;
+                if (t_r >= t_s) {
+                    total_beats = t_r - t_s + Math.floor(c.value / 2);
+                } else {
+                    total_beats = (t_r + T) - t_s + Math.floor(c.value / 2);
+                }
+                duration = total_beats * BEAT_TIME;
+            }
+
+            let endTime = startTime + duration;
+            let gt = globalTime;
+            if (endTime > totalTime && gt < startTime) { gt += totalTime; }
+
+            if (gt >= startTime && gt < endTime) {
+                let timeRatio = (gt - startTime) / duration;
+                return Math.sin(timeRatio * Math.PI);
+            }
+        }
+    }
+    return null;
+}
+
 function update(timestamp) {
     if (!lastTimestamp) lastTimestamp = timestamp;
     
@@ -1083,8 +1168,19 @@ function update(timestamp) {
     g_leftHand = { x: leftBaseX, y: leftHY };
     g_rightHand = { x: rightBaseX, y: rightHY };
 
-    ctx.beginPath(); ctx.arc(g_leftHand.x, g_leftHand.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
-    ctx.beginPath(); ctx.arc(g_rightHand.x, g_rightHand.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
+    let handLeftPos = g_leftHand;
+    let handRightPos = g_rightHand;
+    let leftCenterProgress = getCenterHitProgress(globalTime, 0);
+    let rightCenterProgress = getCenterHitProgress(globalTime, 1);
+    if (leftCenterProgress !== null) {
+        handLeftPos = lerp(g_leftHand, { x: 400, y: 460 }, leftCenterProgress);
+    }
+    if (rightCenterProgress !== null) {
+        handRightPos = lerp(g_rightHand, { x: 400, y: 460 }, rightCenterProgress);
+    }
+
+    ctx.beginPath(); ctx.arc(handLeftPos.x, handLeftPos.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
+    ctx.beginPath(); ctx.arc(handRightPos.x, handRightPos.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
 
     let tr = g_seq[beat];
 
@@ -1094,28 +1190,28 @@ function update(timestamp) {
 
         if (th_a_0 && th_b_0) {
             if (th_a_0.mode === 1) {
-                let passPos = lerp(g_leftHand, g_rightHand, u);
+                let passPos = lerp(handLeftPos, handRightPos, u);
                 ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
             } else if (th_a_0.mode === 3) {
-                let spinPos = lerp(g_leftHand, g_rightHand, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+                let spinPos = lerp(handLeftPos, handRightPos, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
                 let spinAngle = -u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
             }
             if (th_b_0.mode === 1) {
-                let passPos = lerp(g_rightHand, g_leftHand, u);
+                let passPos = lerp(handRightPos, handLeftPos, u);
                 ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
             } else if (th_b_0.mode === 3) {
-                let spinPos = lerp(g_rightHand, g_leftHand, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
+                let spinPos = lerp(handRightPos, handLeftPos, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
                 let spinAngle = u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
             }
         } 
         
         tr.throws_a.forEach(th => {
-            if (th.hs === HS_HAND1) draw_hand1(g_leftHand, u, 0);
-            if (th.hs === HS_HAND2) draw_hand2(g_leftHand, u, 0);
+            if (th.hs === HS_HAND1) draw_hand1(handLeftPos, u, 0);
+            if (th.hs === HS_HAND2) draw_hand2(handLeftPos, u, 0);
         });
         tr.throws_b.forEach(th => {
-            if (th.hs === HS_HAND1) draw_hand1(g_rightHand, u, 1);
-            if (th.hs === HS_HAND2) draw_hand2(g_rightHand, u, 1);
+            if (th.hs === HS_HAND1) draw_hand1(handRightPos, u, 1);
+            if (th.hs === HS_HAND2) draw_hand2(handRightPos, u, 1);
         });
     }
 
