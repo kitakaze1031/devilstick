@@ -265,9 +265,15 @@ function get_data(id) {
         "-3": { x: 340, y: 400, angle: 50 * DEG_TO_RAD },
         "-2": { x: 340, y: 400, angle: -50 * DEG_TO_RAD }, // 左手
         "-1": { x: 400, y: 460, angle: -50 * DEG_TO_RAD }, // センター左
-        "f-1": { x: 340, y: 400, angle: 0 * DEG_TO_RAD }, // f: left-flat center
-        "f0": { x: 400, y: 400, angle: 0 * DEG_TO_RAD },  // f: center-flat
-        "f1": { x: 460, y: 400, angle: 0 * DEG_TO_RAD },  // f: right-flat
+        "f-1": { x: 340, y: 400, angle: 90 * DEG_TO_RAD }, // f: left-flat center
+        "f0": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },  // f: center-flat
+        "f1": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },  // f: right-flat
+        "f-1o": { x: 340, y: 400, angle: 90 * DEG_TO_RAD }, // f: left-flat center
+        "f-1i": { x: 340, y: 400, angle: 90 * DEG_TO_RAD }, // f: left-flat center
+        "f0l": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },  // f: center-flat
+        "f0r": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },  // f: center-flat
+        "f1o": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },  // f: right-flat
+        "f1i": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },  // f: right-flat
          "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },  // センター右
          "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },  // 右手
          "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
@@ -311,17 +317,25 @@ const ASYNC_PATTERN_TRANSITIONS = {
 };
 
 // =====================================
-// フラット(f)の遷移マッピング
+// フラット(f)の遷移マッピング (行き先 to のみ決定)
 // =====================================
 const F_TRANSITION_MAP = {
-    "-2al": { "f-2al": "f-1", default: "f-1" },
-    "-2ar": { "f-2ar": "f1", default: "f1" },
-    "2al": { "f2al": "f-1", default: "f-1" },
-    "2ar": { "f2ar": "f1", default: "f1" },
-    "2axl": { "f2axr": "f0", default: "f0" },
-    "2axr": { "f2axl": "f0", default: "f0" },
-    "f2axl": { "2axr": "f2axr", "f2axr": "f0", "f2ar": "f1", default: "f0" },
-    "f2axr": { "2axl": "f2axl", "f2axl": "f0", "f2al": "f-1", default: "f0" }
+    "2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" } },
+    "-2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" } },
+    "2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" } },
+    "-2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" } },
+    "2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" } },
+    "-2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" } },
+    "2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" } },
+    "-2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" } },
+    "f2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "2axr": { to: "f0r" }, "-2axl": { to: "f0l" }, "-2ar": { to: "3" }, "2ar": { to: "2" } },
+    "f-2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "2axr": { to: "f0r" }, "-2axl": { to: "f0l" }, "-2ar": { to: "3" }, "2ar": { to: "2" } },
+    "f2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "2axl": { to: "f0l" }, "-2axl": { to: "f0r" }, "-2al": { to: "-3" }, "2al": { to: "-2" } },
+    "f-2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "2axl": { to: "f0l" }, "-2axl": { to: "f0r" }, "-2al": { to: "-3" }, "2al": { to: "-2" } },
+    "f2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "-2al": { to: "f-1o" }, "2al": { to: "f-1i" }, "-2axl": { to: "f0r" }, "2axl": { to: "f0l" } },
+    "f-2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "-2al": { to: "f-1o" }, "2al": { to: "f-1i" }, "-2axl": { to: "f0r" }, "2axl": { to: "f0l" } },
+    "f2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "-2ar": { to: "f1o" }, "2ar": { to: "f1i" }, "-2axr": { to: "f0l" }, "2axr": { to: "f0r" } },
+    "f-2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "-2ar": { to: "f1o" }, "2ar": { to: "f1i" }, "-2axr": { to: "f0l" }, "2axr": { to: "f0r" } }
 };
 
 // =====================================
@@ -350,6 +364,29 @@ const ASYNC_ANGLE_RULES = {
      "2": { "1": "180n", "-1": "(80+(n-1)*180)" , "2": "180n"},
     "-1": { "-4": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n", "2": "(100+(n-1)*180)", "-3": "(100+(n-1)*180)" },
      "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)","1": "-180n",  "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
+};
+
+// =====================================
+// フラット用の現在地(from)と行き先(to)から角度を決める表
+// =====================================
+const F_ANGLE_RULES = {
+    "-4": { "f-1": "-(140+(a-1)*180)", "f0": "-(140+(a-1)*180)" },
+    "4": { "f1": "(140+(a-1)*180)", "f0": "(140+(a-1)*180)" },
+    "-3": { "f-1": "(140+(a-1)*180)", "f0": "(140+(a-1)*180)" },
+    "3": { "f1": "-(140+(a-1)*180)", "f0": "-(140+(a-1)*180)" },
+    "-2": { "f-1": "-(220+(a-1)*180)", "f0": "-(220+(a-1)*180)" },
+    "2": { "f1": "(220+(a-1)*180)", "f0": "(220+(a-1)*180)" },
+    "-1": { "f-1": "-(220+(a-1)*180)", "f0": "(140+(a-1)*180)", "f1": "(140+(a-1)*180)" },
+    "1": { "f1": "(220+(a-1)*180)", "f0": "-(140+(a-1)*180)", "f-1": "-(140+(a-1)*180)" },
+    "f0": { "f0": "0", "f-1": "0", "f1": "0", "f0l": "0", "f0r": "0", "f-1o": "0", "f1o": "0", "f-1i": "0", "f1i": "0" },
+    "f-1": { "f0": "0", "f-1": "0", "f1": "0", "f0l": "0", "f0r": "0", "f-1o": "0", "f1o": "0", "f-1i": "0", "f1i": "0" },
+    "f1": { "f0": "0", "f-1": "0", "f1": "0", "f0l": "0", "f0r": "0", "f-1o": "0", "f1o": "0", "f-1i": "0", "f1i": "0" },
+    "f0l": { "f0": "180a", "f-1": "180a", "f1": "180a", "-4": "(140+(a-1)*180)", "1": "(140+(a-1)*180)", "-1": "(220+(a-1)*180)", "2": "(140+(a-1)*180)", "-3": "(220+(a-1)*180)" },
+    "f0r": { "f0": "-180a", "f-1": "-180a", "f1": "-180a", "4": "-(140+(a-1)*180)", "-1": "-(140+(a-1)*180)", "1": "-(220+(a-1)*180)", "-2": "-(140+(a-1)*180)", "3": "-(220+(a-1)*180)" },
+    "f-1o": { "f0": "180a", "f-1": "180a", "f1": "180a", "-4": "(140+(a-1)*180)", "-1": "(220+(a-1)*180)", "1": "(140+(a-1)*180)", "-3": "180a" },
+    "f1o": { "f0": "-180a", "f1": "-180a", "f-1": "-180a", "4": "-(140+(a-1)*180)", "1": "-(220+(a-1)*180)", "-1": "-(140+(a-1)*180)", "3": "-180a" },
+    "f-1i": { "f0": "-180a", "f1": "-180a", "f-1": "-180a", "1": "-(220+(a-1)*180)", "-1": "-(140+(a-1)*180)", "-2": "-(140+(a-1)*180)" },
+    "f1i": { "f0": "180a", "f-1": "180a", "f1": "180a", "-1": "(220+(a-1)*180)", "1": "(140+(a-1)*180)", "2": "(140+(a-1)*180)" }
 };
 
 // =====================================
@@ -692,6 +729,7 @@ function build(seq, balls) {
         }
         if (path.length === 0) continue;
 
+        // --- 1つ目のループ: 行き先(to)の決定 ---
         for (let i = 0; i < path.length; i++) {
             let curr_t = path[i];
             let next_t = path[(i + 1) % path.length];
@@ -699,16 +737,24 @@ function build(seq, balls) {
             let next_throw = table[b][next_t];
 
             let curr_key = curr_throw.action_str;
+            if (curr_throw.propeller === 5) curr_key = "f" + curr_key; // f修飾子を付与
+
             let next_key = next_throw.action_str;
+            if (next_throw.propeller === 5) next_key = "f" + next_key;
 
             let transitionTable = g_isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
-            if (transitionTable[curr_key] && transitionTable[curr_key][next_key]) {
+            
+            // F_TRANSITION_MAP を最優先で参照
+            if (F_TRANSITION_MAP[curr_key] && F_TRANSITION_MAP[curr_key][next_key]) {
+                curr_throw.to = F_TRANSITION_MAP[curr_key][next_key].to;
+            } else if (transitionTable[curr_key] && transitionTable[curr_key][next_key]) {
                 curr_throw.to = transitionTable[curr_key][next_key].to;
             } else {
                 curr_throw.to = next_key.endsWith('l') ? -2 : 2;
             }
         }
 
+        // --- 2つ目のループ: 出発地(from)と角度(angleExpr)の決定 ---
         for (let i = 0; i < path.length; i++) {
             let prev_t = path[(i - 1 + path.length) % path.length];
             let curr_t = path[i];
@@ -721,7 +767,10 @@ function build(seq, balls) {
             let f = String(curr_throw.from);
             let t = String(curr_throw.to);
 
-            if (angleTable[f] && angleTable[f][t] !== undefined) {
+            // F_ANGLE_RULES を最優先で参照
+            if (F_ANGLE_RULES[f] && F_ANGLE_RULES[f][t] !== undefined) {
+                curr_throw.angleExpr = F_ANGLE_RULES[f][t];
+            } else if (angleTable[f] && angleTable[f][t] !== undefined) {
                 curr_throw.angleExpr = angleTable[f][t];
             } else {
                 curr_throw.angleExpr = g_isAsync ? ((Number(t) <= -1) ? "-180n" : "180n") : ((Number(t) <= -1) ? "-180a" : "180a");
@@ -930,30 +979,6 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 let angle = timeRatio * Math.PI * base_s;
                 draw_horizontal_devilstick(p, angle, color);
             }
-            else if (c.propeller === 5) {
-                let fTargetId = "f0";
-                
-                let nextBallData = null;
-                for (let path_offset = 1; path_offset < T; path_offset++) {
-                    let next_t = (t + path_offset) % T;
-                    if (table[ballIndex][next_t] && table[ballIndex][next_t].value > 0) {
-                        nextBallData = table[ballIndex][next_t];
-                        break;
-                    }
-                }
-                
-                if (nextBallData && F_TRANSITION_MAP[c.action_str]) {
-                    let mapEntry = F_TRANSITION_MAP[c.action_str];
-                    fTargetId = mapEntry[nextBallData.action_str] || mapEntry.default || "f0";
-                }
-                
-                let p0 = get_data(fTargetId);
-                let p = { x: p0.x, y: p0.y };
-                p.y -= hOffset;
-
-                let angle = (p0.x <= 400) ? 90 * DEG_TO_RAD : (p0.x >= 400 ? -90 * DEG_TO_RAD : 0);
-                draw_devilstick(p, angle, color);
-            }
             else if (c.propeller === 3) {
                 let current_dt = gt - startTime;
                 let spinRatio = current_dt / duration;
@@ -1011,12 +1036,17 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 let asyncOddRot = 100 + 180 * (a_val - 1);
 
                 if (c.angleExpr) {
-                    if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    if (c.angleExpr === "0") TotalRotDeg = 0;
+                    else if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
                     else if (c.angleExpr === "-180a" || c.angleExpr === "-180n") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
                     else if (c.angleExpr === "-(100+(a-1)*180)" || c.angleExpr === "-(100+(n-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
                     else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
                     else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
                     else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(140+(a-1)*180)" || c.angleExpr === "-(140+(n-1)*180)") TotalRotDeg = -(140 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(140+(a-1)*180)" || c.angleExpr === "(140+(n-1)*180)") TotalRotDeg = (140 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(220+(a-1)*180)" || c.angleExpr === "-(220+(n-1)*180)") TotalRotDeg = -(220 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(220+(a-1)*180)" || c.angleExpr === "(220+(n-1)*180)") TotalRotDeg = (220 + (a_val-1) * 180);
                     else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
                 } else {
                     let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (g_isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
@@ -1105,6 +1135,109 @@ function getCenterHitProgress(globalTime, handSide) {
     return null;
 }
 
+function getFlatHitMotion(globalTime, handSide, basePos) {
+    if (!table) return null;
+    let totalTime = T * BEAT_TIME;
+
+    for (let b = 0; b < g_balls; b++) {
+        for (let t = 0; t < T; t++) {
+            let c = table[b][t];
+            if (!c || c.value <= 0) continue;
+            if (c.handSide !== handSide) continue;
+            if (c.propeller !== 5) continue; // f修飾子のみ
+
+            // 叩く時刻（ターゲット時刻）
+            let baseTime = t * BEAT_TIME;
+            
+            // 現在の globalTime と叩く時刻(baseTime)の差分を計算（ループ対応）
+            let diff = (globalTime - baseTime) % totalTime;
+            if (diff > totalTime / 2) diff -= totalTime;
+            if (diff < -totalTime / 2) diff += totalTime;
+
+            // アニメーション範囲：0.25f前（直前の0.75f時点）〜 0.75f後
+            if (diff >= -0.25 * BEAT_TIME && diff <= 0.75 * BEAT_TIME) {
+                let progress = 0;
+                if (diff <= 0) {
+                    // 移動: 0.25fかけて目的地へ（diffが -0.25 の時 progress = 0、diffが 0 の時 progress = 1）
+                    progress = 1.0 - Math.abs(diff) / (0.25 * BEAT_TIME);
+                } else {
+                    // 戻り: 0.75fかけて定位置へ（diffが 0 の時 progress = 1、diffが 0.75 の時 progress = 0）
+                    progress = 1.0 - diff / (0.75 * BEAT_TIME);
+                }
+
+                let targetX = basePos.x;
+                let targetY = 400; // 上下しないようにYを400に固定
+
+                // クロス判定 (同期のax や 非同期の2n-1)
+                let isCross = c.action_str.includes("ax") || c.action_str.includes("(2n-1)");
+
+                if (isCross) { 
+                    // f2ax または -f2ax の時、実際の最終角度(TotalRotDeg)を計算して向きを厳密に判定
+                    let sv = c.value;
+                    let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
+                    let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
+                    let isAsyncOdd = g_isAsync && (sv % 4 !== 0);
+                    let asyncOddRot = 100 + 180 * (a_val - 1);
+                    
+                    let TotalRotDeg = 0;
+                    if (c.angleExpr) {
+                        if (c.angleExpr === "0") TotalRotDeg = 0;
+                        else if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                        else if (c.angleExpr === "-180a" || c.angleExpr === "-180n") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
+                        else if (c.angleExpr === "-(100+(a-1)*180)" || c.angleExpr === "-(100+(n-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
+                        else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
+                        else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
+                        else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                        else if (c.angleExpr === "-(140+(a-1)*180)" || c.angleExpr === "-(140+(n-1)*180)") TotalRotDeg = -(140 + (a_val-1) * 180);
+                        else if (c.angleExpr === "(140+(a-1)*180)" || c.angleExpr === "(140+(n-1)*180)") TotalRotDeg = (140 + (a_val-1) * 180);
+                        else if (c.angleExpr === "-(220+(a-1)*180)" || c.angleExpr === "-(220+(n-1)*180)") TotalRotDeg = -(220 + (a_val-1) * 180);
+                        else if (c.angleExpr === "(220+(a-1)*180)" || c.angleExpr === "(220+(n-1)*180)") TotalRotDeg = (220 + (a_val-1) * 180);
+                        else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    } else {
+                        let rot_base = 180 * a_val;
+                        if (g_isAsync && (sv % 4 !== 0)) {
+                            rot_base = 100 + 180 * (a_val - 1);
+                        }
+                        if (c.from <= -2) TotalRotDeg = -rot_base;
+                        else if (c.from >= 2) TotalRotDeg = rot_base;
+                        else {
+                            let dir = (c.to > c.from) ? 1.0 : -1.0;
+                            TotalRotDeg = dir * rot_base;
+                        }
+                    }
+
+                    if (TotalRotDeg > 0) targetX = 480;       // 回転 +
+                    else if (TotalRotDeg < 0) targetX = 320;  // 回転 -
+                    else targetX = 400;                       // 回転 0
+
+                } else { 
+                    // f2a または f-2a の時
+                    let prev_t = (t - 1 + T) % T;
+                    let max_loops = T;
+                    while (prev_t !== t && max_loops > 0 && (!table[b][prev_t] || table[b][prev_t].value <= 0)) {
+                        prev_t = (prev_t - 1 + T) % T;
+                        max_loops--;
+                    }
+                    let prev_throw = table[b][prev_t];
+                    let from_minus = prev_throw && prev_throw.action_str && prev_throw.action_str.startsWith("-");
+
+                    if (from_minus) {
+                        targetX = 400; // -2aから
+                    } else {
+                        // 2aから
+                        if (handSide === 0) targetX = 280; // 左手
+                        else targetX = 520;                // 右手
+                    }
+                }
+
+                let currentX = basePos.x + (targetX - basePos.x) * progress;
+                return { x: currentX, y: targetY };
+            }
+        }
+    }
+    return null;
+}
+
 function update(timestamp) {
     if (!lastTimestamp) lastTimestamp = timestamp;
     
@@ -1168,15 +1301,39 @@ function update(timestamp) {
     g_leftHand = { x: leftBaseX, y: leftHY };
     g_rightHand = { x: rightBaseX, y: rightHY };
 
-    let handLeftPos = g_leftHand;
-    let handRightPos = g_rightHand;
+    let handLeftPos = { ...g_leftHand };
+    let handRightPos = { ...g_rightHand };
+
     let leftCenterProgress = getCenterHitProgress(globalTime, 0);
     let rightCenterProgress = getCenterHitProgress(globalTime, 1);
+    
+    // 通常のセンターヒット時の処理
     if (leftCenterProgress !== null) {
         handLeftPos = lerp(g_leftHand, { x: 400, y: 460 }, leftCenterProgress);
     }
     if (rightCenterProgress !== null) {
         handRightPos = lerp(g_rightHand, { x: 400, y: 460 }, rightCenterProgress);
+    }
+
+    // フラット(f)ヒット時の処理（センターヒットより優先・Y軸固定）
+    // 通常の揺れ(handLeftPos)と、フラットアニメーションの座標(flatLeftPos)をスムーズに繋ぐ
+    let flatLeftPos = getFlatHitMotion(globalTime, 0, { x: leftBaseX, y: handBaseY });
+    if (flatLeftPos !== null) {
+        // Y軸の揺れを強制的に400で上書き
+        handLeftPos.x = flatLeftPos.x;
+        handLeftPos.y = flatLeftPos.y; 
+        g_leftHand = { ...handLeftPos }; 
+    } else if (leftCenterProgress !== null) {
+        g_leftHand = { ...handLeftPos };
+    }
+
+    let flatRightPos = getFlatHitMotion(globalTime, 1, { x: rightBaseX, y: handBaseY });
+    if (flatRightPos !== null) {
+        handRightPos.x = flatRightPos.x;
+        handRightPos.y = flatRightPos.y;
+        g_rightHand = { ...handRightPos };
+    } else if (rightCenterProgress !== null) {
+        g_rightHand = { ...handRightPos };
     }
 
     ctx.beginPath(); ctx.arc(handLeftPos.x, handLeftPos.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
