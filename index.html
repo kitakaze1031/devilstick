@@ -181,6 +181,8 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)(2,2x)([2,2x],0)')">(2x,2x)(2,2x)([2,2x],0)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)(2,2x)([2x,2],0)')">(2x,2x)(2,2x)([2x,2],0)</button>
                     <button class="preset-btn" onclick="applyPreset('[1 -1]')">[1 -1]</button>
+                    <button class="preset-btn" onclick="applyPreset('5(f)31')">5(f)31</button>
+                    <button class="preset-btn" onclick="applyPreset('5(r1)31')">5(r1)31</button>
                 </div>
             </div>
 
@@ -194,16 +196,6 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                     <button class="preset-btn" onclick="applyPreset('3')">3</button>
                     <button class="preset-btn" onclick="applyPreset('3(r1)')">3(r1)</button>
                     <button class="preset-btn" onclick="applyPreset('531')">531</button>
-                </div>
-            </div>
-
-            <div class="preset-wrapper">
-                <div class="section-title">3本(入力例)</div>
-                <div class="preset-container">
-                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
-                    <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)')">(4,2x)(4,4)(4,0*)(2x,4)(4,4)(0*,4)</button>
                 </div>
             </div>
 
@@ -229,7 +221,7 @@ const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
 const DEG_TO_RAD = Math.PI / 180;
 
 let currentSpeed = 1.0;
-let currentHeight = 1.0; // 高さ調整用グローバル変数
+let currentHeight = 1.0;
 let table = null;
 let g_balls = 0;
 let g_seq = [];
@@ -263,19 +255,19 @@ function get_data(id) {
     const data = {
         "-4": { x: 300, y: 460, angle: 50 * DEG_TO_RAD },
         "-3": { x: 340, y: 400, angle: 50 * DEG_TO_RAD },
-        "-2": { x: 340, y: 400, angle: -50 * DEG_TO_RAD }, // 左手
-        "-1": { x: 400, y: 460, angle: -50 * DEG_TO_RAD }, // センター左
-        "f-1": { x: 340, y: 400, angle: 90 * DEG_TO_RAD }, // f: left-flat center
-        "f0": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },  // f: center-flat
-        "f1": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },  // f: right-flat
-        "f-1o": { x: 340, y: 400, angle: 90 * DEG_TO_RAD }, // f: left-flat center
-        "f-1i": { x: 340, y: 400, angle: 90 * DEG_TO_RAD }, // f: left-flat center
-        "f0l": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },  // f: center-flat
-        "f0r": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },  // f: center-flat
-        "f1o": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },  // f: right-flat
-        "f1i": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },  // f: right-flat
-         "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },  // センター右
-         "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },  // 右手
+        "-2": { x: 340, y: 400, angle: -50 * DEG_TO_RAD },
+        "-1": { x: 400, y: 460, angle: -50 * DEG_TO_RAD },
+        "f-1": { x: 340, y: 400, angle: 90 * DEG_TO_RAD },
+        "f0": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },
+        "f1": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
+        "f-1o": { x: 340, y: 400, angle: 90 * DEG_TO_RAD },
+        "f-1i": { x: 340, y: 400, angle: 90 * DEG_TO_RAD },
+        "f0l": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },
+        "f0r": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },
+        "f1o": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
+        "f1i": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
+         "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },
+         "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },
          "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
          "4": { x: 500, y: 460, angle: -50 * DEG_TO_RAD }
     };
@@ -283,13 +275,11 @@ function get_data(id) {
 }
 
 function getAsyncThrowCount(sv) {
-    // 非同期モードでは内部的に投擲値が2倍されているので、
-    // 2n 系と 2n-1 系を正しく扱うために実際の回転カウントを求める
     return (sv % 4 === 0) ? sv / 4 : (sv + 2) / 4;
 }
 
 // =====================================
-// 同期用の状態遷移のルール表 (行き先 to のみ決定)
+// 同期用の状態遷移のルール表
 // =====================================
 const SYNC_PATTERN_TRANSITIONS = {
     "-2al":  { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
@@ -303,7 +293,7 @@ const SYNC_PATTERN_TRANSITIONS = {
 };
 
 // =====================================
-// 非同期用の状態遷移のルール表 (行き先 to のみ決定)
+// 非同期用の状態遷移のルール表
 // =====================================
 const ASYNC_PATTERN_TRANSITIONS = {
     "-2nl": { "-2nl": { to: -3 }, "2nl":  { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l":  { to: -1 } },
@@ -317,7 +307,7 @@ const ASYNC_PATTERN_TRANSITIONS = {
 };
 
 // =====================================
-// フラット(f)の遷移マッピング (行き先 to のみ決定)
+// 同期フラット(f)の遷移マッピング
 // =====================================
 const F_TRANSITION_MAP = {
     "2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" } },
@@ -339,7 +329,29 @@ const F_TRANSITION_MAP = {
 };
 
 // =====================================
-// 同期用の現在地(from)と行き先(to)から角度を決める表
+// 非同期フラット(af)の遷移マッピング
+// =====================================
+const AF_TRANSITION_MAP = {
+    "(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" } },
+    "-(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" } },
+    "(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" } },
+    "-(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" } },
+    "2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" } },
+    "-2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" } },
+    "2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" } },
+    "-2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" } },
+    "f(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "(2n-1)r": { to: "f0r" }, "-(2n-1)l": { to: "f0l" }, "-2nr": { to: "3" }, "2nr": { to: "2" } },
+    "f-(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "(2n-1)r": { to: "f0r" }, "-(2n-1)l": { to: "f0l" }, "-2nr": { to: "3" }, "2nr": { to: "2" } },
+    "f(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "(2n-1)l": { to: "f0l" }, "-(2n-1)l": { to: "f0r" }, "-2nl": { to: "-3" }, "2nl": { to: "-2" } },
+    "f-(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "(2n-1)l": { to: "f0l" }, "-(2n-1)l": { to: "f0r" }, "-2nl": { to: "-3" }, "2nl": { to: "-2" } },
+    "f2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "-2nl": { to: "f-1o" }, "2nl": { to: "f-1i" }, "-(2n-1)l": { to: "f0r" }, "(2n-1)l": { to: "f0l" } },
+    "f-2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "-2nl": { to: "f-1o" }, "2nl": { to: "f-1i" }, "-(2n-1)l": { to: "f0r" }, "(2n-1)l": { to: "f0l" } },
+    "f2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "-2nr": { to: "f1o" }, "2nr": { to: "f1i" }, "-(2n-1)r": { to: "f0l" }, "(2n-1)r": { to: "f0r" } },
+    "f-2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "-2nr": { to: "f1o" }, "2nr": { to: "f1i" }, "-(2n-1)r": { to: "f0l" }, "(2n-1)r": { to: "f0r" } }
+};
+
+// =====================================
+// 角度決定ルール表
 // =====================================
 const SYNC_ANGLE_RULES = {
     "-4": { "4": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "1": "-180a" },
@@ -352,9 +364,6 @@ const SYNC_ANGLE_RULES = {
      "1": { "4": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)","1": "-180a", "-2": "-(100+(a-1)*180)", "3": "-(100+(a-1)*180)" }
 };
 
-// =====================================
-// 非同期用の現在地(from)と行き先(to)から角度を決める表
-// =====================================
 const ASYNC_ANGLE_RULES = {
     "-4": { "4": "-(100+(n-1)*180)", "-2": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)", "1": "-180n" },
      "4": { "-4": "(100+(n-1)*180)", "2": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n" },
@@ -366,9 +375,6 @@ const ASYNC_ANGLE_RULES = {
      "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)","1": "-180n",  "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
 };
 
-// =====================================
-// フラット用の現在地(from)と行き先(to)から角度を決める表
-// =====================================
 const F_ANGLE_RULES = {
     "-4": { "f-1": "-(140+(a-1)*180)", "f0": "-(140+(a-1)*180)" },
     "4": { "f1": "(140+(a-1)*180)", "f0": "(140+(a-1)*180)" },
@@ -390,107 +396,75 @@ const F_ANGLE_RULES = {
 };
 
 // =====================================
-// サイトスワップ構文解析 (()修飾子・アシンクロ両対応)
+// サイトスワップ構文解析
 // =====================================
 function parse(s) {
     let i = 0;
     let seq = [];
     
-    // --- アシンクロ（コンマなし）の解析モード（マルチプレックス対応） ---
     if (s.indexOf(',') === -1) {
         g_isAsync = true;
         let async_beats = [];
 
-        let parseSingleAsyncThrow = () => {
-            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null };
-            while (i < s.length) {
-                if (s[i] === ' ' || s[i] === '(' || s[i] === ')' || s[i] === '[' || s[i] === ']') { 
-                    if (s[i] === '[' || s[i] === ']') break;
-                    i++; continue; 
-                }
-                if (s[i] >= '0' && s[i] <= '9') break;
-                if (s[i] === 'p') { th.propeller = 1; i++; }
-                else if (s[i] === 't') { th.propeller = 2; i++; }
-                else if (s[i] === 'f') { th.propeller = 5; i++; }
-                else if (s[i] === 's') { th.propeller = 3; i++; }
-                else if (s[i] === '-') { th.is_minus = true; i++; }
-                else if (s[i] === 'r') {
-                    i++;
-                    let r_sign = 1; if (i < s.length && s[i] === '-') { r_sign = -1; i++; }
-                    let r_val = 0; let has_r = false;
-                    while (i < s.length && s[i] >= '0' && s[i] <= '9') {
-                        r_val = r_val * 10 + parseInt(s[i]); i++; has_r = true;
-                    }
-                    if (has_r) th.rot = r_val * r_sign;
-                }
-                else { i++; }
-            }
-            if (i < s.length && s[i] >= '0' && s[i] <= '9') {
-                th.val = parseInt(s[i]);
-                i++;
-            } else {
-                return null;
-            }
-            while (i < s.length) {
-                if (s[i] === ' ' || s[i] === '(' || s[i] === ')' || s[i] === '[' || s[i] === ']') { 
-                    if (s[i] === '[' || s[i] === ']') break;
-                    i++; continue; 
-                }
-                if (s[i] >= '0' && s[i] <= '9') break;
-                if (s[i] === '-' && i + 1 < s.length && s[i+1] >= '0' && s[i+1] <= '9') break;
+        let normalized = s.replace(/([0-9a-zA-Z])\(r([0-9]*)\)/g, "$1r$2");
+        normalized = normalized.replace(/\(f\)([0-9a-zA-Z])/g, "f$1");
+        normalized = normalized.replace(/[\(\)]/g, ""); 
 
-                if (s[i] === 'x') { th.cross = 1; i++; }
-                else if (s[i] === '*') { th.hs = HS_HAND1; i++; }
-                else if (s[i] === '+') { th.hs = HS_HAND2; i++; }
-                else if (s[i] === '^') {
-                    i++;
-                    if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; }
-                }
-                else if (s[i] === 'r') {
-                    i++;
-                    let r_sign = 1; if (i < s.length && s[i] === '-') { r_sign = -1; i++; }
-                    let r_val = 0; let has_r = false;
-                    while (i < s.length && s[i] >= '0' && s[i] <= '9') {
-                        r_val = r_val * 10 + parseInt(s[i]); i++; has_r = true;
-                    }
-                    if (has_r) th.rot = r_val * r_sign;
-                }
-                else if (s[i] === 'p') { th.propeller = 1; i++; }
-                else if (s[i] === 't') { th.propeller = 2; i++; }
-                else if (s[i] === 'f') { th.propeller = 5; i++; }
-                else if (s[i] === 's') { th.propeller = 3; i++; }
-                else { i++; }
+        let parseSingleAsyncThrow = (tokenIndex, tokens) => {
+            if (tokenIndex >= tokens.length) return null;
+            let token = tokens[tokenIndex];
+            
+            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null };
+            
+            if (token.startsWith('-')) {
+                th.is_minus = true;
+                token = token.substring(1);
             }
+            if (token.startsWith('f')) {
+                th.propeller = 5;
+                token = token.substring(1);
+            }
+            
+            let numMatch = token.match(/^[0-9a-zA-Z]/);
+            if (!numMatch) return null;
+            
+            if (/[0-9]/.test(numMatch[0])) {
+                th.val = parseInt(numMatch[0]);
+            } else {
+                th.val = numMatch[0].toLowerCase().charCodeAt(0) - 87;
+            }
+            token = token.substring(1); 
+            
+            if (token.includes('x')) th.cross = 1;
+            if (token.includes('*')) th.hs = HS_HAND1;
+            if (token.includes('+')) th.hs = HS_HAND2;
+            
+            let rMatch = token.match(/r(-?[0-9]*)/);
+            if (rMatch) {
+                if (rMatch[1] !== "" && rMatch[1] !== "-") {
+                    th.rot = parseInt(rMatch[1]);
+                }
+            }
+            
             if (th.cross === null) {
                 th.cross = (th.val % 2 !== 0) ? 1 : 0;
             }
-            th.val = th.val * 2;
+            th.val = th.val * 2; 
+            
             return th;
         };
 
-        while(i < s.length) {
-            if (s[i] === ' ') { i++; continue; }
-            if (s[i] === '[') {
-                i++;
-                let multiplex_throws = [];
-                while (i < s.length && s[i] !== ']') {
-                    if (s[i] === ' ') { i++; continue; }
-                    let th = parseSingleAsyncThrow();
-                    if (th) multiplex_throws.push(th);
-                    else i++;
-                }
-                if (i < s.length && s[i] === ']') i++;
-                if (multiplex_throws.length > 0) {
-                    async_beats.push(multiplex_throws);
-                }
-            } else {
-                let th = parseSingleAsyncThrow();
-                if (th) {
-                    async_beats.push([th]);
-                } else {
-                    i++;
-                }
+        const regex = /-?f?[0-9a-zA-Z](?:[x\*+\^]|r-?[0-9]*)*/g;
+        const tokens = normalized.match(regex) || [];
+        
+        let tokenIndex = 0;
+
+        while(tokenIndex < tokens.length) {
+            let th = parseSingleAsyncThrow(tokenIndex, tokens);
+            if (th) {
+                async_beats.push([th]);
             }
+            tokenIndex++;
         }
 
         if (async_beats.length === 0) return [];
@@ -510,9 +484,7 @@ function parse(s) {
         }
         return seq;
     }
-    // --- アシンクロ解析モードここまで ---
 
-    // --- 【既存】シンクロ（括弧あり）の解析モード ---
     g_isAsync = false;
     let pending_prefix = '';
     while (i < s.length) {
@@ -638,7 +610,7 @@ function object_count(seq) {
 }
 
 // =====================================
-// 軌道構築 (マルチ対応版)
+// 軌道構築
 // =====================================
 function build(seq, balls) {
     table = Array.from({ length: balls }, () => Array.from({ length: T }, () => ({ value: -1, from: -1, to: -1, angleExpr: "", action_str: "", propeller: 0, rot: null })) );
@@ -698,7 +670,7 @@ function build(seq, balls) {
             let cross = th.cross;
             let is_minus = th.is_minus;
 
-            th.val = -1; // 投擲済みにマーク
+            th.val = -1; 
 
             let action_str;
             if (g_isAsync) {
@@ -729,7 +701,6 @@ function build(seq, balls) {
         }
         if (path.length === 0) continue;
 
-        // --- 1つ目のループ: 行き先(to)の決定 ---
         for (let i = 0; i < path.length; i++) {
             let curr_t = path[i];
             let next_t = path[(i + 1) % path.length];
@@ -737,16 +708,21 @@ function build(seq, balls) {
             let next_throw = table[b][next_t];
 
             let curr_key = curr_throw.action_str;
-            if (curr_throw.propeller === 5) curr_key = "f" + curr_key; // f修飾子を付与
+            let mapped_curr_key = curr_key;
+            if (g_isAsync) mapped_curr_key = mapped_curr_key.replace(/2n/g, "2a").replace(/\(2n\-1\)/g, "2ax");
+            if (curr_throw.propeller === 5) mapped_curr_key = "f" + mapped_curr_key;
 
             let next_key = next_throw.action_str;
-            if (next_throw.propeller === 5) next_key = "f" + next_key;
+            let mapped_next_key = next_key;
+            if (g_isAsync) mapped_next_key = mapped_next_key.replace(/2n/g, "2a").replace(/\(2n\-1\)/g, "2ax");
+            if (next_throw.propeller === 5) mapped_next_key = "f" + mapped_next_key;
 
             let transitionTable = g_isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
             
-            // F_TRANSITION_MAP を最優先で参照
-            if (F_TRANSITION_MAP[curr_key] && F_TRANSITION_MAP[curr_key][next_key]) {
-                curr_throw.to = F_TRANSITION_MAP[curr_key][next_key].to;
+            if (g_isAsync && AF_TRANSITION_MAP[curr_key] && AF_TRANSITION_MAP[curr_key][next_key]) {
+                curr_throw.to = AF_TRANSITION_MAP[curr_key][next_key].to;
+            } else if (F_TRANSITION_MAP[mapped_curr_key] && F_TRANSITION_MAP[mapped_curr_key][mapped_next_key]) {
+                curr_throw.to = F_TRANSITION_MAP[mapped_curr_key][mapped_next_key].to;
             } else if (transitionTable[curr_key] && transitionTable[curr_key][next_key]) {
                 curr_throw.to = transitionTable[curr_key][next_key].to;
             } else {
@@ -754,7 +730,6 @@ function build(seq, balls) {
             }
         }
 
-        // --- 2つ目のループ: 出発地(from)と角度(angleExpr)の決定 ---
         for (let i = 0; i < path.length; i++) {
             let prev_t = path[(i - 1 + path.length) % path.length];
             let curr_t = path[i];
@@ -767,7 +742,6 @@ function build(seq, balls) {
             let f = String(curr_throw.from);
             let t = String(curr_throw.to);
 
-            // F_ANGLE_RULES を最優先で参照
             if (F_ANGLE_RULES[f] && F_ANGLE_RULES[f][t] !== undefined) {
                 curr_throw.angleExpr = F_ANGLE_RULES[f][t];
             } else if (angleTable[f] && angleTable[f][t] !== undefined) {
@@ -918,7 +892,6 @@ function draw_ball(balls, globalTime, color, ballIndex) {
             let timeRatio = (gt - startTime) / duration; 
             let sv = c.value; 
             
-            // 【修正】アシンクロでは2は内部的に4になる。2(保持)の高さは0にする
             let is_two = g_isAsync ? (sv === 4) : (sv === 2);
             
             let heightScale = 10.0 * (sv * sv) * currentHeight;
@@ -1144,35 +1117,27 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
             let c = table[b][t];
             if (!c || c.value <= 0) continue;
             if (c.handSide !== handSide) continue;
-            if (c.propeller !== 5) continue; // f修飾子のみ
+            if (c.propeller !== 5) continue; 
 
-            // 叩く時刻（ターゲット時刻）
             let baseTime = t * BEAT_TIME;
-            
-            // 現在の globalTime と叩く時刻(baseTime)の差分を計算（ループ対応）
             let diff = (globalTime - baseTime) % totalTime;
             if (diff > totalTime / 2) diff -= totalTime;
             if (diff < -totalTime / 2) diff += totalTime;
 
-            // アニメーション範囲：0.25f前（直前の0.75f時点）〜 0.75f後
             if (diff >= -0.25 * BEAT_TIME && diff <= 0.75 * BEAT_TIME) {
                 let progress = 0;
                 if (diff <= 0) {
-                    // 移動: 0.25fかけて目的地へ（diffが -0.25 の時 progress = 0、diffが 0 の時 progress = 1）
                     progress = 1.0 - Math.abs(diff) / (0.25 * BEAT_TIME);
                 } else {
-                    // 戻り: 0.75fかけて定位置へ（diffが 0 の時 progress = 1、diffが 0.75 の時 progress = 0）
                     progress = 1.0 - diff / (0.75 * BEAT_TIME);
                 }
 
                 let targetX = basePos.x;
-                let targetY = 400; // 上下しないようにYを400に固定
+                let targetY = 400; 
 
-                // クロス判定 (同期のax や 非同期の2n-1)
                 let isCross = c.action_str.includes("ax") || c.action_str.includes("(2n-1)");
 
                 if (isCross) { 
-                    // f2ax または -f2ax の時、実際の最終角度(TotalRotDeg)を計算して向きを厳密に判定
                     let sv = c.value;
                     let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
                     let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
@@ -1196,7 +1161,7 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
                     } else {
                         let rot_base = 180 * a_val;
                         if (g_isAsync && (sv % 4 !== 0)) {
-                            rot_base = 100 + 180 * (a_val - 1);
+                            rot_base = 100 + 180 * (s_val - 1);
                         }
                         if (c.from <= -2) TotalRotDeg = -rot_base;
                         else if (c.from >= 2) TotalRotDeg = rot_base;
@@ -1206,12 +1171,11 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
                         }
                     }
 
-                    if (TotalRotDeg > 0) targetX = 480;       // 回転 +
-                    else if (TotalRotDeg < 0) targetX = 320;  // 回転 -
-                    else targetX = 400;                       // 回転 0
+                    if (TotalRotDeg > 0) targetX = 480;       
+                    else if (TotalRotDeg < 0) targetX = 320;  
+                    else targetX = 400;                       
 
                 } else { 
-                    // f2a または f-2a の時
                     let prev_t = (t - 1 + T) % T;
                     let max_loops = T;
                     while (prev_t !== t && max_loops > 0 && (!table[b][prev_t] || table[b][prev_t].value <= 0)) {
@@ -1222,11 +1186,10 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
                     let from_minus = prev_throw && prev_throw.action_str && prev_throw.action_str.startsWith("-");
 
                     if (from_minus) {
-                        targetX = 400; // -2aから
+                        targetX = 400; 
                     } else {
-                        // 2aから
-                        if (handSide === 0) targetX = 280; // 左手
-                        else targetX = 520;                // 右手
+                        if (handSide === 0) targetX = 280; 
+                        else targetX = 520;                
                     }
                 }
 
@@ -1236,6 +1199,84 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
         }
     }
     return null;
+}
+
+// =====================================
+// 人物描画（インバースキネマティクス）
+// =====================================
+function drawStickman(ctx, leftTarget, rightTarget) {
+    ctx.save();
+    ctx.strokeStyle = "#4a5568";
+    ctx.lineWidth = 6;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // 頭
+    ctx.beginPath();
+    ctx.arc(400, 180, 25, 0, Math.PI * 2);
+    ctx.fillStyle = "#edf2f7";
+    ctx.fill();
+    ctx.stroke();
+
+    // 背骨
+    ctx.beginPath();
+    ctx.moveTo(400, 205);
+    ctx.lineTo(400, 380);
+    ctx.stroke();
+
+    // 肩
+    ctx.beginPath();
+    ctx.moveTo(340, 230);
+    ctx.lineTo(460, 230);
+    ctx.stroke();
+
+    // 足
+    ctx.beginPath();
+    ctx.moveTo(400, 380);
+    ctx.lineTo(350, 530);
+    ctx.moveTo(400, 380);
+    ctx.lineTo(450, 530);
+    ctx.stroke();
+
+    // 腕のIK（インバースキネマティクス）計算関数
+    function drawArm(shoulder, target, isLeft) {
+        let dx = target.x - shoulder.x;
+        let dy = target.y - shoulder.y;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        let L1 = 90; // 上腕の長さ
+        let L2 = 100; // 前腕の長さ
+
+        // 腕が届かない場合は限界まで伸ばす
+        if (dist >= L1 + L2) {
+            ctx.beginPath();
+            ctx.moveTo(shoulder.x, shoulder.y);
+            ctx.lineTo(target.x, target.y);
+            ctx.stroke();
+            return;
+        }
+
+        let angle1 = Math.atan2(dy, dx);
+        let cosAngle2 = (L1*L1 + dist*dist - L2*L2) / (2 * L1 * dist);
+        cosAngle2 = Math.max(-1, Math.min(1, cosAngle2)); // 丸め誤差対策
+        let angle2 = Math.acos(cosAngle2);
+
+        // 左腕は外側（左）に、右腕は外側（右）に肘が曲がるように計算
+        let elbowAngle = isLeft ? (angle1 + angle2) : (angle1 - angle2);
+        let elbowX = shoulder.x + L1 * Math.cos(elbowAngle);
+        let elbowY = shoulder.y + L1 * Math.sin(elbowAngle);
+
+        ctx.beginPath();
+        ctx.moveTo(shoulder.x, shoulder.y);
+        ctx.lineTo(elbowX, elbowY); // 肩から肘
+        ctx.lineTo(target.x, target.y); // 肘から手
+        ctx.stroke();
+    }
+
+    // 左右の腕を描画
+    drawArm({x: 340, y: 230}, leftTarget, true);
+    drawArm({x: 460, y: 230}, rightTarget, false);
+
+    ctx.restore();
 }
 
 function update(timestamp) {
@@ -1284,7 +1325,6 @@ function update(timestamp) {
 
     let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
     
-    // アシンクロでは左右の手の位相を反転させ、左手と右手を逆にする
     let period = g_isAsync ? (BEAT_TIME * 2) : BEAT_TIME;
     let left_phase = g_isAsync ? BEAT_TIME : 0;
     let right_phase = 0;
@@ -1307,7 +1347,6 @@ function update(timestamp) {
     let leftCenterProgress = getCenterHitProgress(globalTime, 0);
     let rightCenterProgress = getCenterHitProgress(globalTime, 1);
     
-    // 通常のセンターヒット時の処理
     if (leftCenterProgress !== null) {
         handLeftPos = lerp(g_leftHand, { x: 400, y: 460 }, leftCenterProgress);
     }
@@ -1315,11 +1354,8 @@ function update(timestamp) {
         handRightPos = lerp(g_rightHand, { x: 400, y: 460 }, rightCenterProgress);
     }
 
-    // フラット(f)ヒット時の処理（センターヒットより優先・Y軸固定）
-    // 通常の揺れ(handLeftPos)と、フラットアニメーションの座標(flatLeftPos)をスムーズに繋ぐ
     let flatLeftPos = getFlatHitMotion(globalTime, 0, { x: leftBaseX, y: handBaseY });
     if (flatLeftPos !== null) {
-        // Y軸の揺れを強制的に400で上書き
         handLeftPos.x = flatLeftPos.x;
         handLeftPos.y = flatLeftPos.y; 
         g_leftHand = { ...handLeftPos }; 
@@ -1335,6 +1371,10 @@ function update(timestamp) {
     } else if (rightCenterProgress !== null) {
         g_rightHand = { ...handRightPos };
     }
+
+    // ====== ここにスティックマンの描画を追加 ======
+    drawStickman(ctx, handLeftPos, handRightPos);
+    // ===========================================
 
     ctx.beginPath(); ctx.arc(handLeftPos.x, handLeftPos.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
     ctx.beginPath(); ctx.arc(handRightPos.x, handRightPos.y, 8, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
