@@ -215,6 +215,35 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 // =====================================
 // 定数・グローバル変数
 // =====================================
+/*
+ グローバル変数一覧（簡易説明）
+ - BEAT_TIME: 1ビートの秒数（タイミング基準）
+ - COLORS: ボール描画用の色配列
+ - HS_NONE/HS_HAND1/HS_HAND2: 手描画のフラグ
+ - DEG_TO_RAD: 度->ラジアン変換係数
+
+ - currentSpeed: 再生速度（UIのスライダーで変更）
+ - currentHeight: 投げの高さスケール（UIのスライダーで変更）
+ - table: ボールごとの時刻スロットテーブル。各セルは
+                    { value, from, to, angleExpr, action_str, propeller, rot, handSide }
+ - g_balls: ボール数（object_countの結果）
+ - g_seq: parse() が返すシーケンス（パターン配列）
+ - g_n: g_seq の長さ（シーケンス長）
+ - T: シミュレーション全体のタイムスロット数（周期・tableの列長）
+
+ - g_isAsync: 同期/非同期判定フラグ（parseで設定）
+ - animationFrameId: requestAnimationFrame のID（キャンセル用）
+ - lastTimestamp / virtualTime: アニメーション時間管理
+ - g_scale: 描画スケール（make_siteswap_tableで計算）
+
+ - g_leftHand / g_rightHand: 左右手の現在座標（x,y）
+ - canvas / ctx: 描画先の Canvas と 2D コンテキスト
+
+ - mediaRecorder / recordedChunks / isRecording / recordDuration / logicalTimeAccumulator:
+     録画制御用の変数群
+
+ 注意: `initSimulation()` を呼ぶことで `table`, `g_balls`, `T` などが再計算・初期化されます。
+*/
 const BEAT_TIME = 0.7;
 const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5", "#f56565", "#4299e1", "#48bb78", "#ed8936", "#9f7aea"];
 const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
@@ -406,7 +435,8 @@ function parse(s) {
         g_isAsync = true;
         let async_beats = [];
 
-        let normalized = s.replace(/([0-9a-zA-Z])\(r([0-9]*)\)/g, "$1r$2");
+        let normalized = s.replace(/([0-9a-zA-Z])\(r(-?[0-9]+)\)/g, "$1r$2 ");
+        normalized = normalized.replace(/\(f\)\(r(-?[0-9]+)\)([0-9a-zA-Z])/g, "f$2r$1 ");
         normalized = normalized.replace(/\(f\)([0-9a-zA-Z])/g, "f$1");
         normalized = normalized.replace(/[\(\)]/g, ""); 
 
@@ -448,6 +478,10 @@ function parse(s) {
             
             if (th.cross === null) {
                 th.cross = (th.val % 2 !== 0) ? 1 : 0;
+            }
+            // 非同期の奇数 f は、同期の x と同じ交差動作にする
+            if (th.propeller === 5 && th.val % 2 !== 0) {
+                th.cross = 1;
             }
             th.val = th.val * 2; 
             
@@ -709,19 +743,22 @@ function build(seq, balls) {
 
             let curr_key = curr_throw.action_str;
             let mapped_curr_key = curr_key;
-            if (g_isAsync) mapped_curr_key = mapped_curr_key.replace(/2n/g, "2a").replace(/\(2n\-1\)/g, "2ax");
+            if (g_isAsync) mapped_curr_key = mapped_curr_key.replace(/\(2n\-1\)/g, "2ax").replace(/2n/g, "2a");
             if (curr_throw.propeller === 5) mapped_curr_key = "f" + mapped_curr_key;
 
             let next_key = next_throw.action_str;
             let mapped_next_key = next_key;
-            if (g_isAsync) mapped_next_key = mapped_next_key.replace(/2n/g, "2a").replace(/\(2n\-1\)/g, "2ax");
+            if (g_isAsync) mapped_next_key = mapped_next_key.replace(/\(2n\-1\)/g, "2ax").replace(/2n/g, "2a");
             if (next_throw.propeller === 5) mapped_next_key = "f" + mapped_next_key;
+
+            let af_curr_key = curr_throw.propeller === 5 ? "f" + curr_key : curr_key;
+            let af_next_key = next_throw.propeller === 5 ? "f" + next_key : next_key;
 
             let transitionTable = g_isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
             
-            if (g_isAsync && AF_TRANSITION_MAP[curr_key] && AF_TRANSITION_MAP[curr_key][next_key]) {
-                curr_throw.to = AF_TRANSITION_MAP[curr_key][next_key].to;
-            } else if (F_TRANSITION_MAP[mapped_curr_key] && F_TRANSITION_MAP[mapped_curr_key][mapped_next_key]) {
+            if (g_isAsync && AF_TRANSITION_MAP[af_curr_key] && AF_TRANSITION_MAP[af_curr_key][af_next_key]) {
+                curr_throw.to = AF_TRANSITION_MAP[af_curr_key][af_next_key].to;
+            } else if (!g_isAsync && F_TRANSITION_MAP[mapped_curr_key] && F_TRANSITION_MAP[mapped_curr_key][mapped_next_key]) {
                 curr_throw.to = F_TRANSITION_MAP[mapped_curr_key][mapped_next_key].to;
             } else if (transitionTable[curr_key] && transitionTable[curr_key][next_key]) {
                 curr_throw.to = transitionTable[curr_key][next_key].to;
@@ -762,10 +799,14 @@ function make_siteswap_table(input) {
         g_seq[i].throws_a.forEach(th => { if (th.val > max_val) max_val = th.val; });
         g_seq[i].throws_b.forEach(th => { if (th.val > max_val) max_val = th.val; });
     }
-    let max_s = Math.floor(max_val / 2);
-    let baseScale = Math.min(1.0, 360 / (4*max_s * max_s * 10 + 60.0));
-    let heightFactor = 1.0 / Math.max(0.05, currentHeight);
-    g_scale = Math.min(1.0, Math.max(0.15, baseScale * heightFactor));
+    let maxThrowHeight = 10.0 * max_val * max_val * currentHeight;
+    let sceneMinY = Math.min(155.0, 460.0 - maxThrowHeight - 125.0);
+    let sceneMaxY = Math.max(530.0, 460.0 + 125.0);
+    let sceneMaxX = 400.0 + 125.0;
+    let topScale = 430.0 / (450.0 - sceneMinY);
+    let bottomScale = 130.0 / (sceneMaxY - 450.0);
+    let horizontalScale = 380.0 / (sceneMaxX - 400.0);
+    g_scale = Math.min(1.0, topScale, bottomScale, horizontalScale);
 
     g_balls = object_count(g_seq);
     let calcBalls = g_balls > 0 ? g_balls : 1;
@@ -1006,9 +1047,14 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
                 let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
                 let isAsyncOdd = g_isAsync && (sv % 4 !== 0);
-                let asyncOddRot = 100 + 180 * (a_val - 1);
-
-                if (c.angleExpr) {
+　　　　　　　　　let asyncOddRot = 100 + 180 * (a_val - 1);
+                if (g_isAsync && c.rot !== null) {
+                    let rot_base = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    if (typeof c.from === "number" && c.from <= -2) TotalRotDeg = -rot_base;
+                    else if (typeof c.from === "number" && c.from >= 2) TotalRotDeg = rot_base;
+                    else if (c.angleExpr && c.angleExpr.startsWith("-")) TotalRotDeg = -rot_base;
+                    else TotalRotDeg = rot_base;
+                } else if (c.angleExpr) {
                     if (c.angleExpr === "0") TotalRotDeg = 0;
                     else if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
                     else if (c.angleExpr === "-180a" || c.angleExpr === "-180n") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
@@ -1118,6 +1164,7 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
             if (!c || c.value <= 0) continue;
             if (c.handSide !== handSide) continue;
             if (c.propeller !== 5) continue; 
+            if (g_isAsync && c.value % 4 !== 0) continue;
 
             let baseTime = t * BEAT_TIME;
             let diff = (globalTime - baseTime) % totalTime;
@@ -1142,7 +1189,7 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
                     let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
                     let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
                     let isAsyncOdd = g_isAsync && (sv % 4 !== 0);
-                    let asyncOddRot = 100 + 180 * (a_val - 1);
+　　　　　　　　　　　let asyncOddRot = 100 + 180 * (a_val - 1);
                     
                     let TotalRotDeg = 0;
                     if (c.angleExpr) {
@@ -1160,8 +1207,8 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
                         else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
                     } else {
                         let rot_base = 180 * a_val;
-                        if (g_isAsync && (sv % 4 !== 0)) {
-                            rot_base = 100 + 180 * (s_val - 1);
+                        if (isAsyncOdd) {
+                            rot_base = 100 + 180 * (a_val - 1);
                         }
                         if (c.from <= -2) TotalRotDeg = -rot_base;
                         else if (c.from >= 2) TotalRotDeg = rot_base;
