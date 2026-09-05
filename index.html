@@ -628,6 +628,14 @@ function parse(s) {
                 t.throws_b.forEach(applyProp);
             }
 
+            // グループ直後の r は、直前グループのクロス2を特殊回転にする
+            if (i < s.length && s[i] === 'r') {
+                let applyProp4 = (th) => { if (th.val === 2 && th.cross === 1) th.propeller = 4; };
+                t.throws_a.forEach(applyProp4);
+                t.throws_b.forEach(applyProp4);
+                i++;
+            }
+
             seq.push(t);
         } else { i++; }
     }
@@ -799,7 +807,8 @@ function make_siteswap_table(input) {
         g_seq[i].throws_a.forEach(th => { if (th.val > max_val) max_val = th.val; });
         g_seq[i].throws_b.forEach(th => { if (th.val > max_val) max_val = th.val; });
     }
-    let maxThrowHeight = 10.0 * max_val * max_val * currentHeight;
+    let logicalMaxValue = g_isAsync ? max_val / 2.0 : max_val;
+    let maxThrowHeight = 10.0 * logicalMaxValue * logicalMaxValue * currentHeight;
     let sceneMinY = Math.min(155.0, 460.0 - maxThrowHeight - 125.0);
     let sceneMaxY = Math.max(530.0, 460.0 + 125.0);
     let sceneMaxX = 400.0 + 125.0;
@@ -895,8 +904,6 @@ function draw_ball(balls, globalTime, color, ballIndex) {
         let c = balls[t];
         if (!c || c.value <= 0) continue;
 
-        if (c.propeller === 4) continue;
-
         let startTime = t * BEAT_TIME;
         let duration = (c.value / 2.0) * BEAT_TIME;
         let endTime = startTime + duration;
@@ -933,11 +940,10 @@ function draw_ball(balls, globalTime, color, ballIndex) {
             let timeRatio = (gt - startTime) / duration; 
             let sv = c.value; 
             
-            let is_two = g_isAsync ? (sv === 4) : (sv === 2);
-            
-            let heightScale = 10.0 * (sv * sv) * currentHeight;
+            let logicalValue = g_isAsync ? sv / 2.0 : sv;
+            let heightScale = 5.0 * (logicalValue * logicalValue) * currentHeight;
             let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
-            let hOffset = is_two ? 0 : bounce * heightScale;
+            let hOffset = bounce * heightScale;
 
             if (c.propeller === 1) {
                 let isHorizontal2x = (c.value === 2 && (c.from === -1 || c.from === 1) && c.propeller === 1);
@@ -992,6 +998,13 @@ function draw_ball(balls, globalTime, color, ballIndex) {
 
                 let angle = timeRatio * Math.PI * base_s;
                 draw_horizontal_devilstick(p, angle, color);
+            }
+            else if (c.propeller === 5) {
+                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p = lerp(p0, p1, timeRatio);
+                p.y = (g_leftHand.y + g_rightHand.y) / 2.0 - 20.0 - hOffset;
+                let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
+                draw_devilstick(p, angle, color);
             }
             else if (c.propeller === 3) {
                 let current_dt = gt - startTime;
