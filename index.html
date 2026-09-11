@@ -1013,11 +1013,13 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
                 let angle = baseAngle + (side === 0 ? -hs_val : hs_val) * 0.35 + Math.PI;
 
                 const L = 80.0;
+                const gripOffset = 15.0; // 根元から15pxの位置を握るように調整
                 let dx = Math.cos(angle);
                 let dy = Math.sin(angle);
 
-                let stick_p1 = { x: tip.x + dx * L, y: tip.y + dy * L };
-                let stick_p2 = tip;
+                // 手(tip)の位置を支点とし、上部(L - 15)と下部(-15)へスティックを伸ばす
+                let stick_p1 = { x: tip.x + dx * (L - gripOffset), y: tip.y + dy * (L - gripOffset) };
+                let stick_p2 = { x: tip.x - dx * gripOffset, y: tip.y - dy * gripOffset };
 
                 drawLineEx(stick_p1, stick_p2, 8, "#4a5568");
 
@@ -1473,8 +1475,8 @@ function update(timestamp) {
     let right_phase = 0;
     
     let left_hs = calcHandMotion(virtualTime, period, left_phase);
-    let right_hs = calcHandMotion(virtualTime, period, right_phase);
-    if (g_isAsync) { [left_hs, right_hs] = [right_hs, left_hs]; }
+let right_hs = calcHandMotion(virtualTime, period, right_phase);
+// if (g_isAsync) { [left_hs, right_hs] = [right_hs, left_hs]; } // ←この行を無効化
     
     let leftHY = handBaseY + left_hs * 20.0; let rightHY = handBaseY + right_hs * 20.0;
     
