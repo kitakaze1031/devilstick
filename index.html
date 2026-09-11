@@ -971,24 +971,35 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
         }
 
         if (gt >= startTime && gt < endTime) {
-            let timeRatio = (gt - startTime) / duration;
+            let dt = gt - startTime; // スロー開始からの経過時間
             let sv = c.value;
             let logicalValue = isAsync ? sv / 2.0 : sv;
 
-            let isHeld = (logicalValue <= 2 && c.from === c.to);
+            // ★ 1. 空中時間(Air Time)と保持時間(Dwell Time)の分割
+            let dwellDuration = BEAT_TIME * 0.5; // 手の中に0.5カウント(0.5テンポ)保持する
+            if (duration <= dwellDuration) {
+                // スローにかかる時間が極端に短い場合の安全策
+                dwellDuration = duration * 0.5;
+            }
+            let airDuration = duration - dwellDuration;
 
-            let p0 = get_data(c.from);
-            let p1 = get_data(c.to);
-            let p = lerp(p0, p1, timeRatio);
-            
-            let heightScale = 8.0 * (logicalValue * logicalValue) * currentHeight;
-            let hOffset = 0;
-            let angle = 0;
+            let isCross = isAsync ? c.action_str.includes("(2n-1)") : c.action_str.includes("ax");
+            let isHeld = (logicalValue <= 2 && !isCross);
 
-            if (isHeld) {
-                hOffset = 0;
-                let side = (c.from <= -1) ? 0 : 1; 
-                p = side === 0 ? { ...g_leftHand } : { ...g_rightHand };
+            // ★ 2. 完全に保持するスローか、空中の時間が終わってキャッチしたかを判定
+            let inHandPhase = isHeld || (dt >= airDuration);
+
+            if (inHandPhase) {
+                // --- 【手の中にある（保持中）の描画】 ---
+                let side;
+                if (isHeld) {
+                    side = c.handSide; // 元々持っている手
+                } else {
+                    // 飛んできてキャッチした先の手
+                    side = (typeof c.to === "number") ? ((c.to <= -1) ? 0 : 1) : (c.handSide || 0);
+                }
+
+                let tip = side === 0 ? { ...g_leftHand } : { ...g_rightHand };
 
                 let centerPeriod = g_isAsync ? (BEAT_TIME * 2) : BEAT_TIME;
                 let centerLeftPhase = g_isAsync ? BEAT_TIME : 0;
@@ -997,47 +1008,61 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
                     ? calcHandMotion(virtualTime, centerPeriod, centerLeftPhase) 
                     : calcHandMotion(virtualTime, centerPeriod, centerRightPhase);
 
-                // ハンドスティックは画面に水平(画面平面に平行)に伸ばす
-                let flare = 0.1;
-                let baseAngle = (side === 0) ? -flare : Math.PI + flare;
-                angle = baseAngle + (side === 0 ? -hs_val : hs_val) * 0.35;
+                let flare = 1.2;
+                let baseAngle = (side === 0) ? flare : Math.PI - flare;
+                let angle = baseAngle + (side === 0 ? -hs_val : hs_val) * 0.35 + Math.PI;
 
                 const L = 80.0;
-                const gripOffset = 40.0;
-
                 let dx = Math.cos(angle);
                 let dy = Math.sin(angle);
 
-                // 手を体側の端寄りにする
-                let stick_p1 = {
-                 x: p.x - dx * (L - gripOffset),
-                y: p.y - dy * (L - gripOffset)
-                };
+                let stick_p1 = { x: tip.x + dx * L, y: tip.y + dy * L };
+                let stick_p2 = tip;
 
-let stick_p2 = {
-    x: p.x + dx * gripOffset,
-    y: p.y + dy * gripOffset
-};
+                drawLineEx(stick_p1, stick_p2, 8, "#4a5568");
 
-drawLineEx(stick_p1, stick_p2, 8, "#4a5568");
             } else {
-                // 飛翔中のハンドスティックは「手→上→手」の放物線にする
-                // （get_dataの固定座標を使うと一度下に潜って見えるため、実際の手の位置を始点・終点にする）
-                let startHand = (typeof c.from === "number")
+                // --- 【空中を飛んでいる（滞空）の描画】 ---
+                // ★ 3. 0.5テンポ早く軌道を描き切るように timeRatio を加速
+                let timeRatio = dt / airDuration;
+                
+                let heightScale = 8.0 * (logicalValue * logicalValue) * currentHeight;
+                let hOffset = 0;
+                let angle = 0;
+
+                let startSide = (typeof c.from === "number") ? ((c.from <= -1) ? 0 : 1) : (c.handSide || 0);
+                let endSide = (typeof c.to === "number") ? ((c.to <= -1) ? 0 : 1) : (c.handSide || 0);
+                const HS_FLARE = 1.2;
+
+                let A_start = (startSide === 0) ? HS_FLARE + Math.PI : Math.PI - HS_FLARE + Math.PI;
+                let A_target = (endSide === 0) ? HS_FLARE + Math.PI : Math.PI - HS_FLARE + Math.PI;
+
+                let startTip = (typeof c.from === "number")
                     ? (c.from <= -1 ? g_leftHand : g_rightHand)
                     : ((c.handSide === 0) ? g_leftHand : g_rightHand);
-                let endHand = (typeof c.to === "number")
+                let endTip = (typeof c.to === "number")
                     ? (c.to <= -1 ? g_leftHand : g_rightHand)
                     : ((c.handSide === 0) ? g_leftHand : g_rightHand);
-                p = lerp(startHand, endHand, timeRatio);
+                
+                const centerOffset = 40.0;
+                let startCenter = {
+                    x: startTip.x + Math.cos(A_start) * centerOffset,
+                    y: startTip.y + Math.sin(A_start) * centerOffset
+                };
+                let endCenter = {
+                    x: endTip.x + Math.cos(A_target) * centerOffset,
+                    y: endTip.y + Math.sin(A_target) * centerOffset
+                };
 
+                let p = lerp(startCenter, endCenter, timeRatio);
+
+                // 高さの計算も airDuration ベースで完結する
                 let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
                 hOffset = bounce * Math.max(heightScale, 45.0);
                 p.y -= hOffset;
 
                 let TotalRotDeg = 0;
                 let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
-                // 「2」のスローではハンドスティックを回転させない
                 if (logicalValue === 2 && (c.rot === null || c.rot === undefined)) { a_val = 0; }
                 let rot_base = 180 * a_val;
                 if (c.from <= -2) TotalRotDeg = -rot_base;
@@ -1047,12 +1072,6 @@ drawLineEx(stick_p1, stick_p2, 8, "#4a5568");
                     TotalRotDeg = dir * rot_base;
                 }
 
-                // 発着時の角度は持っているときの水平角度に揃える
-                let startSide = (typeof c.from === "number") ? ((c.from <= -1) ? 0 : 1) : (c.handSide || 0);
-                let endSide = (typeof c.to === "number") ? ((c.to <= -1) ? 0 : 1) : (c.handSide || 0);
-                const HS_FLARE = 0.1;
-                let A_start = (startSide === 0) ? -HS_FLARE : Math.PI + HS_FLARE;
-                let A_target = (endSide === 0) ? -HS_FLARE : Math.PI + HS_FLARE;
                 let totalRotRad = TotalRotDeg * DEG_TO_RAD;
                 let idealEndAngle = A_start + totalRotRad;
                 let k = Math.round((idealEndAngle - A_target) / Math.PI);
@@ -1421,7 +1440,6 @@ function update(timestamp) {
     let asyncSpeedFactor = g_isAsync ? 2.0 : 1.0;
     virtualTime += dt * currentSpeed * asyncSpeedFactor;
 
-    // センタースティックの時間をベースに全体の進行を計算
     let totalTime = T * BEAT_TIME;
     let globalTime = virtualTime % totalTime;
     
@@ -1459,83 +1477,59 @@ function update(timestamp) {
     if (g_isAsync) { [left_hs, right_hs] = [right_hs, left_hs]; }
     
     let leftHY = handBaseY + left_hs * 20.0; let rightHY = handBaseY + right_hs * 20.0;
+    
     g_leftHand = { x: leftBaseX, y: leftHY }; g_rightHand = { x: rightBaseX, y: rightHY };
 
-    let handLeftPos = { ...g_leftHand }; let handRightPos = { ...g_rightHand };
+    let handLeftTip = { ...g_leftHand }; let handRightTip = { ...g_rightHand };
 
     let leftCenterProgress = getCenterHitProgress(globalTime, 0);
     let rightCenterProgress = getCenterHitProgress(globalTime, 1);
     
-    if (leftCenterProgress !== null) { handLeftPos = lerp(g_leftHand, { x: 400, y: 460 }, leftCenterProgress); }
-    if (rightCenterProgress !== null) { handRightPos = lerp(g_rightHand, { x: 400, y: 460 }, rightCenterProgress); }
+    if (leftCenterProgress !== null) { handLeftTip = lerp(g_leftHand, { x: 400, y: 460 }, leftCenterProgress); }
+    if (rightCenterProgress !== null) { handRightTip = lerp(g_rightHand, { x: 400, y: 460 }, rightCenterProgress); }
 
     let flatLeftPos = getFlatHitMotion(globalTime, 0, { x: leftBaseX, y: handBaseY });
-    if (flatLeftPos !== null) { handLeftPos.x = flatLeftPos.x; handLeftPos.y = flatLeftPos.y; g_leftHand = { ...handLeftPos }; } 
-    else if (leftCenterProgress !== null) { g_leftHand = { ...handLeftPos }; }
+    if (flatLeftPos !== null) { handLeftTip.x = flatLeftPos.x; handLeftTip.y = flatLeftPos.y; g_leftHand = { ...handLeftTip }; } 
+    else if (leftCenterProgress !== null) { g_leftHand = { ...handLeftTip }; }
 
     let flatRightPos = getFlatHitMotion(globalTime, 1, { x: rightBaseX, y: handBaseY });
-    if (flatRightPos !== null) { handRightPos.x = flatRightPos.x; handRightPos.y = flatRightPos.y; g_rightHand = { ...handRightPos }; } 
-    else if (rightCenterProgress !== null) { g_rightHand = { ...handRightPos }; }
+    if (flatRightPos !== null) { handRightTip.x = flatRightPos.x; handRightTip.y = flatRightPos.y; g_rightHand = { ...handRightTip }; } 
+    else if (rightCenterProgress !== null) { g_rightHand = { ...handRightTip }; }
 
-    drawStickman(ctx, handLeftPos, handRightPos);
-
-    ctx.beginPath(); ctx.arc(handLeftPos.x, handLeftPos.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
-    ctx.beginPath(); ctx.arc(handRightPos.x, handRightPos.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
+    // ★ flareを大きくして傾きを持たせる
+    let flare = 1.2;
+    let leftAngle = flare - left_hs * 0.35 + Math.PI;
+    let rightAngle = Math.PI - flare + right_hs * 0.35 + Math.PI;
     
-    let tr = g_seq[beat];
-    if (tr) {
-        let th_a_0 = tr.throws_a.find(th => th.val === 0);
-        let th_b_0 = tr.throws_b.find(th => th.val === 0);
+    const gripOffset = 40.0; 
 
-        if (th_a_0 && th_b_0) {
-            if (th_a_0.mode === 1) {
-                let passPos = lerp(handLeftPos, handRightPos, u);
-                ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
-            } else if (th_a_0.mode === 3) {
-                let spinPos = lerp(handLeftPos, handRightPos, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
-                let spinAngle = -u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
-            }
-            if (th_b_0.mode === 1) {
-                let passPos = lerp(handRightPos, handLeftPos, u);
-                ctx.beginPath(); ctx.arc(passPos.x, passPos.y, 10, 0, Math.PI * 2); ctx.fillStyle = "#718096"; ctx.fill();
-            } else if (th_b_0.mode === 3) {
-                let spinPos = lerp(handRightPos, handLeftPos, u); spinPos.y -= Math.sin(u * Math.PI) * 40.0;
-                let spinAngle = u * Math.PI; draw_stick(spinPos, spinAngle, "#718096");
-            }
-        } 
-        
-        // ハンドスティックがサイトスワップとして未定義の場合の互換用描画
-        if (g_handBalls === 0) {
-            tr.throws_a.forEach(th => {
-                if (th.hs === HS_HAND1) draw_hand1(handLeftPos, u, 0);
-                if (th.hs === HS_HAND2) draw_hand2(handLeftPos, u, 0);
-            });
-            tr.throws_b.forEach(th => {
-                if (th.hs === HS_HAND1) draw_hand1(handRightPos, u, 1);
-                if (th.hs === HS_HAND2) draw_hand2(handRightPos, u, 1);
-            });
-        }
-    }
+    let actualLeftHand = {
+        x: handLeftTip.x + Math.cos(leftAngle) * gripOffset,
+        y: handLeftTip.y + Math.sin(leftAngle) * gripOffset
+    };
+    let actualRightHand = {
+        x: handRightTip.x + Math.cos(rightAngle) * gripOffset,
+        y: handRightTip.y + Math.sin(rightAngle) * gripOffset
+    };
 
-    if (g_handBalls > 0 && handTable) {
+    drawStickman(ctx, actualLeftHand, actualRightHand);
+
+    ctx.beginPath(); ctx.arc(actualLeftHand.x, actualLeftHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
+    ctx.beginPath(); ctx.arc(actualRightHand.x, actualRightHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
+
+    if (handTable && g_handBalls > 0) {
         for (let b = 0; b < g_handBalls; b++) {
             draw_handstick_ball(handTable[b], handGlobalTime, b, g_handIsAsync, handT);
         }
     }
 
-    if (g_balls > 0 && table) {
+    if (table && g_balls > 0) {
         for (let b = 0; b < g_balls; b++) {
-            let color = COLORS[b % COLORS.length];
-            draw_ball(table[b], globalTime, color, b);
+            draw_ball(table[b], globalTime, COLORS[b % COLORS.length], b);
         }
     }
 
     ctx.restore();
-
-    let currentPattern = document.getElementById("siteswapInput").value;
-    ctx.font = "bold 20px 'Helvetica Neue', Arial, sans-serif"; ctx.fillStyle = "#2c3e50"; ctx.textAlign = "left"; ctx.textBaseline = "top";
-    ctx.fillText("Siteswap: " + currentPattern, 20, 20);
-
     animationFrameId = requestAnimationFrame(update);
 }
 
