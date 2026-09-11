@@ -32,6 +32,13 @@ h1 {
     margin-top: 0;
 }
 
+.description {
+    color: #555;
+    line-height: 1.6;
+    margin-top: -8px;
+    margin-bottom: 18px;
+}
+
 .panel {
     background: #fff;
     border-radius: 12px;
@@ -54,7 +61,8 @@ label {
 }
 
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ccc;
@@ -154,158 +162,143 @@ code {
     background: #eee;
     font-family: monospace;
 }
+
+.cancel-button {
+    background: #a22;
+    margin-left: 8px;
+}
+.progress {
+    display: none;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f0f0f0;
+}
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #ddd;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+.progress-bar-inner {
+    width: 0%;
+    height: 100%;
+    transition: width 0.1s linear;
+}
 </style>
 </head>
 
+
 <body>
-
 <div class="container">
-
-    <h1>Devil Stick Siteswap Solver</h1>
-
-    <!-- ==========================================
-         入力
-    =========================================== -->
+    <h1>Hand Stick / Devil Stick Siteswap Calculator</h1>
 
     <div class="panel">
-
-        <h2>入力条件</h2>
+        <h2>① Devil Stick → Hand Stick</h2>
+        <p class="description">
+            Devil Stickのサイトスワップから、条件に合うHand Stickサイトスワップを探索します。
+        </p>
 
         <div class="grid">
+            <div>
+                <label for="d2hDevilStick">Devil Stick サイトスワップ</label>
+                <input id="d2hDevilStick" type="text"
+                       value="(6,4x)(0,0)(2x,0)"
+                       placeholder="(6,4x)(0,0)(2x,0)">
+            </div>
 
             <div>
-                <label for="devilStick">
-                    Devil Stick サイトスワップ
-                </label>
-
-                <input
-                    id="devilStick"
-                    type="text"
-                    value="(6,4x)(0,0)(2x,0)"
-                    placeholder="(6,4x)(0,0)(2x,0)"
-                >
-
+                <label for="d2hHitValues">たたく時のHSサイトスワップ</label>
+                <input id="d2hHitValues" type="text" value="2" placeholder="2">
                 <div class="help">
-                    例：
-                    <code>(6,4x)(0,0)(2x,0)</code>
+                    叩く・投げる時のHS数字。スペースまたはカンマ区切り。<br>
+                    例: <code>2</code>、<code>2 4</code>。空欄で0以外の全偶数を許容。
                 </div>
             </div>
 
-
             <div>
-                <label for="hitValues">
-                    たたく時のHS数字
-                </label>
-
-                <input
-                    id="hitValues"
-                    type="text"
-                    value="2"
-                    placeholder="2"
-                >
-
-                <div class="help">
-                    叩く・投げる時のHS数字（スペースまたはカンマ区切り）。<br>
-                    例: <code>2</code>（2のみ）, <code>2 4</code>（2と4）<br>
-                    （空欄で0以外の全偶数を許容）
-                </div>
+                <label for="d2hObjects">Devil Stick オブジェクト数</label>
+                <input id="d2hObjects" type="number" value="2" min="1" step="1">
             </div>
 
-
             <div>
-                <label for="objects">
-                    オブジェクト数 (HS)
-                </label>
-
-                <input
-                    id="objects"
-                    type="number"
-                    value="2"
-                    min="1"
-                    step="1"
-                >
-
-                <div class="help">
-                    オブジェクト数を厳密に固定します。
-                </div>
+                <label for="d2hMaxPeriod">最大周期</label>
+                <input id="d2hMaxPeriod" type="number" value="6" min="1" step="1">
             </div>
 
-
             <div>
-                <label for="maxPeriod">
-                    最大周期
-                </label>
-
-                <input
-                    id="maxPeriod"
-                    type="number"
-                    value="6"
-                    min="1"
-                    step="1"
-                >
-
-                <div class="help">
-                    1周期から指定した周期まで探索します。
-                </div>
+                <label for="d2hMaxValue">最大値</label>
+                <input id="d2hMaxValue" type="number" value="8" min="2" step="2">
             </div>
-
-
-            <div>
-                <label for="maxValue">
-                    最大値
-                </label>
-
-                <input
-                    id="maxValue"
-                    type="number"
-                    value="8"
-                    min="2"
-                    step="2"
-                >
-
-                <div class="help">
-                    2, 4, 6, 8 ... の偶数を探索します。
-                </div>
-            </div>
-
         </div>
 
-
-        <button id="solveButton">
-            探索開始
-        </button>
-
-
-        <div id="error" class="error"></div>
-
-        <div id="status" class="status"></div>
-
+        <button id="d2hSolveButton">Hand Stickを探索</button><button id="d2hCancelButton" class="cancel-button" style="display:none;">中断</button><div id="d2hProgress" class="progress"><span id="d2hProgressText"></span><div class="progress-bar"><div id="d2hProgressBar" class="progress-bar-inner"></div></div></div>
+        <div id="d2hError" class="error"></div>
+        <div id="d2hStatus" class="status"></div>
     </div>
-
-
-
-
-
-    <!-- ==========================================
-         結果
-    =========================================== -->
 
     <div class="panel">
-
-        <h2>結果</h2>
-
-        <div id="summary" class="summary">
-            まだ探索していません。
-        </div>
-
-        <div id="results"></div>
-
+        <h2>①の結果：Hand Stick</h2>
+        <div id="d2hSummary" class="summary">まだ探索していません。</div>
+        <div id="d2hResults"></div>
     </div>
 
+    <div class="panel">
+        <h2>② Hand Stick → Devil Stick</h2>
+        <p class="description">
+            Hand Stickのサイトスワップから、条件に合うDevil Stickサイトスワップを探索します。
+        </p>
+
+        <div class="grid">
+            <div>
+                <label for="h2dHandStick">Hand Stick サイトスワップ</label>
+                <input id="h2dHandStick" type="text"
+                       value="(4,2)(2,4)"
+                       placeholder="(4,2)(2,4)">
+                <div class="help">
+                    例: <code>(4,2)(2,4)</code>
+                </div>
+            </div>
+
+            <div>
+                <label for="h2dHitValues">たたく時のHSサイトスワップ</label>
+                <input id="h2dHitValues" type="text" value="2" placeholder="2">
+                <div class="help">
+                    叩く・投げる時のHS数字。スペースまたはカンマ区切り。
+                </div>
+            </div>
+
+            <div>
+                <label for="h2dObjects">Devil Stick オブジェクト数</label>
+                <input id="h2dObjects" type="number" value="2" min="1" step="1">
+            </div>
+
+            <div>
+                <label for="h2dMaxPeriod">Devil Stick 最大周期</label>
+                <input id="h2dMaxPeriod" type="number" value="6" min="1" step="1">
+            </div>
+
+            <div>
+                <label for="h2dMaxValue">最大値</label>
+                <input id="h2dMaxValue" type="number" value="8" min="2" step="2">
+            </div>
+        </div>
+
+        <button id="h2dSolveButton">Devil Stickを探索</button><button id="h2dCancelButton" class="cancel-button" style="display:none;">中断</button><div id="h2dProgress" class="progress"><span id="h2dProgressText"></span><div class="progress-bar"><div id="h2dProgressBar" class="progress-bar-inner"></div></div></div>
+        <div id="h2dError" class="error"></div>
+        <div id="h2dStatus" class="status"></div>
+    </div>
+
+    <div class="panel">
+        <h2>②の結果：Devil Stick</h2>
+        <div id="h2dSummary" class="summary">まだ探索していません。</div>
+        <div id="h2dResults"></div>
+    </div>
 </div>
-
-
 <script>
+
 
 /* =========================================================
  *
@@ -703,75 +696,87 @@ function formatSequence(sequence) {
  *
  * ========================================================= */
 
-function searchPeriod(period, objectCount, maxValue, devilSequence, allowedHitList, allow2x) {
+function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allowedHitList, allow2x, state) {
     const candidates = generateCandidates(maxValue, allow2x);
     const results = [];
     const sequence = [];
-
     const targetSum = 2 * objectCount * period;
 
-    /* 候補を小さい順（0を含む）にソートして綺麗なパターンを優先 */
-    candidates.sort((a, b) => {
-        const sa = a.left + a.right;
-        const sb = b.left + b.right;
-        if (sa !== sb) return sa - sb;
+    // 各位置で使えるHS候補を先に絞る。
+    const candidateLists = [];
+    for (let position = 0; position < period; position++) {
+        const devil = devilSequence[position % devilSequence.length];
 
-        const xa = (a.leftX ? 1 : 0) + (a.rightX ? 1 : 0);
-        const xb = (b.leftX ? 1 : 0) + (b.rightX ? 1 : 0);
-        return xa - xb;
-    });
+        candidateLists.push(candidates.filter(candidate => {
+            if (devil.left > 0) {
+                if (devil.left > 2 || (devil.left === 2 && devil.leftX)) {
+                    if (!isHitAllowed(candidate.left, candidate.leftX, allowedHitList)) return false;
+                } else if (candidate.left !== 2 || candidate.leftX !== false) {
+                    return false;
+                }
+            }
+
+            if (devil.right > 0) {
+                if (devil.right > 2 || (devil.right === 2 && devil.rightX)) {
+                    if (!isHitAllowed(candidate.right, candidate.rightX, allowedHitList)) return false;
+                } else if (candidate.right !== 2 || candidate.rightX !== false) {
+                    return false;
+                }
+            }
+            return true;
+        }));
+    }
+
+    // 各位置以降の最小/最大合計を前計算して、到達不能な枝を即座に切る。
+    const suffixMin = new Array(period + 1).fill(0);
+    const suffixMax = new Array(period + 1).fill(0);
+
+    for (let i = period - 1; i >= 0; i--) {
+        let min = Infinity, max = -Infinity;
+        for (const c of candidateLists[i]) {
+            const v = c.left + c.right;
+            if (v < min) min = v;
+            if (v > max) max = v;
+        }
+        suffixMin[i] = suffixMin[i + 1] + (min === Infinity ? 0 : min);
+        suffixMax[i] = suffixMax[i + 1] + (max === -Infinity ? 0 : max);
+    }
 
     function backtrack(position, currentSum) {
+        if (state && state.cancelled) return;
+
+        if (state) {
+            state.nodes++;
+            if ((state.nodes & 4095) === 0) {
+                state.onProgress(position, period, state.nodes);
+            }
+        }
+
         if (position === period) {
             if (currentSum !== targetSum) return;
             if (isRepeatingShorter(sequence)) return;
             if (!validSiteswap(sequence)) return;
             if (!satisfiesHitRule(sequence, devilSequence, allowedHitList)) return;
 
-            results.push(
-                sequence.map(p => ({
-                    left: p.left,
-                    right: p.right,
-                    leftX: p.leftX,
-                    rightX: p.rightX
-                }))
-            );
+            results.push(sequence.map(p => ({
+                left: p.left, right: p.right,
+                leftX: p.leftX, rightX: p.rightX
+            })));
             return;
         }
 
-        const remaining = period - position - 1;
-        const devil = devilSequence[position % devilSequence.length];
+        if (currentSum + suffixMin[position] > targetSum) return;
+        if (currentSum + suffixMax[position] < targetSum) return;
 
-        for (const candidate of candidates) {
-            let valid = true;
-
-            // 左手の判定
-            if (devil.left > 0) {
-                if (devil.left > 2 || (devil.left === 2 && devil.leftX)) {
-                    if (!isHitAllowed(candidate.left, candidate.leftX, allowedHitList)) valid = false;
-                } else {
-                    if (candidate.left !== 2 || candidate.leftX !== false) valid = false;
-                }
-            }
-
-            // 右手の判定
-            if (devil.right > 0) {
-                if (devil.right > 2 || (devil.right === 2 && devil.rightX)) {
-                    if (!isHitAllowed(candidate.right, candidate.rightX, allowedHitList)) valid = false;
-                } else {
-                    if (candidate.right !== 2 || candidate.rightX !== false) valid = false;
-                }
-            }
-
-            if (!valid) continue;
+        for (const candidate of candidateLists[position]) {
+            if (state && state.cancelled) return;
 
             const value = candidate.left + candidate.right;
             const nextSum = currentSum + value;
-            const minRemaining = 0; // (0,0) を許可したため最小残りは0
-            const maxRemaining = remaining * 2 * maxValue;
 
-            if (nextSum + minRemaining > targetSum) continue;
-            if (nextSum + maxRemaining < targetSum) continue;
+            if (nextSum > targetSum) continue;
+            if (nextSum + suffixMin[position + 1] > targetSum) continue;
+            if (nextSum + suffixMax[position + 1] < targetSum) continue;
 
             sequence.push(candidate);
             backtrack(position + 1, nextSum);
@@ -784,122 +789,390 @@ function searchPeriod(period, objectCount, maxValue, devilSequence, allowedHitLi
 }
 
 
+function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowedHitList) {
+    const candidates = generateCandidates(maxValue, true);
+    const results = [];
+    const sequence = [];
+    const targetSum = 2 * objectCount * period;
+
+    candidates.sort((a, b) => {
+        const sa = a.left + a.right;
+        const sb = b.left + b.right;
+        if (sa !== sb) return sa - sb;
+        const xa = (a.leftX ? 1 : 0) + (a.rightX ? 1 : 0);
+        const xb = (b.leftX ? 1 : 0) + (b.rightX ? 1 : 0);
+        return xa - xb;
+    });
+
+    function backtrack(position, currentSum) {
+        if (position === period) {
+            if (currentSum !== targetSum) return;
+            if (isRepeatingShorter(sequence)) return;
+            if (!validSiteswap(sequence)) return;
+            if (!satisfiesHitRule(handSequence, sequence, allowedHitList)) return;
+
+            results.push(sequence.map(p => ({
+                left: p.left,
+                right: p.right,
+                leftX: p.leftX,
+                rightX: p.rightX
+            })));
+            return;
+        }
+
+        const remaining = period - position - 1;
+        const hand = handSequence[position % handSequence.length];
+
+        for (const candidate of candidates) {
+            let valid = true;
+
+            if (candidate.left > 0) {
+                if (candidate.left > 2 || (candidate.left === 2 && candidate.leftX)) {
+                    if (!isHitAllowed(hand.left, hand.leftX, allowedHitList)) valid = false;
+                } else {
+                    if (hand.left !== 2 || hand.leftX !== false) valid = false;
+                }
+            }
+
+            if (candidate.right > 0) {
+                if (candidate.right > 2 || (candidate.right === 2 && candidate.rightX)) {
+                    if (!isHitAllowed(hand.right, hand.rightX, allowedHitList)) valid = false;
+                } else {
+                    if (hand.right !== 2 || hand.rightX !== false) valid = false;
+                }
+            }
+
+            if (!valid) continue;
+
+            const value = candidate.left + candidate.right;
+            const nextSum = currentSum + value;
+            const maxRemaining = remaining * 2 * maxValue;
+
+            if (nextSum > targetSum) continue;
+            if (nextSum + maxRemaining < targetSum) continue;
+
+            sequence.push(candidate);
+            backtrack(position + 1, nextSum);
+            sequence.pop();
+        }
+    }
+
+    backtrack(0, 0);
+    return results;
+}
+
 /* =========================================================
- *
- * メイン探索
- *
+ * Calculator 1: Devil Stick -> Hand Stick
  * ========================================================= */
 
-function solve() {
-    const button = document.getElementById("solveButton");
-    const error = document.getElementById("error");
-    const status = document.getElementById("status");
-    const summary = document.getElementById("summary");
-    const resultsElement = document.getElementById("results");
+
+function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowedHitList, state) {
+    const candidates = generateCandidates(maxValue, true);
+    const results = [];
+    const sequence = [];
+    const targetSum = 2 * objectCount * period;
+
+    function isAllowed(candidate, hand) {
+        if (candidate.left > 0) {
+            if (candidate.left > 2 || (candidate.left === 2 && candidate.leftX)) {
+                if (!isHitAllowed(hand.left, hand.leftX, allowedHitList)) return false;
+            } else if (hand.left !== 2 || hand.leftX !== false) {
+                return false;
+            }
+        }
+        if (candidate.right > 0) {
+            if (candidate.right > 2 || (candidate.right === 2 && candidate.rightX)) {
+                if (!isHitAllowed(hand.right, hand.rightX, allowedHitList)) return false;
+            } else if (hand.right !== 2 || hand.rightX !== false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    const candidateLists = [];
+    for (let position = 0; position < period; position++) {
+        const hand = handSequence[position % handSequence.length];
+        candidateLists.push(candidates.filter(c => isAllowed(c, hand)));
+    }
+
+    const suffixMin = new Array(period + 1).fill(0);
+    const suffixMax = new Array(period + 1).fill(0);
+
+    for (let i = period - 1; i >= 0; i--) {
+        let min = Infinity, max = -Infinity;
+        for (const c of candidateLists[i]) {
+            const v = c.left + c.right;
+            if (v < min) min = v;
+            if (v > max) max = v;
+        }
+        suffixMin[i] = suffixMin[i + 1] + (min === Infinity ? 0 : min);
+        suffixMax[i] = suffixMax[i + 1] + (max === -Infinity ? 0 : max);
+    }
+
+    function backtrack(position, currentSum) {
+        if (state.cancelled) return;
+
+        state.nodes++;
+        if ((state.nodes & 4095) === 0) {
+            state.onProgress(position, period, state.nodes);
+        }
+
+        if (position === period) {
+            if (currentSum !== targetSum) return;
+            if (isRepeatingShorter(sequence)) return;
+            if (!validSiteswap(sequence)) return;
+            if (!satisfiesHitRule(handSequence, sequence, allowedHitList)) return;
+
+            results.push(sequence.map(p => ({
+                left: p.left, right: p.right,
+                leftX: p.leftX, rightX: p.rightX
+            })));
+            return;
+        }
+
+        if (currentSum + suffixMin[position] > targetSum) return;
+        if (currentSum + suffixMax[position] < targetSum) return;
+
+        for (const candidate of candidateLists[position]) {
+            if (state.cancelled) return;
+
+            const value = candidate.left + candidate.right;
+            const nextSum = currentSum + value;
+
+            if (nextSum > targetSum) continue;
+            if (nextSum + suffixMin[position + 1] > targetSum) continue;
+            if (nextSum + suffixMax[position + 1] < targetSum) continue;
+
+            sequence.push(candidate);
+            backtrack(position + 1, nextSum);
+            sequence.pop();
+        }
+    }
+
+    backtrack(0, 0);
+    return results;
+}
+
+
+function setupProgress(prefix) {
+    return {
+        progress: document.getElementById(prefix + "Progress"),
+        text: document.getElementById(prefix + "ProgressText"),
+        bar: document.getElementById(prefix + "ProgressBar"),
+        cancel: document.getElementById(prefix + "CancelButton")
+    };
+}
+
+function setProgress(ui, text, ratio) {
+    ui.progress.style.display = "block";
+    ui.text.textContent = text;
+    ui.bar.style.width = Math.max(0, Math.min(100, ratio * 100)) + "%";
+}
+
+function renderResults(summary, element, results, name, cancelled) {
+    results.sort((a, b) =>
+        a.period - b.period || a.notation.localeCompare(b.notation)
+    );
+
+    const unique = [];
+    const seen = new Set();
+
+    for (const result of results) {
+        if (seen.has(result.notation)) continue;
+        seen.add(result.notation);
+        unique.push(result);
+    }
+
+    summary.textContent =
+        (cancelled ? "探索を中断しました。 " : "") +
+        "見つかった" + name + "サイトスワップ: " + unique.length + " 個";
+
+    if (!unique.length) {
+        element.innerHTML =
+            '<div class="empty">条件を満たすサイトスワップはありません。</div>';
+        return;
+    }
+
+    unique.forEach((result, index) => {
+        const div = document.createElement("div");
+        div.className = "result";
+        div.innerHTML =
+            '<span class="result-number">' + (index + 1) + '.</span>' +
+            escapeHtml(result.notation);
+        element.appendChild(div);
+    });
+}
+
+function runPeriods(options) {
+    const {
+        button, cancelButton, ui, maxPeriod,
+        getResultsForPeriod, summary, resultElement, resultName
+    } = options;
+
+    const state = {
+        cancelled: false,
+        nodes: 0,
+        onProgress(position, period, nodes) {
+            const ratio =
+                ((period - 1) + position / Math.max(1, period)) /
+                maxPeriod;
+            setProgress(
+                ui,
+                "周期 " + period + " / " + maxPeriod +
+                " を計算中…（探索ノード " + nodes.toLocaleString() + "）",
+                ratio
+            );
+        }
+    };
+
+    cancelButton.style.display = "inline-block";
+    cancelButton.disabled = false;
+    cancelButton.textContent = "中断";
+    cancelButton.onclick = () => {
+        state.cancelled = true;
+        cancelButton.disabled = true;
+        cancelButton.textContent = "中断中...";
+    };
+
+    let period = 1;
+    const allResults = [];
+
+    function nextPeriod() {
+        if (state.cancelled || period > maxPeriod) {
+            renderResults(
+                summary, resultElement, allResults,
+                resultName, state.cancelled
+            );
+
+            if (!state.cancelled) {
+                setProgress(ui, "探索完了", 1);
+            }
+
+            button.disabled = false;
+            button.textContent = resultName + "を探索";
+            cancelButton.style.display = "none";
+            cancelButton.onclick = null;
+            return;
+        }
+
+        const results = getResultsForPeriod(period, state);
+        allResults.push(...results);
+
+        period++;
+        // 1周期ごとにブラウザへ制御を返すので、中断ボタンが反応できる。
+        setTimeout(nextPeriod, 0);
+    }
+
+    setTimeout(nextPeriod, 0);
+}
+
+function solveDevilToHand() {
+    const button = document.getElementById("d2hSolveButton");
+    const error = document.getElementById("d2hError");
+    const summary = document.getElementById("d2hSummary");
+    const resultElement = document.getElementById("d2hResults");
+    const cancelButton = document.getElementById("d2hCancelButton");
+    const ui = setupProgress("d2h");
 
     error.style.display = "none";
-    status.style.display = "none";
-    resultsElement.innerHTML = "";
+    resultElement.innerHTML = "";
 
     try {
-        const devilText = document.getElementById("devilStick").value;
-        const hitValuesText = document.getElementById("hitValues").value;
-        const objectCount = Number(document.getElementById("objects").value);
-        const maxPeriod = Number(document.getElementById("maxPeriod").value);
-        const maxValue = Number(document.getElementById("maxValue").value);
+        const devil = parseDevilStick(document.getElementById("d2hDevilStick").value);
+        const allowedHitList = parseHitValues(document.getElementById("d2hHitValues").value);
+        const objectCount = Number(document.getElementById("d2hObjects").value);
+        const maxPeriod = Number(document.getElementById("d2hMaxPeriod").value);
+        const maxValue = Number(document.getElementById("d2hMaxValue").value);
+        const allow2x = allowedHitList !== null &&
+            allowedHitList.some(item => item.value === 2 && item.isX);
 
-        if (!Number.isInteger(objectCount) || objectCount < 1) {
-            throw new Error("オブジェクト数は1以上の整数にしてください。");
-        }
-        if (!Number.isInteger(maxPeriod) || maxPeriod < 1) {
+        if (!Number.isInteger(objectCount) || objectCount < 1)
+            throw new Error("Devil Stick オブジェクト数は1以上の整数にしてください。");
+        if (!Number.isInteger(maxPeriod) || maxPeriod < 1)
             throw new Error("最大周期は1以上の整数にしてください。");
-        }
-        if (!Number.isInteger(maxValue) || maxValue < 2) {
+        if (!Number.isInteger(maxValue) || maxValue < 2)
             throw new Error("最大値は2以上にしてください。");
-        }
-
-        const devil = parseDevilStick(devilText);
-        const allowedHitList = parseHitValues(hitValuesText);
-
-        // 2x は UI のチェックボックスを廃止したため、明示的に許可された場合のみ有効化する
-        let allow2x = false;
-        if (allowedHitList && allowedHitList.some(item => item.value === 2 && item.isX)) {
-            allow2x = true;
-        }
 
         button.disabled = true;
         button.textContent = "探索中...";
 
-        setTimeout(() => {
-            const allResults = [];
-            
-            try {
-                for (let period = 1; period <= maxPeriod; period++) {
-                    const targetSum = 2 * objectCount * period;
-                    // (0,0)を許容したため、最小和は0まで下がる
-                    const minSum = 0; 
-                    const maxSum = 2 * maxValue * period;
+        runPeriods({
+            button, cancelButton, ui, maxPeriod,
+            summary, resultElement, resultName: "Hand Stick",
+            getResultsForPeriod(period, state) {
+                const targetSum = 2 * objectCount * period;
+                if (targetSum > 2 * maxValue * period) return [];
 
-                    if (targetSum < minSum || targetSum > maxSum) continue;
-
-                    const results = searchPeriod(period, objectCount, maxValue, devil, allowedHitList, allow2x);
-
-                    for (const sequence of results) {
-                        allResults.push({
-                            period: period,
-                            sequence: sequence,
-                            notation: formatSequence(sequence)
-                        });
-                    }
-                }
-
-                allResults.sort((a, b) => {
-                    if (a.period !== b.period) {
-                        return a.period - b.period;
-                    }
-                    return a.notation.localeCompare(b.notation);
-                });
-
-                const unique = [];
-                const seen = new Set();
-                for (const result of allResults) {
-                    if (seen.has(result.notation)) continue;
-                    seen.add(result.notation);
-                    unique.push(result);
-                }
-
-                summary.textContent = "見つかったサイトスワップ: " + unique.length + " 個";
-
-                if (unique.length === 0) {
-                    resultsElement.innerHTML = '<div class="empty">条件を満たすサイトスワップはありません。</div>';
-                } else {
-                    unique.forEach((result, index) => {
-                        const div = document.createElement("div");
-                        div.className = "result";
-                        div.innerHTML = '<span class="result-number">' + (index + 1) + '.</span>' + escapeHtml(result.notation);
-                        resultsElement.appendChild(div);
-                    });
-                }
-            } catch (e) {
-                error.textContent = e.message;
-                error.style.display = "block";
-                summary.textContent = "エラー";
-            } finally {
-                button.disabled = false;
-                button.textContent = "探索開始";
+                return searchHandFromDevil(
+                    period, objectCount, maxValue,
+                    devil, allowedHitList, allow2x, state
+                ).map(sequence => ({
+                    period,
+                    notation: formatSequence(sequence)
+                }));
             }
-        }, 10);
-
+        });
     } catch (e) {
-        button.disabled = false;
-        button.textContent = "探索開始";
         error.textContent = e.message;
         error.style.display = "block";
         summary.textContent = "エラー";
     }
 }
 
-document.getElementById("solveButton").addEventListener("click", solve);
+function solveHandToDevil() {
+    const button = document.getElementById("h2dSolveButton");
+    const error = document.getElementById("h2dError");
+    const summary = document.getElementById("h2dSummary");
+    const resultElement = document.getElementById("h2dResults");
+    const cancelButton = document.getElementById("h2dCancelButton");
+    const ui = setupProgress("h2d");
+
+    error.style.display = "none";
+    resultElement.innerHTML = "";
+
+    try {
+        const hand = parseDevilStick(document.getElementById("h2dHandStick").value);
+        const allowedHitList = parseHitValues(document.getElementById("h2dHitValues").value);
+        const objectCount = Number(document.getElementById("h2dObjects").value);
+        const maxPeriod = Number(document.getElementById("h2dMaxPeriod").value);
+        const maxValue = Number(document.getElementById("h2dMaxValue").value);
+
+        if (!Number.isInteger(objectCount) || objectCount < 1)
+            throw new Error("Devil Stick オブジェクト数は1以上の整数にしてください。");
+        if (!Number.isInteger(maxPeriod) || maxPeriod < 1)
+            throw new Error("Devil Stick 最大周期は1以上の整数にしてください。");
+        if (!Number.isInteger(maxValue) || maxValue < 2)
+            throw new Error("最大値は2以上にしてください。");
+
+        button.disabled = true;
+        button.textContent = "探索中...";
+
+        runPeriods({
+            button, cancelButton, ui, maxPeriod,
+            summary, resultElement, resultName: "Devil Stick",
+            getResultsForPeriod(period, state) {
+                const targetSum = 2 * objectCount * period;
+                if (targetSum > 2 * maxValue * period) return [];
+
+                return searchDevilFromHand(
+                    period, objectCount, maxValue,
+                    hand, allowedHitList, state
+                ).map(sequence => ({
+                    period,
+                    notation: formatSequence(sequence)
+                }));
+            }
+        });
+    } catch (e) {
+        error.textContent = e.message;
+        error.style.display = "block";
+        summary.textContent = "エラー";
+    }
+}
+
+document.getElementById("d2hSolveButton").addEventListener("click", solveDevilToHand);
+document.getElementById("h2dSolveButton").addEventListener("click", solveHandToDevil);
 
 </script>
 </body>
