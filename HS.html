@@ -589,6 +589,16 @@ function validSiteswap(sequence) {
     return true;
 }
 
+function validateSiteswapInput(sequence, label) {
+    if (!sequence || sequence.length === 0) {
+        throw new Error(label + "を入力してください。");
+    }
+    if (!validSiteswap(sequence)) {
+        throw new Error(label + "がサイトスワップとして成立していません。衝突・消滅する組み合わせは入力できません。");
+    }
+    return sequence;
+}
+
 
 /* =========================================================
  *
@@ -810,6 +820,7 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
             if (isRepeatingShorter(sequence)) return;
             if (!validSiteswap(sequence)) return;
             if (!satisfiesHitRule(handSequence, sequence, allowedHitList)) return;
+            if (!validSiteswap(sequence)) return;
 
             results.push(sequence.map(p => ({
                 left: p.left,
@@ -1079,7 +1090,10 @@ function solveDevilToHand() {
     resultElement.innerHTML = "";
 
     try {
-        const devil = parseDevilStick(document.getElementById("d2hDevilStick").value);
+        const devil = validateSiteswapInput(
+            parseDevilStick(document.getElementById("d2hDevilStick").value),
+            "Devil Stick サイトスワップ"
+        );
         const allowedHitList = parseHitValues(document.getElementById("d2hHitValues").value);
         const objectCount = Number(document.getElementById("d2hObjects").value);
         const maxPeriod = Number(document.getElementById("d2hMaxPeriod").value);
@@ -1132,7 +1146,10 @@ function solveHandToDevil() {
     resultElement.innerHTML = "";
 
     try {
-        const hand = parseDevilStick(document.getElementById("h2dHandStick").value);
+        const hand = validateSiteswapInput(
+            parseDevilStick(document.getElementById("h2dHandStick").value),
+            "Hand Stick サイトスワップ"
+        );
         const allowedHitList = parseHitValues(document.getElementById("h2dHitValues").value);
         const objectCount = Number(document.getElementById("h2dObjects").value);
         const maxPeriod = Number(document.getElementById("h2dMaxPeriod").value);
