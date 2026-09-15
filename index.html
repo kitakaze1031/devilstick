@@ -65,6 +65,12 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 .pad-btn.prefix:hover { background-color: #feebc8; border-color: #f6ad55; }
 
 @media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } .pad-btn { height: 44px; font-size: 14px; } }
+
+.result-filter { margin: 12px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.result-filter label { font-weight: 600; }
+.result-text-filter { flex: 1 1 260px; min-width: 180px; box-sizing: border-box; }
+.filter-count { opacity: .75; font-size: .9em; }
+.filter-no-match { padding: 12px; opacity: .75; }
 </style>
 </head>
 
@@ -279,7 +285,12 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
     <div class="panel">
         <h2>①の結果：Hand Stick</h2>
         <div id="d2hSummary" class="summary">まだ探索していません。</div>
-        <div id="d2hResults"></div>
+        <div class="result-filter" data-target="d2hResults">
+    <label>表記を直接検索</label>
+    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x" autocomplete="off">
+    <span class="filter-count"></span>
+</div>
+<div id="d2hResults"></div>
     </div>
 
     <div class="panel">
@@ -331,7 +342,12 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
     <div class="panel">
         <h2>②の結果：Devil Stick</h2>
         <div id="h2dSummary" class="summary">まだ探索していません。</div>
-        <div id="h2dResults"></div>
+        <div class="result-filter" data-target="h2dResults">
+    <label>表記を直接検索</label>
+    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x" autocomplete="off">
+    <span class="filter-count"></span>
+</div>
+<div id="h2dResults"></div>
     </div>
 </div>
 </div>
@@ -2372,80 +2388,6 @@ function formatSequence(sequence) {
 }
 
 
-
-/* =========================================================
- * 高速検索用：部分探索中の周期衝突を即時判定
- *
- * hasPeriodicCollision() と同じ到着先キーを使う。
- * 完成後の消滅判定は従来どおり validSiteswap() に任せる。
- * ========================================================= */
-function tryAddPeriodicArrivals(candidate, position, period, arrivals) {
-    const added = [];
-
-    if (candidate.left > 0) {
-        const arrivalTime = mod(position + candidate.left / 2, period);
-        const arrivalHand = getArrivalHand(0, candidate.leftX);
-        const key = arrivalTime + ":" + arrivalHand;
-
-        if (arrivals.has(key)) return null;
-        arrivals.add(key);
-        added.push(key);
-    }
-
-    if (candidate.right > 0) {
-        const arrivalTime = mod(position + candidate.right / 2, period);
-        const arrivalHand = getArrivalHand(1, candidate.rightX);
-        const key = arrivalTime + ":" + arrivalHand;
-
-        if (arrivals.has(key)) {
-            for (const k of added) arrivals.delete(k);
-            return null;
-        }
-        arrivals.add(key);
-        added.push(key);
-    }
-
-    return added;
-}
-
-function rollbackPeriodicArrivals(arrivals, added) {
-    for (const key of added) arrivals.delete(key);
-}
-
-/*
- * 各 suffix で「作れる合計値」を BigInt のビット集合として前計算する。
- * bit k = 1 なら、その suffix で合計 2*k が作れる。
- * 候補値は generateCandidates() の仕様上すべて偶数なので、半分にして保持する。
- */
-function buildSuffixReachableSums(candidateLists, targetSum) {
-    const targetUnits = targetSum / 2;
-    const suffixBits = new Array(candidateLists.length + 1);
-    suffixBits[candidateLists.length] = 1n; // 合計0が作れる
-
-    for (let i = candidateLists.length - 1; i >= 0; i--) {
-        let bits = 0n;
-        for (const c of candidateLists[i]) {
-            const units = (c.left + c.right) / 2;
-            if (units <= targetUnits) {
-                bits |= suffixBits[i + 1] << BigInt(units);
-            }
-        }
-        // targetSum より大きいビットは不要。
-        if (targetUnits >= 0) {
-            bits &= (1n << BigInt(targetUnits + 1)) - 1n;
-        }
-        suffixBits[i] = bits;
-    }
-
-    return suffixBits;
-}
-
-function canReachSuffixSum(suffixBits, position, remainingSum) {
-    if (remainingSum < 0 || (remainingSum & 1)) return false;
-    const units = remainingSum / 2;
-    return ((suffixBits[position] >> BigInt(units)) & 1n) !== 0n;
-}
-
 /* =========================================================
  *
  * バックトラッキング
@@ -2453,13 +2395,10 @@ function canReachSuffixSum(suffixBits, position, remainingSum) {
  * ========================================================= */
 
 function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allowedHitList, allow2x, state) {
-    // Devil Stick が (0,0) の位置では、2x を含む全候補を許可する。
-    // 叩く位置だけ candidateLists で先に制限する。
     const candidates = generateCandidates(maxValue, true);
     const results = [];
     const sequence = [];
     const targetSum = 2 * objectCount * period;
-    const arrivals = new Set();
 
     // 各位置で使えるHS候補を先に絞る。
     const candidateLists = [];
@@ -2474,7 +2413,6 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
                     return false;
                 }
             }
-
             if (devil.right > 0) {
                 if (devil.right > 2 || (devil.right === 2 && devil.rightX)) {
                     if (!isHitAllowed(candidate.right, candidate.rightX, allowedHitList)) return false;
@@ -2486,7 +2424,25 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
         }));
     }
 
-    // 各位置以降の最小/最大合計。
+    // 空の候補位置があれば、この周期は即座に不可能。
+    for (const list of candidateLists) {
+        if (list.length === 0) return results;
+    }
+
+    // 探索順は変えず、各位置内だけ合計値の小さい順にする。
+    // 結果そのものは後段で notation 順にソートされるため、集合は変わらない。
+    for (const list of candidateLists) {
+        list.sort((a, b) => {
+            const sa = a.left + a.right;
+            const sb = b.left + b.right;
+            if (sa !== sb) return sa - sb;
+            const xa = (a.leftX ? 1 : 0) + (a.rightX ? 1 : 0);
+            const xb = (b.leftX ? 1 : 0) + (b.rightX ? 1 : 0);
+            return xa - xb;
+        });
+    }
+
+    // 各位置以降の最小/最大合計を前計算。
     const suffixMin = new Array(period + 1).fill(0);
     const suffixMax = new Array(period + 1).fill(0);
 
@@ -2497,12 +2453,63 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
             if (v < min) min = v;
             if (v > max) max = v;
         }
-        suffixMin[i] = suffixMin[i + 1] + (min === Infinity ? 0 : min);
-        suffixMax[i] = suffixMax[i + 1] + (max === -Infinity ? 0 : max);
+        suffixMin[i] = suffixMin[i + 1] + min;
+        suffixMax[i] = suffixMax[i + 1] + max;
     }
 
-    // min/max では拾えない「実際に作れる合計値」も前計算する。
-    const suffixBits = buildSuffixReachableSums(candidateLists, targetSum);
+    /*
+     * hasPeriodicCollision() と同じ到着キーを探索途中で管理する。
+     * キー = arrivalTime * 2 + arrivalHand
+     *
+     * 元の最終判定を置き換えるのではなく、同じ条件に該当する枝を
+     * その場で捨てるための枝刈りとして使う。
+     */
+    const occupied = new Uint8Array(period * 2);
+
+    function addCandidateCollisionState(candidate, position) {
+        const keys = [];
+
+        if (candidate.left > 0) {
+            const arrivalTime = mod(position + candidate.left / 2, period);
+            const arrivalHand = getArrivalHand(0, candidate.leftX);
+            keys.push(arrivalTime * 2 + arrivalHand);
+        }
+
+        if (candidate.right > 0) {
+            const arrivalTime = mod(position + candidate.right / 2, period);
+            const arrivalHand = getArrivalHand(1, candidate.rightX);
+            keys.push(arrivalTime * 2 + arrivalHand);
+        }
+
+        // この候補自身の2投が同じ場所へ着く場合も元判定と同じくNG。
+        for (const key of keys) {
+            if (occupied[key]) return null;
+        }
+        if (keys.length === 2 && keys[0] === keys[1]) return null;
+
+        // 現在位置に既に到着が予約されている場合、現在の投げが0なら消滅。
+        // 新しく追加する到着も含めて確認する。
+        const currentLeftKey = position * 2;
+        const currentRightKey = currentLeftKey + 1;
+
+        let hasCurrentLeftArrival = !!occupied[currentLeftKey];
+        let hasCurrentRightArrival = !!occupied[currentRightKey];
+
+        for (const key of keys) {
+            if (key === currentLeftKey) hasCurrentLeftArrival = true;
+            if (key === currentRightKey) hasCurrentRightArrival = true;
+        }
+
+        if (hasCurrentLeftArrival && candidate.left === 0) return null;
+        if (hasCurrentRightArrival && candidate.right === 0) return null;
+
+        for (const key of keys) occupied[key] = 1;
+        return keys;
+    }
+
+    function rollbackCollisionState(keys) {
+        for (const key of keys) occupied[key] = 0;
+    }
 
     function backtrack(position, currentSum) {
         if (state && state.cancelled) return;
@@ -2516,7 +2523,8 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
 
         if (position === period) {
             if (currentSum !== targetSum) return;
-            // 最終判定は従来コードをそのまま残す。
+
+            // 最終結果の判定は従来コードをそのまま残す。
             if (isRepeatingShorter(sequence)) return;
             if (!validSiteswap(sequence)) return;
             if (!satisfiesHitRule(sequence, devilSequence, allowedHitList)) return;
@@ -2528,30 +2536,29 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
             return;
         }
 
-        const remainingSum = targetSum - currentSum;
-        if (remainingSum < suffixMin[position] || remainingSum > suffixMax[position]) return;
-        if (!canReachSuffixSum(suffixBits, position, remainingSum)) return;
+        const remaining = targetSum - currentSum;
+        if (remaining < suffixMin[position]) return;
+        if (remaining > suffixMax[position]) return;
 
         for (const candidate of candidateLists[position]) {
             if (state && state.cancelled) return;
 
             const value = candidate.left + candidate.right;
             const nextSum = currentSum + value;
-            const nextRemaining = targetSum - nextSum;
 
             if (nextSum > targetSum) continue;
-            if (nextRemaining < suffixMin[position + 1] || nextRemaining > suffixMax[position + 1]) continue;
-            if (!canReachSuffixSum(suffixBits, position + 1, nextRemaining)) continue;
+            if (nextSum + suffixMin[position + 1] > targetSum) continue;
+            if (nextSum + suffixMax[position + 1] < targetSum) continue;
 
-            // 完成前でも、同じ到着先が出た枝は即座に捨てる。
-            const added = tryAddPeriodicArrivals(candidate, position, period, arrivals);
-            if (added === null) continue;
+            // ★ 衝突・消滅を完成前に枝刈り
+            const addedKeys = addCandidateCollisionState(candidate, position);
+            if (addedKeys === null) continue;
 
             sequence.push(candidate);
             backtrack(position + 1, nextSum);
             sequence.pop();
 
-            rollbackPeriodicArrivals(arrivals, added);
+            rollbackCollisionState(addedKeys);
         }
     }
 
@@ -2642,7 +2649,6 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
     const results = [];
     const sequence = [];
     const targetSum = 2 * objectCount * period;
-    const arrivals = new Set();
 
     function isAllowed(candidate, hand) {
         if (candidate.left > 0) {
@@ -2668,6 +2674,18 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
         candidateLists.push(candidates.filter(c => isAllowed(c, hand)));
     }
 
+    for (const list of candidateLists) {
+        if (list.length === 0) return results;
+        list.sort((a, b) => {
+            const sa = a.left + a.right;
+            const sb = b.left + b.right;
+            if (sa !== sb) return sa - sb;
+            const xa = (a.leftX ? 1 : 0) + (a.rightX ? 1 : 0);
+            const xb = (b.leftX ? 1 : 0) + (b.rightX ? 1 : 0);
+            return xa - xb;
+        });
+    }
+
     const suffixMin = new Array(period + 1).fill(0);
     const suffixMax = new Array(period + 1).fill(0);
 
@@ -2678,23 +2696,67 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
             if (v < min) min = v;
             if (v > max) max = v;
         }
-        suffixMin[i] = suffixMin[i + 1] + (min === Infinity ? 0 : min);
-        suffixMax[i] = suffixMax[i + 1] + (max === -Infinity ? 0 : max);
+        suffixMin[i] = suffixMin[i + 1] + min;
+        suffixMax[i] = suffixMax[i + 1] + max;
     }
 
-    const suffixBits = buildSuffixReachableSums(candidateLists, targetSum);
+    // hasPeriodicCollision() と同じ到着キーを探索中に管理する。
+    const occupied = new Uint8Array(period * 2);
+
+    function addCandidateCollisionState(candidate, position) {
+        const keys = [];
+
+        if (candidate.left > 0) {
+            const arrivalTime = mod(position + candidate.left / 2, period);
+            const arrivalHand = getArrivalHand(0, candidate.leftX);
+            keys.push(arrivalTime * 2 + arrivalHand);
+        }
+
+        if (candidate.right > 0) {
+            const arrivalTime = mod(position + candidate.right / 2, period);
+            const arrivalHand = getArrivalHand(1, candidate.rightX);
+            keys.push(arrivalTime * 2 + arrivalHand);
+        }
+
+        for (const key of keys) {
+            if (occupied[key]) return null;
+        }
+        if (keys.length === 2 && keys[0] === keys[1]) return null;
+
+        const currentLeftKey = position * 2;
+        const currentRightKey = currentLeftKey + 1;
+
+        let hasCurrentLeftArrival = !!occupied[currentLeftKey];
+        let hasCurrentRightArrival = !!occupied[currentRightKey];
+
+        for (const key of keys) {
+            if (key === currentLeftKey) hasCurrentLeftArrival = true;
+            if (key === currentRightKey) hasCurrentRightArrival = true;
+        }
+
+        if (hasCurrentLeftArrival && candidate.left === 0) return null;
+        if (hasCurrentRightArrival && candidate.right === 0) return null;
+
+        for (const key of keys) occupied[key] = 1;
+        return keys;
+    }
+
+    function rollbackCollisionState(keys) {
+        for (const key of keys) occupied[key] = 0;
+    }
 
     function backtrack(position, currentSum) {
-        if (state.cancelled) return;
+        if (state && state.cancelled) return;
 
-        state.nodes++;
-        if ((state.nodes & 4095) === 0) {
-            state.onProgress(position, period, state.nodes);
+        if (state) {
+            state.nodes++;
+            if ((state.nodes & 4095) === 0) {
+                state.onProgress(position, period, state.nodes);
+            }
         }
 
         if (position === period) {
             if (currentSum !== targetSum) return;
-            // 最終判定は従来コードをそのまま残す。
             if (isRepeatingShorter(sequence)) return;
             if (!validSiteswap(sequence)) return;
             if (!satisfiesHitRule(handSequence, sequence, allowedHitList)) return;
@@ -2706,36 +2768,34 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
             return;
         }
 
-        const remainingSum = targetSum - currentSum;
-        if (remainingSum < suffixMin[position] || remainingSum > suffixMax[position]) return;
-        if (!canReachSuffixSum(suffixBits, position, remainingSum)) return;
+        const remaining = targetSum - currentSum;
+        if (remaining < suffixMin[position]) return;
+        if (remaining > suffixMax[position]) return;
 
         for (const candidate of candidateLists[position]) {
-            if (state.cancelled) return;
+            if (state && state.cancelled) return;
 
             const value = candidate.left + candidate.right;
             const nextSum = currentSum + value;
-            const nextRemaining = targetSum - nextSum;
 
             if (nextSum > targetSum) continue;
-            if (nextRemaining < suffixMin[position + 1] || nextRemaining > suffixMax[position + 1]) continue;
-            if (!canReachSuffixSum(suffixBits, position + 1, nextRemaining)) continue;
+            if (nextSum + suffixMin[position + 1] > targetSum) continue;
+            if (nextSum + suffixMax[position + 1] < targetSum) continue;
 
-            const added = tryAddPeriodicArrivals(candidate, position, period, arrivals);
-            if (added === null) continue;
+            const addedKeys = addCandidateCollisionState(candidate, position);
+            if (addedKeys === null) continue;
 
             sequence.push(candidate);
             backtrack(position + 1, nextSum);
             sequence.pop();
 
-            rollbackPeriodicArrivals(arrivals, added);
+            rollbackCollisionState(addedKeys);
         }
     }
 
     backtrack(0, 0);
     return results;
 }
-
 
 function setupProgress(prefix) {
     return {
@@ -3045,5 +3105,45 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
+<script>
+(function () {
+    function setupResultTextFilter(filter) {
+        const targetId = filter.dataset.target;
+        const results = document.getElementById(targetId);
+        const input = filter.querySelector('.result-text-filter');
+        const count = filter.querySelector('.filter-count');
+        if (!results || !input) return;
+
+        let emptyMessage = null;
+        const apply = () => {
+            const query = input.value.trim().toLowerCase();
+            const items = Array.from(results.querySelectorAll('.result'));
+            let visible = 0;
+            items.forEach(item => {
+                const copy = item.cloneNode(true);
+                copy.querySelector('.result-number')?.remove();
+                const text = copy.textContent.trim().toLowerCase();
+                const matched = !query || text.includes(query);
+                item.style.display = matched ? '' : 'none';
+                if (matched) visible++;
+            });
+            if (count) count.textContent = query ? `${visible} / ${items.length} 件表示` : `${items.length} 件`;
+            if (emptyMessage) emptyMessage.remove();
+            if (query && items.length && visible === 0) {
+                emptyMessage = document.createElement('div');
+                emptyMessage.className = 'filter-no-match';
+                emptyMessage.textContent = '一致する表記がありません。';
+                results.appendChild(emptyMessage);
+            }
+        };
+
+        input.addEventListener('input', apply);
+        new MutationObserver(apply).observe(results, { childList: true, subtree: true });
+        apply();
+    }
+
+    document.querySelectorAll('.result-filter').forEach(setupResultTextFilter);
+})();
+</script>
 </body>
 </html>
