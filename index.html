@@ -65,6 +65,19 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 .pad-btn.prefix:hover { background-color: #feebc8; border-color: #f6ad55; }
 
 @media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } .pad-btn { height: 44px; font-size: 14px; } }
+
+.result-filter {
+    margin: 0 0 16px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f7f7f7;
+}
+.result-filter label { margin-bottom: 6px; }
+.result-text-filter { margin: 0 !important; box-sizing: border-box; }
+.filter-count { display: block; margin-top: 6px; color: #666; font-size: 13px; }
+.result-filter + #d2hResults .result, .result-filter + #h2dResults .result { }
+.result-filter .filter-no-match { margin: 8px 0 0; color: #777; font-size: 14px; }
 </style>
 </head>
 
@@ -279,7 +292,12 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
     <div class="panel">
         <h2>①の結果：Hand Stick</h2>
         <div id="d2hSummary" class="summary">まだ探索していません。</div>
-        <div id="d2hResults"></div>
+        <div class="result-filter" data-target="d2hResults">
+    <label>表記を直接検索</label>
+    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x" autocomplete="off">
+    <span class="filter-count"></span>
+</div>
+<div id="d2hResults"></div>
     </div>
 
     <div class="panel">
@@ -331,7 +349,12 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
     <div class="panel">
         <h2>②の結果：Devil Stick</h2>
         <div id="h2dSummary" class="summary">まだ探索していません。</div>
-        <div id="h2dResults"></div>
+        <div class="result-filter" data-target="h2dResults">
+    <label>表記を直接検索</label>
+    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x" autocomplete="off">
+    <span class="filter-count"></span>
+</div>
+<div id="h2dResults"></div>
     </div>
 </div>
 </div>
@@ -2944,6 +2967,46 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
         });
         observer.observe(h2dResults, { childList: true, subtree: true });
     }
+})();
+</script>
+<script>
+(function () {
+    function setupResultTextFilter(filter) {
+        const targetId = filter.dataset.target;
+        const results = document.getElementById(targetId);
+        const input = filter.querySelector('.result-text-filter');
+        const count = filter.querySelector('.filter-count');
+        if (!results || !input) return;
+
+        let emptyMessage = null;
+        const apply = () => {
+            const query = input.value.trim().toLowerCase();
+            const items = Array.from(results.querySelectorAll('.result'));
+            let visible = 0;
+            items.forEach(item => {
+                const copy = item.cloneNode(true);
+                copy.querySelector('.result-number')?.remove();
+                const text = copy.textContent.trim().toLowerCase();
+                const matched = !query || text.includes(query);
+                item.style.display = matched ? '' : 'none';
+                if (matched) visible++;
+            });
+            if (count) count.textContent = query ? `${visible} / ${items.length} 件表示` : `${items.length} 件`;
+            if (emptyMessage) emptyMessage.remove();
+            if (query && items.length && visible === 0) {
+                emptyMessage = document.createElement('div');
+                emptyMessage.className = 'filter-no-match';
+                emptyMessage.textContent = '一致する表記がありません。';
+                results.appendChild(emptyMessage);
+            }
+        };
+
+        input.addEventListener('input', apply);
+        new MutationObserver(apply).observe(results, { childList: true, subtree: true });
+        apply();
+    }
+
+    document.querySelectorAll('.result-filter').forEach(setupResultTextFilter);
 })();
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}' crossorigin="anonymous"></script>
