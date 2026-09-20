@@ -1025,8 +1025,9 @@ function build(seq, balls, localT, isAsync) {
             let from = (side === 0) ? (cross ? -1 : -2) : (cross ? 1 : 2);
             let to = (side === 0) ? (cross ? 1 : -2) : (cross ? -1 : 2);
             let rot = th.rot;
+            let hs = th.hs;
 
-            outTable[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot, handSide: side };
+            outTable[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot, hs, handSide: side };
 
             t += Math.floor(value / 2);
             if (to === -1 || to === 1) side ^= 1;
@@ -1109,12 +1110,36 @@ function make_siteswap_table(centerInput, handInput) {
     g_handIsAsync = parsedHand.isAsync;
     g_handN = g_handSeq.length;
 
+    // ハンドスティック専用記法：2+ は「フラーリッシュする2」として扱う。
+    // parse() では + を HS_HAND2 として保持しているので、ハンド側だけ
+    // propeller=5（フラーリッシュ）へ変換する。通常の 2 や他の数字には影響しない。
+    for (const beat of g_handSeq) {
+        for (const th of [...beat.throws_a, ...beat.throws_b]) {
+            if (th.val === 4 && th.hs === HS_HAND2) {
+                th.propeller = 5;
+            }
+        }
+    }
+
     let max_val = 0;
     for (let i = 0; i < g_n; i++) {
         g_seq[i].throws_a.forEach(th => { if (th.val > max_val) max_val = th.val; });
         g_seq[i].throws_b.forEach(th => { if (th.val > max_val) max_val = th.val; });
     }
+    // 見切れ防止用のスケールは、センタースティックだけでなく
+    // ハンドスティック側のサイトスワップも含めて決める。
+    // 以前は g_seq の最大値だけを見ていたため、ハンド側だけ高い
+    // サイトスワップ（例: (8,8)）では g_scale が 1.0 のままとなり、
+    // ハンドスティックの頂点がキャンバス上端を越えることがあった。
+    let handMaxVal = 0;
+    for (let i = 0; i < g_handN; i++) {
+        g_handSeq[i].throws_a.forEach(th => { if (th.val > handMaxVal) handMaxVal = th.val; });
+        g_handSeq[i].throws_b.forEach(th => { if (th.val > handMaxVal) handMaxVal = th.val; });
+    }
     let logicalMaxValue = g_isAsync ? max_val / 2.0 : max_val;
+    let logicalHandMaxValue = g_handIsAsync ? handMaxVal / 2.0 : handMaxVal;
+    logicalMaxValue = Math.max(logicalMaxValue, logicalHandMaxValue);
+
     let maxThrowHeight = 10.0 * logicalMaxValue * logicalMaxValue * currentHeight;
     let sceneMinY = Math.min(155.0, 460.0 - maxThrowHeight - 125.0);
     let sceneMaxY = Math.max(530.0, 460.0 + 125.0);
@@ -1325,6 +1350,14 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
                 let baseAngle = (side === 0) ? flare : Math.PI - flare;
                 let angle = baseAngle + (side === 0 ? -hs_val : hs_val) * 0.35 + Math.PI;
 
+                // 2+ はフラーリッシュ。手元を支点に1カウントで1回転させる。
+                // 2 の通常保持は従来どおり。
+                if (c.propeller === 5 && logicalValue === 2) {
+                    const flourishProgress = Math.min(1, Math.max(0, dt / Math.max(duration, 0.0001)));
+                    const spinDirection = side === 0 ? 1 : -1;
+                    angle += spinDirection * flourishProgress * Math.PI * 2;
+                }
+
                 const L = 80.0;
                 const gripOffset = 15.0; // 根元から15pxの位置を握るように調整
                 let dx = Math.cos(angle);
@@ -1333,6 +1366,32 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
                 // 手(tip)の位置を支点とし、上部(L - 15)と下部(-15)へスティックを伸ばす
                 let stick_p1 = { x: tip.x + dx * (L - gripOffset), y: tip.y + dy * (L - gripOffset) };
                 let stick_p2 = { x: tip.x - dx * gripOffset, y: tip.y - dy * gripOffset };
+
+                // 「+」付きの2だけ、画面上の白い手玉(actualHand)を中心に回転させる。
+                // 元の2の位置・角度・長さはそのままにし、回転分だけを追加する。
+                if (c.hs === HS_HAND2 && logicalValue === 2) {
+                    const handCenterOffset = 40.0;
+                    const center = {
+                        x: tip.x + dx * handCenterOffset,
+                        y: tip.y + dy * handCenterOffset
+                    };
+                    const phase = Math.min(1, Math.max(0, dt / Math.max(dwellDuration, 0.001)));
+                    const spin = (side === 0 ? -1 : 1) * phase * Math.PI * 2;
+
+                    const rotateAround = (p) => {
+                        const rx = p.x - center.x;
+                        const ry = p.y - center.y;
+                        const cs = Math.cos(spin);
+                        const sn = Math.sin(spin);
+                        return {
+                            x: center.x + rx * cs - ry * sn,
+                            y: center.y + rx * sn + ry * cs
+                        };
+                    };
+
+                    stick_p1 = rotateAround(stick_p1);
+                    stick_p2 = rotateAround(stick_p2);
+                }
 
                 drawLineEx(stick_p1, stick_p2, 8, "#4a5568");
 
