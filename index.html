@@ -288,7 +288,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
         <div id="d2hSummary" class="summary">まだ探索していません。</div>
         <div class="result-filter" data-target="d2hResults">
     <label>表記を直接検索</label>
-    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x" autocomplete="off">
+    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x / *＝対称" autocomplete="off">
     <span class="filter-count"></span>
 </div>
 <div id="d2hResults"></div>
@@ -345,7 +345,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
         <div id="h2dSummary" class="summary">まだ探索していません。</div>
         <div class="result-filter" data-target="h2dResults">
     <label>表記を直接検索</label>
-    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x" autocomplete="off">
+    <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x / *＝対称" autocomplete="off">
     <span class="filter-count"></span>
 </div>
 <div id="h2dResults"></div>
@@ -2151,8 +2151,11 @@ function parseDevilStick(text) {
             throw new Error("各要素は (左,右) の形式にしてください。");
         }
 
-        const leftText = parts[0];
-        const rightText = parts[1];
+        // 計算機では「-」は無視して値だけで計算する。
+        // シミュレーター側の parse() は - を意味のある記号として扱うが、
+        // この計算機では -2 → 2、-2x → 2x として扱う。
+        const leftText = parts[0].replace(/^-/, "");
+        const rightText = parts[1].replace(/^-/, "");
 
         const leftX = leftText.endsWith("x");
         const rightX = rightText.endsWith("x");
@@ -3225,12 +3228,59 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
         const apply = () => {
             const query = input.value.trim().toLowerCase();
             const items = Array.from(results.querySelectorAll('.result'));
+
+            // 「*」は対称的なサイトスワップだけを検索する特殊記号。
+            // シンクロ表記では、左右を入れ替えながら並びを反転したものと
+            // 前半と後半が左右反転の対応関係なら対称とする。
+            // 例：
+            //   (2,2)
+            //   (4,2x)(2x,4)
+            // は対称、(2x,4x) は非対称。
+            const isSymmetricSiteswap = (text) => {
+                const normalized = text.replace(/\s+/g, '').toLowerCase();
+                const pairs = [];
+                const re = /\(([^,()]+),([^,()]+)\)/g;
+                let match;
+                while ((match = re.exec(normalized)) !== null) {
+                    pairs.push([match[1], match[2]]);
+                }
+
+                if (pairs.length > 0) {
+                    // シンクロの対称性は「前半の各ペアを左右反転したものが
+                    // 後半の同じ位置に並ぶ」こと。
+                    // 例: (a,b)(c,d)(b,a)(d,c)
+                    // 例: (2,0)(6,2)(6x,2)(0,2)(2,6)(2,6x)
+                    // また、(2,2) のような1ペアだけの左右同値も対称とする。
+                    if (pairs.length === 1) {
+                        return pairs[0][0] === pairs[0][1];
+                    }
+                    if (pairs.length % 2 !== 0) return false;
+
+                    const half = pairs.length / 2;
+                    for (let i = 0; i < half; i++) {
+                        const first = pairs[i];
+                        const counterpart = pairs[i + half];
+                        if (first[0] !== counterpart[1] || first[1] !== counterpart[0]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                // アシンクロ等の括弧なし表記は、単純な並びの反転で判定。
+                const tokens = normalized.match(/(?:10|a|[0-9]+x?)/g);
+                if (!tokens || tokens.join('') !== normalized) return false;
+                return tokens.every((token, i) => token === tokens[tokens.length - 1 - i]);
+            };
+
             let visible = 0;
             items.forEach(item => {
                 const copy = item.cloneNode(true);
                 copy.querySelector('.result-number')?.remove();
                 const text = copy.textContent.trim().toLowerCase();
-                const matched = !query || text.includes(query);
+                const matched = query === '*'
+                    ? isSymmetricSiteswap(text)
+                    : (!query || text.includes(query));
                 item.style.display = matched ? '' : 'none';
                 if (matched) visible++;
             });
