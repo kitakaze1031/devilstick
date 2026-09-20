@@ -130,6 +130,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                         <button class="pad-btn action" onclick="insertAtCursor('*')">*</button>
                         <button class="pad-btn action" onclick="insertAtCursor('-')">-</button>
                         <button class="pad-btn action" onclick="insertAtCursor('^')">^</button>
+                        <button class="pad-btn action" onclick="insertAtCursor('+')">+</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('p')">p</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('t')">t</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('f')">f</button>
@@ -754,15 +755,19 @@ function parse(s) {
                 token = token.substring(1);
             }
             
-            let numMatch = token.match(/^[0-9a-zA-Z]/);
+            // アシンクロでは「10」と「a」がどちらもサイトスワップ値10。
+            // 10を1と0の2ビートに分割しないよう、先に2桁の10を判定する。
+            let numMatch = token.match(/^10|^[0-9a-zA-Z]/);
             if (!numMatch) return null;
-            
-            if (/[0-9]/.test(numMatch[0])) {
-                th.val = parseInt(numMatch[0]);
+            const valueToken = numMatch[0];
+            if (valueToken === '10') {
+                th.val = 10;
+            } else if (/^[0-9]$/.test(valueToken)) {
+                th.val = parseInt(valueToken);
             } else {
-                th.val = numMatch[0].toLowerCase().charCodeAt(0) - 87;
+                th.val = valueToken.toLowerCase().charCodeAt(0) - 87;
             }
-            token = token.substring(1); 
+            token = token.substring(valueToken.length); 
             
             if (token.includes('x')) th.cross = 1;
             if (token.includes('*')) th.hs = HS_HAND1;
@@ -786,7 +791,9 @@ function parse(s) {
             return th;
         };
 
-        const regex = /-?f?[0-9a-zA-Z](?:[x\*+\^]|r-?[0-9]*)*/g;
+        // 「10」を1・0ではなく1つのサイトスワップ値として扱う。
+        // a は従来どおり10を表す。
+        const regex = /-?f?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
         const tokens = normalized.match(regex) || [];
         
         let tokenIndex = 0;
@@ -850,10 +857,17 @@ function parse(s) {
                 if (i < s.length && s[i] === '-') { th.is_minus = true; i++; } 
                 
                 let hasNum = false;
-                while (i < s.length && s[i] >= '0' && s[i] <= '9') { 
-                    th.val = th.val * 10 + parseInt(s[i]); 
-                    i++; 
+                // シンクロでは「10」も「a」も同じ値10として扱う。
+                if (s[i] === 'a' || s[i] === 'A') {
+                    th.val = 10;
+                    i++;
                     hasNum = true;
+                } else {
+                    while (i < s.length && s[i] >= '0' && s[i] <= '9') { 
+                        th.val = th.val * 10 + parseInt(s[i]); 
+                        i++; 
+                        hasNum = true;
+                    }
                 }
                 if (!hasNum) return null;
 
@@ -1962,6 +1976,24 @@ function applyHandPreset(val) {
 // =====================================
 // 入力補助パッド制御系ロジック
 // =====================================
+// パッドの入力先。最後にフォーカスしたサイトスワップ欄を記憶する。
+// これにより「パターン」だけでなく「ハンド」欄にも同じ入力パッドを使える。
+let activePadInput = document.getElementById("siteswapInput");
+
+function setActivePadInput(input) {
+    if (input && (input.id === "siteswapInput" || input.id === "handSiteswapInput")) {
+        activePadInput = input;
+    }
+}
+
+["siteswapInput", "handSiteswapInput"].forEach(function(id) {
+    const input = document.getElementById(id);
+    if (input) {
+        input.addEventListener("focus", function() { setActivePadInput(input); });
+        input.addEventListener("click", function() { setActivePadInput(input); });
+    }
+});
+
 document.getElementById("togglePadBtn").addEventListener("click", function() {
     const pad = document.getElementById("inputPad");
     if (pad.style.display === "none" || pad.style.display === "") {
@@ -1971,22 +2003,36 @@ document.getElementById("togglePadBtn").addEventListener("click", function() {
     }
 });
 
+function getActivePadInput() {
+    const handInput = document.getElementById("handSiteswapInput");
+    const mainInput = document.getElementById("siteswapInput");
+    if (activePadInput && document.body.contains(activePadInput)) return activePadInput;
+    return mainInput || handInput;
+}
+
 function insertAtCursor(text) {
-    const input = document.getElementById("siteswapInput");
-    const start = input.selectionStart; const end = input.selectionEnd; const val = input.value;
+    const input = getActivePadInput();
+    if (!input) return;
+    setActivePadInput(input);
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const val = input.value;
     input.value = val.substring(0, start) + text + val.substring(end);
-    input.selectionStart = input.selectionEnd = start + text.length; input.focus();
+    input.selectionStart = input.selectionEnd = start + text.length;
+    input.focus();
 }
 
 function moveCursor(dir) {
-    const input = document.getElementById("siteswapInput");
+    const input = getActivePadInput();
+    if (!input) return;
     let pos = input.selectionStart + dir;
     if (pos < 0) pos = 0; if (pos > input.value.length) pos = input.value.length;
     input.selectionStart = input.selectionEnd = pos; input.focus();
 }
 
 function deleteAtCursor() {
-    const input = document.getElementById("siteswapInput");
+    const input = getActivePadInput();
+    if (!input) return;
     const start = input.selectionStart; const end = input.selectionEnd; const val = input.value;
     if (start === end) {
         if (start > 0) {
@@ -2001,8 +2047,10 @@ function deleteAtCursor() {
 }
 
 function clearInput() {
-    const input = document.getElementById("siteswapInput");
-    input.value = ""; input.focus();
+    const input = getActivePadInput();
+    if (!input) return;
+    input.value = "";
+    input.focus();
 }
 
 // 録画機能
