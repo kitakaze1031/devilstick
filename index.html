@@ -258,7 +258,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <input id="d2hHitValues" type="text" value="2" placeholder="2">
                 <div class="help">
                     叩く・投げる時のHS数字。スペースまたはカンマ区切り。<br>
-                    例: <code>2</code>、<code>2 4</code>。空欄で0以外の全偶数を許容。
+                    例: <code>2</code>、<code>2+</code>、<code>2 2+</code>、<code>2 4</code>。空欄で0以外の全偶数を許容。
                 </div>
             </div>
 
@@ -315,7 +315,8 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 <label for="h2dHitValues">たたく時のHSサイトスワップ</label>
                 <input id="h2dHitValues" type="text" value="2" placeholder="2">
                 <div class="help">
-                    叩く・投げる時のHS数字。スペースまたはカンマ区切り。
+                    叩く・投げる時のHS数字。スペースまたはカンマ区切り。<br>
+                    <code>2</code> と <code>2+</code> は別物として扱います。
                 </div>
             </div>
 
@@ -1964,12 +1965,24 @@ function initSimulation() {
 }
 
 function applyPreset(val) {
-    document.getElementById("siteswapInput").value = val;
+    const input = document.getElementById("siteswapInput");
+    input.value = val;
+    // ボタンの入力例から設定した場合も検索機へ即時反映
+    if (typeof window.syncSimulatorToSearch === "function") {
+        window.syncSimulatorToSearch();
+    }
+    input.dispatchEvent(new Event("input", { bubbles: true }));
     initSimulation();
 }
 
 function applyHandPreset(val) {
-    document.getElementById("handSiteswapInput").value = val;
+    const input = document.getElementById("handSiteswapInput");
+    input.value = val;
+    // ハンドの入力例から設定した場合も検索機へ即時反映
+    if (typeof window.syncSimulatorToSearch === "function") {
+        window.syncSimulatorToSearch();
+    }
+    input.dispatchEvent(new Event("input", { bubbles: true }));
     initSimulation();
 }
 
@@ -2157,11 +2170,15 @@ function parseDevilStick(text) {
         const leftText = parts[0].replace(/^-/, "");
         const rightText = parts[1].replace(/^-/, "");
 
-        const leftX = leftText.endsWith("x");
-        const rightX = rightText.endsWith("x");
+        const leftPlus = leftText.endsWith("+");
+        const rightPlus = rightText.endsWith("+");
+        const leftCore = leftPlus ? leftText.slice(0, -1) : leftText;
+        const rightCore = rightPlus ? rightText.slice(0, -1) : rightText;
+        const leftX = leftCore.endsWith("x");
+        const rightX = rightCore.endsWith("x");
 
-        const leftNumber = Number(leftX ? leftText.slice(0, -1) : leftText);
-        const rightNumber = Number(rightX ? rightText.slice(0, -1) : rightText);
+        const leftNumber = Number(leftX ? leftCore.slice(0, -1) : leftCore);
+        const rightNumber = Number(rightX ? rightCore.slice(0, -1) : rightCore);
 
         if (!Number.isInteger(leftNumber) || !Number.isInteger(rightNumber)) {
             throw new Error("数字を正しく読み取れません。");
@@ -2184,7 +2201,9 @@ function parseDevilStick(text) {
             left: leftNumber,
             right: rightNumber,
             leftX: leftX,
-            rightX: rightX
+            rightX: rightX,
+            leftPlus: leftPlus,
+            rightPlus: rightPlus
         });
     }
 
@@ -2207,30 +2226,20 @@ function parseDevilStick(text) {
 
 function parseHitValues(text) {
     text = text.trim();
-    if (!text) {
-        return null;
-    }
-
+    if (!text) return null;
     const tokens = text.split(/[,/\s]+/).filter(Boolean);
     const result = [];
-
     for (const token of tokens) {
-        const isX = token.endsWith("x");
-        const numStr = isX ? token.slice(0, -1) : token;
+        const isPlus = token.endsWith("+");
+        const plusStripped = isPlus ? token.slice(0, -1) : token;
+        const isX = plusStripped.endsWith("x");
+        const numStr = isX ? plusStripped.slice(0, -1) : plusStripped;
         const num = Number(numStr);
-
         if (!Number.isInteger(num) || num < 0 || num % 2 !== 0) {
             throw new Error("たたく時のHS数字「" + token + "」が不正です。正の偶数を指定してください。");
         }
-        if (num === 0) {
-            throw new Error("たたく時のHS数字に 0 は指定できません。");
-        }
-
-        result.push({
-            value: num,
-            isX: isX,
-            raw: token
-        });
+        if (num === 0) throw new Error("たたく時のHS数字に 0 は指定できません。");
+        result.push({ value: num, isX, isPlus, raw: token });
     }
     return result;
 }
@@ -2242,13 +2251,9 @@ function parseHitValues(text) {
  *
  * ========================================================= */
 
-function isHitAllowed(val, isX, allowedList) {
-    if (allowedList === null) {
-        return val !== 0;
-    }
-    return allowedList.some(item => {
-        return item.value === val && item.isX === isX;
-    });
+function isHitAllowed(val, isX, isPlus, allowedList) {
+    if (allowedList === null) return val !== 0;
+    return allowedList.some(item => item.value === val && item.isX === isX && item.isPlus === isPlus);
 }
 
 
@@ -2258,42 +2263,26 @@ function isHitAllowed(val, isX, allowedList) {
  *
  * ========================================================= */
 
-function generateCandidates(maxValue, allow2x) {
+function generateCandidates(maxValue, allow2x, allow2plus) {
     const result = [];
     const maxEven = Math.floor(maxValue / 2) * 2;
-
     for (let left = 0; left <= maxEven; left += 2) {
         for (let right = 0; right <= maxEven; right += 2) {
-
-            // 2x を許可するかどうかの判定
             const leftCanX = left > 0 && (left !== 2 || allow2x);
             const rightCanX = right > 0 && (right !== 2 || allow2x);
-
-            /* x なし */
-            result.push({
-                left: left, right: right, leftX: false, rightX: false
-            });
-
-            /* 左だけ x */
-            if (leftCanX) {
-                result.push({
-                    left: left, right: right, leftX: true, rightX: false
-                });
-            }
-
-            /* 右だけ x */
-            if (rightCanX) {
-                result.push({
-                    left: left, right: right, leftX: false, rightX: true
-                });
-            }
-
-            /* 両方 x */
-            if (leftCanX && rightCanX) {
-                result.push({
-                    left: left, right: right, leftX: true, rightX: true
-                });
-            }
+            const leftCanPlus = left === 2 && allow2plus;
+            const rightCanPlus = right === 2 && allow2plus;
+            const push = (leftX, rightX, leftPlus, rightPlus) => result.push({left, right, leftX, rightX, leftPlus, rightPlus});
+            push(false, false, false, false);
+            if (leftCanX) push(true, false, false, false);
+            if (rightCanX) push(false, true, false, false);
+            if (leftCanX && rightCanX) push(true, true, false, false);
+            if (leftCanPlus) push(false, false, true, false);
+            if (rightCanPlus) push(false, false, false, true);
+            if (leftCanPlus && rightCanPlus) push(false, false, true, true);
+            if (leftCanX && rightCanPlus) push(true, false, false, true);
+            if (leftCanPlus && rightCanX) push(false, true, true, false);
+            if (leftCanX && rightCanX && leftCanPlus && rightCanPlus) push(true, true, true, true);
         }
     }
     return result;
@@ -2417,10 +2406,10 @@ function satisfiesHitRule(handSequence, devilSequence, allowedHitList) {
         if (devil.left > 0) {
             if (devil.left > 2 || (devil.left === 2 && devil.leftX)) {
                 // 叩く・投げる
-                if (!isHitAllowed(hand.left, hand.leftX, allowedHitList)) return false;
+                if (!isHitAllowed(hand.left, hand.leftX, hand.leftPlus, allowedHitList)) return false;
             } else {
                 // 保持 (2)
-                if (hand.left !== 2 || hand.leftX !== false) return false;
+                if (hand.left !== 2 || hand.leftX !== false || hand.leftPlus !== false) return false;
             }
         }
 
@@ -2428,10 +2417,10 @@ function satisfiesHitRule(handSequence, devilSequence, allowedHitList) {
         if (devil.right > 0) {
             if (devil.right > 2 || (devil.right === 2 && devil.rightX)) {
                 // 叩く・投げる
-                if (!isHitAllowed(hand.right, hand.rightX, allowedHitList)) return false;
+                if (!isHitAllowed(hand.right, hand.rightX, hand.rightPlus, allowedHitList)) return false;
             } else {
                 // 保持 (2)
-                if (hand.right !== 2 || hand.rightX !== false) return false;
+                if (hand.right !== 2 || hand.rightX !== false || hand.rightPlus !== false) return false;
             }
         }
     }
@@ -2460,7 +2449,9 @@ function isRepeatingShorter(sequence) {
                 a.left !== b.left ||
                 a.right !== b.right ||
                 a.leftX !== b.leftX ||
-                a.rightX !== b.rightX
+                a.rightX !== b.rightX ||
+                a.leftPlus !== b.leftPlus ||
+                a.rightPlus !== b.rightPlus
             ) {
                 same = false;
                 break;
@@ -2478,17 +2469,17 @@ function isRepeatingShorter(sequence) {
  *
  * ========================================================= */
 
-function formatNumber(number, isCross) {
+function formatNumber(number, isCross, isPlus) {
     if (number === 0) return "0";
-    return number + (isCross ? "x" : "");
+    return number + (isCross ? "x" : "") + (isPlus ? "+" : "");
 }
 
 function formatPair(pair) {
     return (
         "(" +
-        formatNumber(pair.left, pair.leftX) +
+        formatNumber(pair.left, pair.leftX, pair.leftPlus) +
         "," +
-        formatNumber(pair.right, pair.rightX) +
+        formatNumber(pair.right, pair.rightX, pair.rightPlus) +
         ")"
     );
 }
@@ -2504,8 +2495,8 @@ function formatSequence(sequence) {
  *
  * ========================================================= */
 
-function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allowedHitList, allow2x, state) {
-    const candidates = generateCandidates(maxValue, true);
+function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allowedHitList, allow2x, allow2plus, state) {
+    const candidates = generateCandidates(maxValue, true, true);
     const results = [];
     const sequence = [];
     const targetSum = 2 * objectCount * period;
@@ -2518,15 +2509,15 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
         candidateLists.push(candidates.filter(candidate => {
             if (devil.left > 0) {
                 if (devil.left > 2 || (devil.left === 2 && devil.leftX)) {
-                    if (!isHitAllowed(candidate.left, candidate.leftX, allowedHitList)) return false;
-                } else if (candidate.left !== 2 || candidate.leftX !== false) {
+                    if (!isHitAllowed(candidate.left, candidate.leftX, candidate.leftPlus, allowedHitList)) return false;
+                } else if (candidate.left !== 2 || candidate.leftX !== false || candidate.leftPlus !== false) {
                     return false;
                 }
             }
             if (devil.right > 0) {
                 if (devil.right > 2 || (devil.right === 2 && devil.rightX)) {
-                    if (!isHitAllowed(candidate.right, candidate.rightX, allowedHitList)) return false;
-                } else if (candidate.right !== 2 || candidate.rightX !== false) {
+                    if (!isHitAllowed(candidate.right, candidate.rightX, candidate.rightPlus, allowedHitList)) return false;
+                } else if (candidate.right !== 2 || candidate.rightX !== false || candidate.rightPlus !== false) {
                     return false;
                 }
             }
@@ -2641,7 +2632,8 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
 
             results.push(sequence.map(p => ({
                 left: p.left, right: p.right,
-                leftX: p.leftX, rightX: p.rightX
+                leftX: p.leftX, rightX: p.rightX,
+                leftPlus: p.leftPlus, rightPlus: p.rightPlus
             })));
             return;
         }
@@ -2677,7 +2669,8 @@ function searchHandFromDevil(period, objectCount, maxValue, devilSequence, allow
 }
 
 function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowedHitList) {
-    const candidates = generateCandidates(maxValue, true);
+    // 出力は Devil Stick のサイトスワップなので、Hand Stick 専用の 2+ は候補に含めない。
+    const candidates = generateCandidates(maxValue, true, false);
     const results = [];
     const sequence = [];
     const targetSum = 2 * objectCount * period;
@@ -2688,7 +2681,10 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
         if (sa !== sb) return sa - sb;
         const xa = (a.leftX ? 1 : 0) + (a.rightX ? 1 : 0);
         const xb = (b.leftX ? 1 : 0) + (b.rightX ? 1 : 0);
-        return xa - xb;
+        if (xa !== xb) return xa - xb;
+        const pa = (a.leftPlus ? 1 : 0) + (a.rightPlus ? 1 : 0);
+        const pb = (b.leftPlus ? 1 : 0) + (b.rightPlus ? 1 : 0);
+        return pa - pb;
     });
 
     function backtrack(position, currentSum) {
@@ -2703,7 +2699,9 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
                 left: p.left,
                 right: p.right,
                 leftX: p.leftX,
-                rightX: p.rightX
+                rightX: p.rightX,
+                leftPlus: p.leftPlus,
+                rightPlus: p.rightPlus
             })));
             return;
         }
@@ -2716,17 +2714,17 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
 
             if (candidate.left > 0) {
                 if (candidate.left > 2 || (candidate.left === 2 && candidate.leftX)) {
-                    if (!isHitAllowed(hand.left, hand.leftX, allowedHitList)) valid = false;
+                    if (!isHitAllowed(hand.left, hand.leftX, hand.leftPlus, allowedHitList)) valid = false;
                 } else {
-                    if (hand.left !== 2 || hand.leftX !== false) valid = false;
+                    if (hand.left !== 2 || hand.leftX !== false || hand.leftPlus !== false) valid = false;
                 }
             }
 
             if (candidate.right > 0) {
                 if (candidate.right > 2 || (candidate.right === 2 && candidate.rightX)) {
-                    if (!isHitAllowed(hand.right, hand.rightX, allowedHitList)) valid = false;
+                    if (!isHitAllowed(hand.right, hand.rightX, hand.rightPlus, allowedHitList)) valid = false;
                 } else {
-                    if (hand.right !== 2 || hand.rightX !== false) valid = false;
+                    if (hand.right !== 2 || hand.rightX !== false || hand.rightPlus !== false) valid = false;
                 }
             }
 
@@ -2755,7 +2753,8 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
 
 
 function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowedHitList, state) {
-    const candidates = generateCandidates(maxValue, true);
+    // 出力は Devil Stick のサイトスワップなので、Hand Stick 専用の 2+ は候補に含めない。
+    const candidates = generateCandidates(maxValue, true, false);
     const results = [];
     const sequence = [];
     const targetSum = 2 * objectCount * period;
@@ -2763,15 +2762,15 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
     function isAllowed(candidate, hand) {
         if (candidate.left > 0) {
             if (candidate.left > 2 || (candidate.left === 2 && candidate.leftX)) {
-                if (!isHitAllowed(hand.left, hand.leftX, allowedHitList)) return false;
-            } else if (hand.left !== 2 || hand.leftX !== false) {
+                if (!isHitAllowed(hand.left, hand.leftX, hand.leftPlus, allowedHitList)) return false;
+            } else if (hand.left !== 2 || hand.leftX !== false || hand.leftPlus !== false) {
                 return false;
             }
         }
         if (candidate.right > 0) {
             if (candidate.right > 2 || (candidate.right === 2 && candidate.rightX)) {
-                if (!isHitAllowed(hand.right, hand.rightX, allowedHitList)) return false;
-            } else if (hand.right !== 2 || hand.rightX !== false) {
+                if (!isHitAllowed(hand.right, hand.rightX, hand.rightPlus, allowedHitList)) return false;
+            } else if (hand.right !== 2 || hand.rightX !== false || hand.rightPlus !== false) {
                 return false;
             }
         }
@@ -2873,7 +2872,8 @@ function searchDevilFromHand(period, objectCount, maxValue, handSequence, allowe
 
             results.push(sequence.map(p => ({
                 left: p.left, right: p.right,
-                leftX: p.leftX, rightX: p.rightX
+                leftX: p.leftX, rightX: p.rightX,
+                leftPlus: p.leftPlus, rightPlus: p.rightPlus
             })));
             return;
         }
@@ -3040,7 +3040,9 @@ function solveDevilToHand() {
         const maxPeriod = Number(document.getElementById("d2hMaxPeriod").value);
         const maxValue = Number(document.getElementById("d2hMaxValue").value);
         const allow2x = allowedHitList !== null &&
-            allowedHitList.some(item => item.value === 2 && item.isX);
+            allowedHitList.some(item => item.value === 2 && item.isX && !item.isPlus);
+        const allow2plus = allowedHitList !== null &&
+            allowedHitList.some(item => item.value === 2 && !item.isX && item.isPlus);
 
         if (!Number.isInteger(objectCount) || objectCount < 1)
             throw new Error("Devil Stick オブジェクト数は1以上の整数にしてください。");
@@ -3061,7 +3063,7 @@ function solveDevilToHand() {
 
                 return searchHandFromDevil(
                     period, objectCount, maxValue,
-                    devil, allowedHitList, allow2x, state
+                    devil, allowedHitList, allow2x, allow2plus, state
                 ).map(sequence => ({
                     period,
                     notation: formatSequence(sequence)
@@ -3134,20 +3136,43 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
 </script>
 
 <script>
-// HS統合用の連携だけを追加。既存のシミュレーター処理は変更しない。
+// シミュレーターとHS検索機の双方向連携。
+// 「シミュレーター → 検索機」は入力中も常に同期し、
+// 「検索結果 → シミュレーター」は結果クリックで反映する。
 (function () {
     const devilInput = document.getElementById("siteswapInput");
+    const handInput = document.getElementById("handSiteswapInput");
     const hsDevilInput = document.getElementById("d2hDevilStick");
+    const hsHandInput = document.getElementById("h2dHandStick");
 
-    // シミュレーター側の「パターン」→ ①の検索機へ同期
+    // シミュレーターの「パターン」→ ① Devil Stick検索機
     if (devilInput && hsDevilInput) {
-        const syncDevilToHS = () => {
+        const syncDevilToSearch = () => {
             hsDevilInput.value = devilInput.value;
         };
-        devilInput.addEventListener("input", syncDevilToHS);
-        devilInput.addEventListener("change", syncDevilToHS);
-        syncDevilToHS();
+        devilInput.addEventListener("input", syncDevilToSearch);
+        devilInput.addEventListener("change", syncDevilToSearch);
+        devilInput.addEventListener("blur", syncDevilToSearch);
+        syncDevilToSearch();
     }
+
+    // シミュレーターの「ハンド」→ ② Hand Stick検索機
+    if (handInput && hsHandInput) {
+        const syncHandToSearch = () => {
+            hsHandInput.value = handInput.value;
+        };
+        handInput.addEventListener("input", syncHandToSearch);
+        handInput.addEventListener("change", syncHandToSearch);
+        handInput.addEventListener("blur", syncHandToSearch);
+        syncHandToSearch();
+    }
+
+    // 再生・プリセットなどでプログラムから値が変わった場合にも同期できるよう、
+    // initSimulation() の直前に呼べる共通同期関数を公開する。
+    window.syncSimulatorToSearch = function () {
+        if (devilInput && hsDevilInput) hsDevilInput.value = devilInput.value;
+        if (handInput && hsHandInput) hsHandInput.value = handInput.value;
+    };
 
     // ① Devil Stick → Hand Stick の結果
     // クリックしたHand Stickを「ハンド」に入れ、検索元Devil Stickを「パターン」に入れて開始。
@@ -3157,59 +3182,56 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
             const div = event.target.closest(".result");
             if (!div || !d2hResults.contains(div)) return;
 
-            const number = div.querySelector(".result-number");
             const copy = div.cloneNode(true);
-            if (number) copy.querySelector(".result-number")?.remove();
+            copy.querySelector(".result-number")?.remove();
             const handNotation = copy.textContent.trim();
 
-            const patternInput = document.getElementById("siteswapInput");
-            const handInput = document.getElementById("handSiteswapInput");
-            if (!patternInput || !handInput) return;
+            if (!devilInput || !handInput) return;
 
-            patternInput.value = hsDevilInput ? hsDevilInput.value : patternInput.value;
+            devilInput.value = hsDevilInput ? hsDevilInput.value : devilInput.value;
             handInput.value = handNotation;
+            window.syncSimulatorToSearch();
             initSimulation();
         });
 
-        const observer = new MutationObserver(() => {
+        const markResultsClickable = () => {
             d2hResults.querySelectorAll(".result").forEach((div) => {
                 div.classList.add("hs-clickable-result");
                 div.title = "クリックしてシミュレーターに入力";
             });
-        });
-        observer.observe(d2hResults, { childList: true, subtree: true });
+        };
+        new MutationObserver(markResultsClickable).observe(d2hResults, { childList: true, subtree: true });
+        markResultsClickable();
     }
 
     // ② Hand Stick → Devil Stick の結果
-    // こちらはクリックしたDevil Stickを「パターン」に入れ、検索元Hand Stickを「ハンド」に入れて開始。
+    // クリックしたDevil Stickを「パターン」に入れ、検索元Hand Stickを「ハンド」に入れて開始。
     const h2dResults = document.getElementById("h2dResults");
-    const h2dHandInput = document.getElementById("h2dHandStick");
     if (h2dResults) {
         h2dResults.addEventListener("click", (event) => {
             const div = event.target.closest(".result");
             if (!div || !h2dResults.contains(div)) return;
 
-            const number = div.querySelector(".result-number");
             const copy = div.cloneNode(true);
-            if (number) copy.querySelector(".result-number")?.remove();
+            copy.querySelector(".result-number")?.remove();
             const devilNotation = copy.textContent.trim();
 
-            const patternInput = document.getElementById("siteswapInput");
-            const handInput = document.getElementById("handSiteswapInput");
-            if (!patternInput || !handInput) return;
+            if (!devilInput || !handInput) return;
 
-            patternInput.value = devilNotation;
-            handInput.value = h2dHandInput ? h2dHandInput.value : handInput.value;
+            devilInput.value = devilNotation;
+            handInput.value = hsHandInput ? hsHandInput.value : handInput.value;
+            window.syncSimulatorToSearch();
             initSimulation();
         });
 
-        const observer = new MutationObserver(() => {
+        const markResultsClickable = () => {
             h2dResults.querySelectorAll(".result").forEach((div) => {
                 div.classList.add("hs-clickable-result");
                 div.title = "クリックしてシミュレーターに入力";
             });
-        });
-        observer.observe(h2dResults, { childList: true, subtree: true });
+        };
+        new MutationObserver(markResultsClickable).observe(h2dResults, { childList: true, subtree: true });
+        markResultsClickable();
     }
 })();
 </script>
