@@ -36,6 +36,15 @@ button:hover { background-color: #2b6cb0; }
 #recordBtn:disabled { background-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
 .result-container { display: none; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; }
 .result-container video { width: 100%; max-width: 400px; border-radius: 6px; background: #000; }
+.record-options { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.record-option-label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.95rem; }
+.record-option-label input { width: 18px; height: 18px; margin: 0; accent-color: #3182ce; }
+@media (max-width: 600px) {
+    .record-options { width: 100%; }
+    .record-option-label { width: 100%; }
+    #recordBtn { width: 100%; }
+}
+
 .result-hint { font-size: 13px; color: #e53e3e; font-weight: bold; text-align: center; }
 .section-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2d3748; }
 .preset-container { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -176,7 +185,13 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                         <input type="range" id="heightInput" min="0.0" max="1.0" step="0.05" value="1.0">
                         <span id="heightVal" class="val-label">1.0x</span>
                     </div>
-                    <button id="recordBtn">動画を録画する</button>
+                    <div class="record-options">
+                        <label class="record-option-label">
+                            <input type="checkbox" id="recordSiteswapLabel" checked>
+                            <span>サイトスワップ表記を動画に表示</span>
+                        </label>
+                        <button id="recordBtn">動画を録画する</button>
+                    </div>
                 </div>
             </div>
 
@@ -1949,6 +1964,48 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
     }
 
     ctx.restore();
+
+    // 録画時のみ、選択に応じて2つのサイトスワップ表記を動画の隅へ描画する。
+    // メイン（パターン）＝左上、ハンド＝右上。
+    if (isRecording && document.getElementById("recordSiteswapLabel")?.checked) {
+        const patternLabel = document.getElementById("siteswapInput")?.value.trim();
+        const handLabel = document.getElementById("handSiteswapInput")?.value.trim();
+
+        if (patternLabel || handLabel) {
+            ctx.save();
+            ctx.font = "bold 24px sans-serif";
+            ctx.textBaseline = "top";
+
+            const margin = 14;
+            const top = 12;
+            const padX = 10;
+            const padY = 7;
+            const lineHeight = 36;
+
+            const drawLabel = (label, x, align) => {
+                if (!label) return;
+                ctx.textAlign = align;
+                const metrics = ctx.measureText(label);
+                const boxWidth = metrics.width + padX * 2;
+                const boxHeight = lineHeight;
+                let boxX = align === "left" ? x - padX : x - boxWidth + padX;
+
+                ctx.fillStyle = "rgba(255,255,255,0.88)";
+                ctx.fillRect(boxX, top - 2, boxWidth, boxHeight);
+                ctx.fillStyle = "#1a202c";
+                ctx.fillText(label, x, top + padY);
+            };
+
+            // パターン（メイン）: 左上
+            drawLabel(patternLabel, margin + padX, "left");
+
+            // ハンド: 右上
+            drawLabel(handLabel, canvas.width - margin - padX, "right");
+
+            ctx.restore();
+        }
+    }
+
     animationFrameId = requestAnimationFrame(update);
 }
 
@@ -2116,8 +2173,9 @@ function startRecording() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "");
-        a.download = `devilstick_siteswap_${patternName}.mp4`;
+        const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "") || "video";
+        const extension = mediaRecorder.mimeType.includes("mp4") ? "mp4" : "webm";
+        a.download = `devilstick_siteswap_${patternName}.${extension}`;
         document.body.appendChild(a); a.click();
         setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
     };
