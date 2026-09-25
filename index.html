@@ -66,10 +66,36 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 
 @media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } .pad-btn { height: 44px; font-size: 14px; } }
 
-.result-filter { margin: 12px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.result-filter label { font-weight: 600; }
-.result-text-filter { flex: 1 1 260px; min-width: 180px; box-sizing: border-box; }
-.filter-count { opacity: .75; font-size: .9em; }
+.result-filter {
+    margin: 12px 0;
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 10px;
+}
+.result-filter label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+.result-filter input.result-text-filter,
+.result-filter input.result-text-exclude-filter {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.filter-count {
+    grid-column: 2;
+    opacity: .75;
+    font-size: .9em;
+}
+@media (max-width: 767px) {
+    .result-filter {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    .result-filter label { white-space: normal; }
+    .filter-count { grid-column: 1; }
+}
 .filter-no-match { padding: 12px; opacity: .75; }
 </style>
 </head>
@@ -3254,15 +3280,7 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
         let emptyMessage = null;
         const apply = () => {
             const query = input.value.trim().toLowerCase();
-            // 除外欄は複数指定に対応。半角/全角カンマ、スペース、改行で区切る。
-            // 例: `4, 5, 6` → 4 または 5 または 6 を含む表記を除外。
-            const excludeQueries = excludeInput
-                ? excludeInput.value
-                    .toLowerCase()
-                    .split(/[、,\s]+/)
-                    .map(v => v.trim())
-                    .filter(Boolean)
-                : [];
+            const excludeQuery = excludeInput ? excludeInput.value.trim().toLowerCase() : '';
             const items = Array.from(results.querySelectorAll('.result'));
 
             // 「*」は対称的なサイトスワップだけを検索する特殊記号。
@@ -3317,14 +3335,14 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
                 const includeMatched = query === '*'
                     ? isSymmetricSiteswap(text)
                     : (!query || text.includes(query));
-                const excludeMatched = excludeQueries.length === 0 || excludeQueries.every(exclude => !text.includes(exclude));
+                const excludeMatched = !excludeQuery || !text.includes(excludeQuery);
                 const matched = includeMatched && excludeMatched;
                 item.style.display = matched ? '' : 'none';
                 if (matched) visible++;
             });
-            if (count) count.textContent = (query || excludeQueries.length) ? `${visible} / ${items.length} 件表示` : `${items.length} 件`;
+            if (count) count.textContent = (query || excludeQuery) ? `${visible} / ${items.length} 件表示` : `${items.length} 件`;
             if (emptyMessage) emptyMessage.remove();
-            if ((query || excludeQueries.length) && items.length && visible === 0) {
+            if (query && items.length && visible === 0) {
                 emptyMessage = document.createElement('div');
                 emptyMessage.className = 'filter-no-match';
                 emptyMessage.textContent = '一致する表記がありません。';
