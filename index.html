@@ -287,8 +287,10 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
         <h2>①の結果：Hand Stick</h2>
         <div id="d2hSummary" class="summary">まだ探索していません。</div>
         <div class="result-filter" data-target="d2hResults">
-    <label>表記を直接検索</label>
+    <label>表記を直接検索（含む）</label>
     <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x / *＝対称" autocomplete="off">
+    <label>表記を直接検索（除外）</label>
+    <input type="text" class="result-text-exclude-filter" placeholder="例： 4 → 4を含む表記を除外" autocomplete="off">
     <span class="filter-count"></span>
 </div>
 <div id="d2hResults"></div>
@@ -345,8 +347,10 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
         <h2>②の結果：Devil Stick</h2>
         <div id="h2dSummary" class="summary">まだ探索していません。</div>
         <div class="result-filter" data-target="h2dResults">
-    <label>表記を直接検索</label>
+    <label>表記を直接検索（含む）</label>
     <input type="text" class="result-text-filter" placeholder="例： (2,4) / 2x / 4x / *＝対称" autocomplete="off">
+    <label>表記を直接検索（除外）</label>
+    <input type="text" class="result-text-exclude-filter" placeholder="例： 4 → 4を含む表記を除外" autocomplete="off">
     <span class="filter-count"></span>
 </div>
 <div id="h2dResults"></div>
@@ -3243,12 +3247,22 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
         const targetId = filter.dataset.target;
         const results = document.getElementById(targetId);
         const input = filter.querySelector('.result-text-filter');
+        const excludeInput = filter.querySelector('.result-text-exclude-filter');
         const count = filter.querySelector('.filter-count');
         if (!results || !input) return;
 
         let emptyMessage = null;
         const apply = () => {
             const query = input.value.trim().toLowerCase();
+            // 除外欄は複数指定に対応。半角/全角カンマ、スペース、改行で区切る。
+            // 例: `4, 5, 6` → 4 または 5 または 6 を含む表記を除外。
+            const excludeQueries = excludeInput
+                ? excludeInput.value
+                    .toLowerCase()
+                    .split(/[、,\s]+/)
+                    .map(v => v.trim())
+                    .filter(Boolean)
+                : [];
             const items = Array.from(results.querySelectorAll('.result'));
 
             // 「*」は対称的なサイトスワップだけを検索する特殊記号。
@@ -3300,15 +3314,17 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
                 const copy = item.cloneNode(true);
                 copy.querySelector('.result-number')?.remove();
                 const text = copy.textContent.trim().toLowerCase();
-                const matched = query === '*'
+                const includeMatched = query === '*'
                     ? isSymmetricSiteswap(text)
                     : (!query || text.includes(query));
+                const excludeMatched = excludeQueries.length === 0 || excludeQueries.every(exclude => !text.includes(exclude));
+                const matched = includeMatched && excludeMatched;
                 item.style.display = matched ? '' : 'none';
                 if (matched) visible++;
             });
-            if (count) count.textContent = query ? `${visible} / ${items.length} 件表示` : `${items.length} 件`;
+            if (count) count.textContent = (query || excludeQueries.length) ? `${visible} / ${items.length} 件表示` : `${items.length} 件`;
             if (emptyMessage) emptyMessage.remove();
-            if (query && items.length && visible === 0) {
+            if ((query || excludeQueries.length) && items.length && visible === 0) {
                 emptyMessage = document.createElement('div');
                 emptyMessage.className = 'filter-no-match';
                 emptyMessage.textContent = '一致する表記がありません。';
@@ -3317,7 +3333,20 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
         };
 
         input.addEventListener('input', apply);
-        new MutationObserver(apply).observe(results, { childList: true, subtree: true });
+        excludeInput?.addEventListener('input', apply);
+
+        // 結果更新時だけ再フィルタリングする。
+        // apply() 内で「一致なし」メッセージを追加・削除すると MutationObserver が
+        // 自分自身を再度発火させるため、無限ループになってブラウザが固まっていた。
+        // observer では results の子要素の追加・削除だけを監視し、apply 中の
+        // メッセージ操作は一時的に監視を外す。
+        const observer = new MutationObserver(() => {
+            observer.disconnect();
+            apply();
+            observer.observe(results, { childList: true });
+        });
+        observer.observe(results, { childList: true });
+
         apply();
     }
 
