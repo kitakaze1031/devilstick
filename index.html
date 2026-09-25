@@ -166,6 +166,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                         <button class="pad-btn action" onclick="insertAtCursor('-')">-</button>
                         <button class="pad-btn action" onclick="insertAtCursor('^')">^</button>
                         <button class="pad-btn action" onclick="insertAtCursor('+')">+</button>
+                        <button class="pad-btn prefix" onclick="insertAtCursor('sp')">sp</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('p')">p</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('t')">t</button>
                         <button class="pad-btn prefix" onclick="insertAtCursor('f')">f</button>
@@ -233,6 +234,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                     <button class="preset-btn" onclick="applyPreset('(2x,2x)(f2x,2x)')">(2x,2x)(f2x,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,f2x)(f2x,2x)')">(2x,f2x)(f2x,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(p2x,2x)(2x,p2x)')">(p2x,2x)(2x,p2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(sp2x,2x)(2x,sp2x)')">(sp2x,2x)(2x,sp2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(t2,t2)')">(t2,t2)</button>
                     <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
                     
@@ -655,7 +657,10 @@ function get_data(id) {
          "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },
          "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },
          "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
-         "4": { x: 500, y: 460, angle: -50 * DEG_TO_RAD }
+         "4": { x: 500, y: 460, angle: -50 * DEG_TO_RAD },
+         // sp: スティックを鉛直(0deg)で受ける専用状態
+         "sp-1": { x: 340, y: 350, angle: 0 * DEG_TO_RAD },
+         "sp1": { x: 460, y: 350, angle: 0 * DEG_TO_RAD }
     };
     return data[id] || { x: 400, y: 460, angle: 0 };
 }
@@ -727,6 +732,66 @@ const AF_TRANSITION_MAP = {
     "f-2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "-2nr": { to: "f1o" }, "2nr": { to: "f1i" }, "-(2n-1)r": { to: "f0l" }, "(2n-1)r": { to: "f0r" } }
 };
 
+// =====================================
+// sp 状態遷移表
+// sp が付いた投げは、次の到達状態を sp-1 / sp1 にして
+// get_data() の angle=0 により鉛直方向を向く。
+// ※ 元のテキスト表で同じキーが複数行に分かれていた箇所は、
+//    JavaScript の重複キー上書きを避けるため1つに統合している。
+// =====================================
+const SP_TRANSITIONS_MAP = {
+    "-2al":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "-2ar":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "2al":   { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axl": { to: "sp-1" } },
+    "2ar":   { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "-2axl": { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "-2axr": { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "2axl":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "2axr":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axr": { to: "sp-1" } },
+
+    "f-2al":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "f-2ar":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "f2al":   { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axl": { to: "sp-1" } },
+    "f2ar":   { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "f-2axl": { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "f-2axr": { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "f2axl":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "f2axr":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axr": { to: "sp-1" } },
+
+    // sp -> 通常 / f の遷移。重複していた行は統合済み。
+    "sp-2al": {
+        "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 },
+        "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }
+    },
+    "sp-2ar": {
+        "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 },
+        "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }
+    },
+    "sp2al": {
+        "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 },
+        "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }
+    },
+    "sp2ar": {
+        "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 },
+        "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }
+    },
+    "sp-2axl": {
+        "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 },
+        "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }
+    },
+    "sp-2axr": {
+        "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 },
+        "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }
+    },
+    "sp2axr": {
+        "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 },
+        "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }
+    },
+    "sp2axl": {
+        "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }
+    }
+};
+
 const SYNC_ANGLE_RULES = {
     "-4": { "4": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "1": "-180a" },
      "4": { "-4": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a" },
@@ -747,6 +812,26 @@ const ASYNC_ANGLE_RULES = {
      "2": { "1": "180n", "-1": "(80+(n-1)*180)" , "2": "180n"},
     "-1": { "-4": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n", "2": "(100+(n-1)*180)", "-3": "(100+(n-1)*180)" },
      "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)","1": "-180n",  "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
+};
+
+
+// =====================================
+// sp 専用角度遷移表（ユーザー指定値をそのまま反映／同期・非同期共通）
+// get_data() の sp-1 / sp1 の基準姿勢は 0°（鉛直）のまま、
+// ここでは「遷移元 -> 遷移先」で飛行中の総回転角を決める。
+// =====================================
+const SP_ANGLE_RULES = {
+    "-4": { "sp-1": "-(50+(n-1)*180)", "sp1": "-(50+(n-1)*180)" },
+     "4": { "sp1": "(50+(n-1)*180)", "sp-1": "(50+(n-1)*180)" },
+    "-3": { "sp-1": "-(50+(n-1)*180)", "sp1": "-(50+(n-1)*180)" },
+     "3": { "sp1": "(50+(n-1)*180)", "sp-1": "(50+(n-1)*180)" },
+    "-2": { "sp-1": "(50+(n-1)*180)", "sp1": "(50+(n-1)*180)" },
+     "2": { "sp1": "-(50+(n-1)*180)", "sp-1": "-(50+(n-1)*180)" },
+    "-1": { "sp-1": "(50+(n-1)*180)", "sp1": "(50+(n-1)*180)" },
+     "1": { "sp1": "-(50+(n-1)*180)", "sp-1": "-(50+(n-1)*180)" },
+
+     "sp-1": { "4": "-(50+(n-1)*180)","-4": "(50+(n-1)*180)","-3": "(50+(n-1)*180)", "-2": "-(50+(n-1)*180)", "-1": "-(50+(n-1)*180)", "1": "(50+(n-1)*180)" },
+     "sp1": { "-4": "(50+(n-1)*180)","4": "-(50+(n-1)*180)","3": "-(50+(n-1)*180)", "2": "(50+(n-1)*180)", "1": "(50+(n-1)*180)", "-1": "-(50+(n-1)*180)" }
 };
 
 const F_ANGLE_RULES = {
@@ -796,7 +881,10 @@ function parse(s) {
                 th.is_minus = true;
                 token = token.substring(1);
             }
-            if (token.startsWith('f')) {
+            if (token.startsWith('sp')) {
+                th.propeller = 6;
+                token = token.substring(2);
+            } else if (token.startsWith('f')) {
                 th.propeller = 5;
                 token = token.substring(1);
             }
@@ -839,7 +927,7 @@ function parse(s) {
 
         // 「10」を1・0ではなく1つのサイトスワップ値として扱う。
         // a は従来どおり10を表す。
-        const regex = /-?f?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
+        const regex = /-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
         const tokens = normalized.match(regex) || [];
         
         let tokenIndex = 0;
@@ -896,7 +984,9 @@ function parse(s) {
 
             let parseSingleThrow = () => {
                 let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null };
-                if (i < s.length && s[i] === 'p') { th.propeller = 1; i++; } 
+                // sp は2文字で1つの接頭記号。p より先に判定する。
+                if (i + 1 < s.length && s[i] === 's' && s[i + 1] === 'p') { th.propeller = 6; i += 2; }
+                else if (i < s.length && s[i] === 'p') { th.propeller = 1; i++; } 
                 else if (i < s.length && s[i] === 't') { th.propeller = 2; i++; }
                 else if (i < s.length && s[i] === 'f') { th.propeller = 5; i++; } 
                 
@@ -1111,18 +1201,25 @@ function build(seq, balls, localT, isAsync) {
             let mapped_curr_key = curr_key;
             if (isAsync) mapped_curr_key = mapped_curr_key.replace(/\(2n\-1\)/g, "2ax").replace(/2n/g, "2a");
             if (curr_throw.propeller === 5) mapped_curr_key = "f" + mapped_curr_key;
+            else if (curr_throw.propeller === 6) mapped_curr_key = "sp" + mapped_curr_key;
 
             let next_key = next_throw.action_str;
             let mapped_next_key = next_key;
             if (isAsync) mapped_next_key = mapped_next_key.replace(/\(2n\-1\)/g, "2ax").replace(/2n/g, "2a");
             if (next_throw.propeller === 5) mapped_next_key = "f" + mapped_next_key;
+            else if (next_throw.propeller === 6) mapped_next_key = "sp" + mapped_next_key;
 
             let af_curr_key = curr_throw.propeller === 5 ? "f" + curr_key : curr_key;
             let af_next_key = next_throw.propeller === 5 ? "f" + next_key : next_key;
 
             let transitionTable = isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
-            
-            if (isAsync && AF_TRANSITION_MAP[af_curr_key] && AF_TRANSITION_MAP[af_curr_key][af_next_key]) {
+
+            // sp 遷移表を最優先で適用する。
+            // 非同期では 2n/(2n-1) を 2a/2ax に正規化した mapped_*_key を使うため、
+            // 同じ SP_TRANSITIONS_MAP を同期・非同期の両方で参照できる。
+            if (SP_TRANSITIONS_MAP[mapped_curr_key] && SP_TRANSITIONS_MAP[mapped_curr_key][mapped_next_key]) {
+                curr_throw.to = SP_TRANSITIONS_MAP[mapped_curr_key][mapped_next_key].to;
+            } else if (isAsync && AF_TRANSITION_MAP[af_curr_key] && AF_TRANSITION_MAP[af_curr_key][af_next_key]) {
                 curr_throw.to = AF_TRANSITION_MAP[af_curr_key][af_next_key].to;
             } else if (!isAsync && F_TRANSITION_MAP[mapped_curr_key] && F_TRANSITION_MAP[mapped_curr_key][mapped_next_key]) {
                 curr_throw.to = F_TRANSITION_MAP[mapped_curr_key][mapped_next_key].to;
@@ -1145,7 +1242,12 @@ function build(seq, balls, localT, isAsync) {
             let f = String(curr_throw.from);
             let t = String(curr_throw.to);
 
-            if (F_ANGLE_RULES[f] && F_ANGLE_RULES[f][t] !== undefined) {
+            // sp を含む状態遷移では、同期・非同期を問わず sp 専用角度表を最優先する。
+            // (2,sp2)(sp2,2) のような同期パターンでも左右で鏡像の回転規則が適用される。
+            // sp-1 / sp1 の基準姿勢は get_data() の 0°（鉛直）のまま。
+            if (SP_ANGLE_RULES[f] && SP_ANGLE_RULES[f][t] !== undefined) {
+                curr_throw.angleExpr = SP_ANGLE_RULES[f][t];
+            } else if (F_ANGLE_RULES[f] && F_ANGLE_RULES[f][t] !== undefined) {
                 curr_throw.angleExpr = F_ANGLE_RULES[f][t];
             } else if (angleTable[f] && angleTable[f][t] !== undefined) {
                 curr_throw.angleExpr = angleTable[f][t];
@@ -1673,6 +1775,8 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                     else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
                     else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
                     else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(50+(a-1)*180)" || c.angleExpr === "-(50+(n-1)*180)") TotalRotDeg = -(50 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(50+(a-1)*180)" || c.angleExpr === "(50+(n-1)*180)") TotalRotDeg = (50 + (a_val-1) * 180);
                     else if (c.angleExpr === "-(140+(a-1)*180)" || c.angleExpr === "-(140+(n-1)*180)") TotalRotDeg = -(140 + (a_val-1) * 180);
                     else if (c.angleExpr === "(140+(a-1)*180)" || c.angleExpr === "(140+(n-1)*180)") TotalRotDeg = (140 + (a_val-1) * 180);
                     else if (c.angleExpr === "-(220+(a-1)*180)" || c.angleExpr === "-(220+(n-1)*180)") TotalRotDeg = -(220 + (a_val-1) * 180);
@@ -1792,6 +1896,8 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
                         else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
                         else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
                         else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(50+(a-1)*180)" || c.angleExpr === "-(50+(n-1)*180)") TotalRotDeg = -(50 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(50+(a-1)*180)" || c.angleExpr === "(50+(n-1)*180)") TotalRotDeg = (50 + (a_val-1) * 180);
                         else if (c.angleExpr === "-(140+(a-1)*180)" || c.angleExpr === "-(140+(n-1)*180)") TotalRotDeg = -(140 + (a_val-1) * 180);
                         else if (c.angleExpr === "(140+(a-1)*180)" || c.angleExpr === "(140+(n-1)*180)") TotalRotDeg = (140 + (a_val-1) * 180);
                         else if (c.angleExpr === "-(220+(a-1)*180)" || c.angleExpr === "-(220+(n-1)*180)") TotalRotDeg = -(220 + (a_val-1) * 180);
