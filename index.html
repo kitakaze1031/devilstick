@@ -988,19 +988,28 @@ function parse(s) {
             return th;
         };
 
-        // 「10」を1・0ではなく1つのサイトスワップ値として扱う。
-        // a は従来どおり10を表す。
-        const regex = /-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
-        const tokens = normalized.match(regex) || [];
-        
-        let tokenIndex = 0;
+        // アシンクロ multiplex 対応。
+        // [2 3(r1)] のような [...] 全体を「1ビート」として扱う。
+        // 括弧正規化後は [2 3r1 ] の形になるため、[] の境界を先に保持して解析する。
+        // 「10」は1・0ではなく1つのサイトスワップ値、a は従来どおり10を表す。
+        const throwRegex = /-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
+        const beatRegex = /\[[^\]]*\]|-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
+        const beatTokens = normalized.match(beatRegex) || [];
 
-        while(tokenIndex < tokens.length) {
-            let th = parseSingleAsyncThrow(tokenIndex, tokens);
-            if (th) {
-                async_beats.push([th]);
+        for (const beatToken of beatTokens) {
+            if (beatToken.startsWith('[')) {
+                const inner = beatToken.slice(1, -1);
+                const multiplexTokens = inner.match(throwRegex) || [];
+                const multiplexThrows = [];
+                for (let k = 0; k < multiplexTokens.length; k++) {
+                    const th = parseSingleAsyncThrow(k, multiplexTokens);
+                    if (th) multiplexThrows.push(th);
+                }
+                if (multiplexThrows.length > 0) async_beats.push(multiplexThrows);
+            } else {
+                const th = parseSingleAsyncThrow(0, [beatToken]);
+                if (th) async_beats.push([th]);
             }
-            tokenIndex++;
         }
 
         if (async_beats.length === 0) return { seq: [], isAsync: true };
