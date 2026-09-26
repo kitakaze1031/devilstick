@@ -792,6 +792,64 @@ const SP_TRANSITIONS_MAP = {
     }
 };
 
+// =====================================
+// sp 非同期状態遷移表
+// 同期版 SP_TRANSITIONS_MAP と同じ対応関係を、
+// 2a -> 2n / 2ax -> (2n-1) に置き換えた非同期専用表。
+// =====================================
+const SP_ASYNC_TRANSITIONS_MAP = {
+    "-2nl":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "-2nr":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "2nl":   { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)l": { to: "sp-1" } },
+    "2nr":   { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "-(2n-1)l": { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "-(2n-1)r": { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "(2n-1)l":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "(2n-1)r":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)r": { to: "sp-1" } },
+
+    "f-2nl":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "f-2nr":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "f2nl":   { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)l": { to: "sp-1" } },
+    "f2nr":   { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "f-(2n-1)l": { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "f-(2n-1)r": { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "f(2n-1)l":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "f(2n-1)r":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)r": { to: "sp-1" } },
+
+    // sp -> 通常 / f の遷移。重複していた行は統合済み。
+    "sp-2nl": {
+        "-2nl": { to: -3 }, "2nl": { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l": { to: -1 },
+        "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }
+    },
+    "sp-2nr": {
+        "-2nr": { to: 3 }, "2nr": { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r": { to: 1 },
+        "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }
+    },
+    "sp2nl": {
+        "-2nl": { to: -1 }, "2nl": { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l": { to: -1 },
+        "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }
+    },
+    "sp2nr": {
+        "-2nr": { to: 1 }, "2nr": { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r": { to: 1 },
+        "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }
+    },
+    "sp-(2n-1)l": {
+        "-2nr": { to: 3 }, "2nr": { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r": { to: 1 },
+        "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }
+    },
+    "sp-(2n-1)r": {
+        "-2nl": { to: -3 }, "2nl": { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l": { to: -1 },
+        "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }
+    },
+    "sp(2n-1)r": {
+        "-2nl": { to: -1 }, "2nl": { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l": { to: -1 },
+        "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }
+    },
+    "sp(2n-1)l": {
+        "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }
+    }
+};
+
 const SYNC_ANGLE_RULES = {
     "-4": { "4": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "1": "-180a" },
      "4": { "-4": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a" },
@@ -868,7 +926,12 @@ function parse(s) {
 
         let normalized = s.replace(/([0-9a-zA-Z])\(r(-?[0-9]+)\)/g, "$1r$2 ");
         normalized = normalized.replace(/\(f\)\(r(-?[0-9]+)\)([0-9a-zA-Z])/g, "f$2r$1 ");
-        normalized = normalized.replace(/\(f\)([0-9a-zA-Z])/g, "f$1");
+        // 括弧プレフィックスを「直後の1投」に適用する。例: (f)2 -> f2, (sp)2 -> sp2
+        // sp は s + p ではなく専用の propeller=6 として扱う。
+        // (sp) / (f) は「直後の1投だけ」に付くプレフィックスとして先に展開する。
+        // 例: 2(sp)22(sp)2 -> 2 / sp2 / 2 / sp2
+        normalized = normalized.replace(/\(sp\)(?=-?(?:10|[0-9a-zA-Z]))/g, "sp");
+        normalized = normalized.replace(/\(f\)(?=-?(?:10|[0-9a-zA-Z]))/g, "f");
         normalized = normalized.replace(/[\(\)]/g, ""); 
 
         let parseSingleAsyncThrow = (tokenIndex, tokens) => {
@@ -1215,10 +1278,22 @@ function build(seq, balls, localT, isAsync) {
             let transitionTable = isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
 
             // sp 遷移表を最優先で適用する。
-            // 非同期では 2n/(2n-1) を 2a/2ax に正規化した mapped_*_key を使うため、
-            // 同じ SP_TRANSITIONS_MAP を同期・非同期の両方で参照できる。
-            if (SP_TRANSITIONS_MAP[mapped_curr_key] && SP_TRANSITIONS_MAP[mapped_curr_key][mapped_next_key]) {
-                curr_throw.to = SP_TRANSITIONS_MAP[mapped_curr_key][mapped_next_key].to;
+            // 同期は SP_TRANSITIONS_MAP、非同期は SP_ASYNC_TRANSITIONS_MAP を直接参照する。
+            // 非同期側は 2n / (2n-1) の表記を正規化せず、そのまま専用表へ渡す。
+            const spTransitionTable = isAsync ? SP_ASYNC_TRANSITIONS_MAP : SP_TRANSITIONS_MAP;
+            let spCurrKey = isAsync ? curr_key : mapped_curr_key;
+            let spNextKey = isAsync ? next_key : mapped_next_key;
+            if (curr_throw.propeller === 5) spCurrKey = "f" + spCurrKey;
+            else if (curr_throw.propeller === 6) spCurrKey = "sp" + spCurrKey;
+            if (next_throw.propeller === 5) spNextKey = "f" + spNextKey;
+            else if (next_throw.propeller === 6) spNextKey = "sp" + spNextKey;
+
+            if (spTransitionTable[spCurrKey] && spTransitionTable[spCurrKey][spNextKey]) {
+                curr_throw.to = spTransitionTable[spCurrKey][spNextKey].to;
+            } else if (next_throw.propeller === 6) {
+                // (sp)2 のように sp が連続する場合も、次の sp 投げの側へ鉛直状態で接続する。
+                // 専用表に sp -> sp の組合せが無い場合の補完。
+                curr_throw.to = next_key.endsWith('l') ? "sp-1" : "sp1";
             } else if (isAsync && AF_TRANSITION_MAP[af_curr_key] && AF_TRANSITION_MAP[af_curr_key][af_next_key]) {
                 curr_throw.to = AF_TRANSITION_MAP[af_curr_key][af_next_key].to;
             } else if (!isAsync && F_TRANSITION_MAP[mapped_curr_key] && F_TRANSITION_MAP[mapped_curr_key][mapped_next_key]) {
