@@ -73,6 +73,21 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 .pad-btn.prefix { background-color: #feebc8; color: #9c4221; border-color: #fbd38d; }
 .pad-btn.prefix:hover { background-color: #feebc8; border-color: #f6ad55; }
 
+
+/* スマート入力パッド */
+.smart-pad-tools { display:flex; flex-direction:column; gap:8px; width:100%; }
+.smart-pad-label { font-size:12px; font-weight:bold; color:#4a5568; text-align:left; }
+.smart-pad-row { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.smart-pad-row .pad-btn { flex:0 1 auto; min-width:54px; padding:0 10px; }
+.pad-mode-tabs { display:flex; gap:8px; width:100%; margin-bottom:4px; }
+.pad-mode-tab { flex:1; margin:0; background:#e2e8f0; color:#4a5568; border:1px solid #cbd5e1; }
+.pad-mode-tab.active { background:#3182ce; color:#fff; border-color:#3182ce; }
+.pad-mode-panel { display:none; flex-direction:column; gap:8px; width:100%; }
+.pad-mode-panel.active { display:flex; }
+.pad-btn.favorite { background:#f0fff4; border-color:#9ae6b4; color:#276749; }
+.pad-btn.multi { background:#faf5ff; border-color:#d6bcfa; color:#6b46c1; }
+.pad-btn.undo { background:#fffaf0; border-color:#fbd38d; color:#975a16; }
+
 @media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } .pad-btn { height: 44px; font-size: 14px; } }
 
 .result-filter {
@@ -106,6 +121,10 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
     .filter-count { grid-column: 1; }
 }
 .filter-no-match { padding: 12px; opacity: .75; }
+
+/* a-z 入力行 */
+.alphabet-row .pad-btn { flex: 0 0 38px; min-width: 38px; }
+@media (max-width: 600px) { .alphabet-row .pad-btn { flex: 0 0 36px; min-width: 36px; } }
 </style>
 </head>
 
@@ -137,41 +156,93 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                 </div>
                 
                 <div id="inputPad" class="keyboard-pad">
-                    <div class="pad-row">
-                        <button class="pad-btn cmd" onclick="moveCursor(-1)">◀ 左</button>
-                        <button class="pad-btn cmd" onclick="moveCursor(1)">▶ 右</button>
-                        <button class="pad-btn cmd delete" onclick="deleteAtCursor()">⌫ 消去</button>
-                        <button class="pad-btn cmd clear" onclick="clearInput()">クリア</button>
-                    </div>
-                    <div class="pad-row">
-                        <button class="pad-btn" onclick="insertAtCursor('(')">(</button>
-                        <button class="pad-btn" onclick="insertAtCursor(')')">)</button>
-                        <button class="pad-btn" onclick="insertAtCursor(',')">,</button>
-                        <button class="pad-btn" onclick="insertAtCursor('2')">2</button>
-                        <button class="pad-btn" onclick="insertAtCursor('4')">4</button>
-                        <button class="pad-btn" onclick="insertAtCursor('6')">6</button>
-                        <button class="pad-btn" onclick="insertAtCursor('8')">8</button>
-                        <button class="pad-btn" onclick="insertAtCursor('0')">0</button>
-                    </div>
-                    <div class="pad-row">
-                        <button class="pad-btn action" onclick="insertAtCursor('1')">1</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('3')">3</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('5')">5</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('7')">7</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('9')">9</button>
-                    </div>
-                    <div class="pad-row">
-                        <button class="pad-btn action" onclick="insertAtCursor('x')">x</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('*')">*</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('-')">-</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('^')">^</button>
-                        <button class="pad-btn action" onclick="insertAtCursor('+')">+</button>
-                        <button class="pad-btn prefix" onclick="insertAtCursor('sp')">sp</button>
-                        <button class="pad-btn prefix" onclick="insertAtCursor('p')">p</button>
-                        <button class="pad-btn prefix" onclick="insertAtCursor('t')">t</button>
-                        <button class="pad-btn prefix" onclick="insertAtCursor('f')">f</button>
-                        <button class="pad-btn prefix" onclick="insertAtCursor('s')">s</button>
-                        <button class="pad-btn prefix" onclick="insertAtCursor('r')">r</button>
+                    <div class="smart-pad-tools">
+                        <div class="pad-mode-tabs">
+                            <button type="button" id="syncPadTab" class="pad-mode-tab active" onclick="setPadMode('sync')">シンクロ入力</button>
+                            <button type="button" id="asyncPadTab" class="pad-mode-tab" onclick="setPadMode('async')">アシンクロ入力</button>
+                        </div>
+
+                        <div id="syncPadPanel" class="pad-mode-panel active">
+                            <div class="smart-pad-label">シンクロ：数字 / x</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn" onclick="insertAtCursor('0')">0</button>
+                                <button class="pad-btn" onclick="insertAtCursor('2')">2</button><button class="pad-btn action" onclick="insertAtCursor('2x')">2x</button>
+                                <button class="pad-btn" onclick="insertAtCursor('4')">4</button><button class="pad-btn action" onclick="insertAtCursor('4x')">4x</button>
+                                <button class="pad-btn" onclick="insertAtCursor('6')">6</button><button class="pad-btn action" onclick="insertAtCursor('6x')">6x</button>
+                                <button class="pad-btn" onclick="insertAtCursor('8')">8</button><button class="pad-btn action" onclick="insertAtCursor('8x')">8x</button>
+                            </div>
+                            <div class="smart-pad-label">シンクロ：修飾・記号</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('(')">(</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(')')">)</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(',')">,</button>
+                                <button class="pad-btn action" onclick="insertAtCursor('-')">−</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('f')">f</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('sp')">sp</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('p')">p</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('t')">t</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('r1')">r1</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('r')">r</button>
+                            </div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('[')">[</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(']')">]</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(' ')">スペース</button>
+                            </div>
+                            <div class="smart-pad-label">シンクロ：アルファベット（低頻度）</div>
+                            <div class="smart-pad-row alphabet-row">
+                                <button class="pad-btn" onclick="insertAtCursor('a')">a</button><button class="pad-btn action" onclick="insertAtCursor('ax')">ax</button><button class="pad-btn" onclick="insertAtCursor('c')">c</button><button class="pad-btn action" onclick="insertAtCursor('cx')">cx</button><button class="pad-btn" onclick="insertAtCursor('e')">e</button><button class="pad-btn action" onclick="insertAtCursor('ex')">ex</button><button class="pad-btn" onclick="insertAtCursor('g')">g</button><button class="pad-btn action" onclick="insertAtCursor('gx')">gx</button><button class="pad-btn" onclick="insertAtCursor('i')">i</button><button class="pad-btn action" onclick="insertAtCursor('ix')">ix</button><button class="pad-btn" onclick="insertAtCursor('k')">k</button><button class="pad-btn action" onclick="insertAtCursor('kx')">kx</button><button class="pad-btn" onclick="insertAtCursor('m')">m</button><button class="pad-btn action" onclick="insertAtCursor('mx')">mx</button><button class="pad-btn" onclick="insertAtCursor('o')">o</button><button class="pad-btn action" onclick="insertAtCursor('ox')">ox</button><button class="pad-btn" onclick="insertAtCursor('q')">q</button><button class="pad-btn action" onclick="insertAtCursor('qx')">qx</button><button class="pad-btn" onclick="insertAtCursor('s')">s</button><button class="pad-btn action" onclick="insertAtCursor('sx')">sx</button><button class="pad-btn" onclick="insertAtCursor('u')">u</button><button class="pad-btn action" onclick="insertAtCursor('ux')">ux</button><button class="pad-btn" onclick="insertAtCursor('w')">w</button><button class="pad-btn action" onclick="insertAtCursor('wx')">wx</button><button class="pad-btn" onclick="insertAtCursor('y')">y</button><button class="pad-btn action" onclick="insertAtCursor('yx')">yx</button>
+                            </div>
+                        </div>
+
+                        <div id="asyncPadPanel" class="pad-mode-panel">
+                            <div class="smart-pad-label">アシンクロ：数字</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn" onclick="insertAtCursor('0')">0</button><button class="pad-btn" onclick="insertAtCursor('1')">1</button><button class="pad-btn" onclick="insertAtCursor('2')">2</button><button class="pad-btn" onclick="insertAtCursor('3')">3</button><button class="pad-btn" onclick="insertAtCursor('4')">4</button><button class="pad-btn" onclick="insertAtCursor('5')">5</button><button class="pad-btn" onclick="insertAtCursor('6')">6</button><button class="pad-btn" onclick="insertAtCursor('7')">7</button><button class="pad-btn" onclick="insertAtCursor('8')">8</button><button class="pad-btn" onclick="insertAtCursor('9')">9</button>
+                            </div>
+                            <div class="smart-pad-label">アシンクロ：修飾</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('-')">−</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(f)')">(f)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(sp)')">(sp)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(p)')">(p)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(t)')">(t)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(r1)')">(r1)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(r)')">(r)</button>
+                            </div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('[')">[</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(']')">]</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(' ')">スペース</button>
+                            </div>
+                            <div class="smart-pad-label">アシンクロ：アルファベット a〜z（低頻度）</div>
+                            <div class="smart-pad-row alphabet-row">
+                                <button class="pad-btn" onclick="insertAtCursor('a')">a</button><button class="pad-btn" onclick="insertAtCursor('b')">b</button><button class="pad-btn" onclick="insertAtCursor('c')">c</button><button class="pad-btn" onclick="insertAtCursor('d')">d</button><button class="pad-btn" onclick="insertAtCursor('e')">e</button><button class="pad-btn" onclick="insertAtCursor('f')">f</button><button class="pad-btn" onclick="insertAtCursor('g')">g</button><button class="pad-btn" onclick="insertAtCursor('h')">h</button><button class="pad-btn" onclick="insertAtCursor('i')">i</button><button class="pad-btn" onclick="insertAtCursor('j')">j</button><button class="pad-btn" onclick="insertAtCursor('k')">k</button><button class="pad-btn" onclick="insertAtCursor('l')">l</button><button class="pad-btn" onclick="insertAtCursor('m')">m</button><button class="pad-btn" onclick="insertAtCursor('n')">n</button><button class="pad-btn" onclick="insertAtCursor('o')">o</button><button class="pad-btn" onclick="insertAtCursor('p')">p</button><button class="pad-btn" onclick="insertAtCursor('q')">q</button><button class="pad-btn" onclick="insertAtCursor('r')">r</button><button class="pad-btn" onclick="insertAtCursor('s')">s</button><button class="pad-btn" onclick="insertAtCursor('t')">t</button><button class="pad-btn" onclick="insertAtCursor('u')">u</button><button class="pad-btn" onclick="insertAtCursor('v')">v</button><button class="pad-btn" onclick="insertAtCursor('w')">w</button><button class="pad-btn" onclick="insertAtCursor('x')">x</button><button class="pad-btn" onclick="insertAtCursor('y')">y</button><button class="pad-btn" onclick="insertAtCursor('z')">z</button>
+                            </div>
+                        </div>
+
+                        <div id="handPadPanel" class="pad-mode-panel">
+                            <div class="smart-pad-label">ハンドスティック：数字 / x / 2+</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn" onclick="insertAtCursor('0')">0</button>
+                                <button class="pad-btn" onclick="insertAtCursor('1')">1</button>
+                                <button class="pad-btn" onclick="insertAtCursor('2')">2</button>
+                                <button class="pad-btn" onclick="insertAtCursor('3')">3</button>
+                                <button class="pad-btn" onclick="insertAtCursor('4')">4</button>
+                                <button class="pad-btn" onclick="insertAtCursor('5')">5</button>
+                                <button class="pad-btn" onclick="insertAtCursor('6')">6</button>
+                                <button class="pad-btn" onclick="insertAtCursor('7')">7</button>
+                                <button class="pad-btn" onclick="insertAtCursor('8')">8</button>
+                                <button class="pad-btn" onclick="insertAtCursor('9')">9</button>
+                                <button class="pad-btn action" onclick="insertAtCursor('x')">x</button>
+                                <button class="pad-btn action" onclick="insertAtCursor('2+')">2+</button>
+                            </div>
+                        </div>
+
+                        <div class="smart-pad-label">共通編集</div>
+                        <div class="smart-pad-row">
+                            <button class="pad-btn cmd" onclick="moveCursor(-1)">◀</button><button class="pad-btn cmd" onclick="moveCursor(1)">▶</button><button class="pad-btn undo" onclick="padUndo()">↶ Undo</button><button class="pad-btn undo" onclick="padRedo()">↷ Redo</button><button class="pad-btn cmd delete" onclick="deleteAtCursor()">⌫</button><button class="pad-btn cmd clear" onclick="clearInput()">クリア</button>
+                        </div>
                     </div>
                 </div>
 
@@ -634,6 +705,8 @@ let recordedChunks = [];
 let isRecording = false;
 let recordStartTime = 0;
 let recordDuration = 0;
+let recordWarmupDuration = 0;
+let recordingStarted = false;
 let logicalTimeAccumulator = 0;
 
 // =====================================
@@ -2072,13 +2145,32 @@ function update(timestamp) {
 
     if (isRecording) {
         if (recordStartTime === 0) {
-            recordStartTime = timestamp; virtualTime = 0; globalTime = 0; logicalTimeAccumulator = 0;
-            mediaRecorder.start();
+            // まず1周期分をウォームアップとして再生する。
+            // MediaRecorder はまだ開始しないので、この周期は動画に入らない。
+            recordStartTime = timestamp;
+            virtualTime = 0;
+            globalTime = 0;
+            logicalTimeAccumulator = 0;
+            recordingStarted = false;
         }
+
         logicalTimeAccumulator += dt * currentSpeed * asyncSpeedFactor;
-        if (logicalTimeAccumulator >= recordDuration) {
-            isRecording = false; mediaRecorder.stop();
-            document.getElementById("recordBtn").innerText = "動画を録画する"; document.getElementById("recordBtn").disabled = false;
+
+        // 1周期が終わった瞬間（= 2周期目の先頭）から録画開始。
+        if (!recordingStarted && logicalTimeAccumulator >= recordWarmupDuration) {
+            recordingStarted = true;
+            logicalTimeAccumulator -= recordWarmupDuration;
+            mediaRecorder.start();
+            document.getElementById("recordBtn").innerText = "録画中...";
+        }
+
+        // 録画開始後だけ録画時間を数える。従来どおり3周期分を保存する。
+        if (recordingStarted && logicalTimeAccumulator >= recordDuration) {
+            isRecording = false;
+            recordingStarted = false;
+            mediaRecorder.stop();
+            document.getElementById("recordBtn").innerText = "動画を録画する";
+            document.getElementById("recordBtn").disabled = false;
         }
     }
 
@@ -2264,12 +2356,44 @@ function applyHandPreset(val) {
 // =====================================
 // パッドの入力先。最後にフォーカスしたサイトスワップ欄を記憶する。
 // これにより「パターン」だけでなく「ハンド」欄にも同じ入力パッドを使える。
+let currentPadMode = "sync";
+function renderPadMode() {
+    const isHand = activePadInput && activePadInput.id === "handSiteswapInput";
+    const syncPanel = document.getElementById("syncPadPanel");
+    const asyncPanel = document.getElementById("asyncPadPanel");
+    const handPanel = document.getElementById("handPadPanel");
+    const syncTab = document.getElementById("syncPadTab");
+    const asyncTab = document.getElementById("asyncPadTab");
+
+    if (handPanel) handPanel.classList.toggle("active", isHand);
+    if (syncPanel) syncPanel.classList.toggle("active", !isHand && currentPadMode === "sync");
+    if (asyncPanel) asyncPanel.classList.toggle("active", !isHand && currentPadMode === "async");
+    if (syncTab) syncTab.classList.toggle("active", !isHand && currentPadMode === "sync");
+    if (asyncTab) asyncTab.classList.toggle("active", !isHand && currentPadMode === "async");
+}
+
+function setPadMode(mode) {
+    currentPadMode = (mode === "async") ? "async" : "sync";
+    renderPadMode();
+}
+
 let activePadInput = document.getElementById("siteswapInput");
 
 function setActivePadInput(input) {
     if (input && (input.id === "siteswapInput" || input.id === "handSiteswapInput")) {
         activePadInput = input;
+        updatePadForActiveInput();
     }
+}
+
+function updatePadForActiveInput() {
+    const isHand = activePadInput && activePadInput.id === "handSiteswapInput";
+    const tabs = document.querySelector("#inputPad .pad-mode-tabs");
+    const syncPanel = document.getElementById("syncPadPanel");
+    const asyncPanel = document.getElementById("asyncPadPanel");
+    const handPanel = document.getElementById("handPadPanel");
+    if (tabs) tabs.style.display = isHand ? "none" : "flex";
+    renderPadMode();
 }
 
 ["siteswapInput", "handSiteswapInput"].forEach(function(id) {
@@ -2280,9 +2404,12 @@ function setActivePadInput(input) {
     }
 });
 
+updatePadForActiveInput();
+
 document.getElementById("togglePadBtn").addEventListener("click", function() {
     const pad = document.getElementById("inputPad");
     if (pad.style.display === "none" || pad.style.display === "") {
+        updatePadForActiveInput();
         pad.style.display = "flex"; this.innerText = "パッドを閉じる";
     } else {
         pad.style.display = "none"; this.innerText = "入力パッドを開く";
@@ -2296,10 +2423,55 @@ function getActivePadInput() {
     return mainInput || handInput;
 }
 
+const padHistory = [];
+const padRedoHistory = [];
+function snapshotPadInput(input) {
+    if (!input) return;
+    padHistory.push({ id: input.id, value: input.value, start: input.selectionStart ?? input.value.length, end: input.selectionEnd ?? input.value.length });
+    if (padHistory.length > 100) padHistory.shift();
+    padRedoHistory.length = 0;
+}
+function restorePadSnapshot(snap) {
+    if (!snap) return;
+    const input = document.getElementById(snap.id) || getActivePadInput();
+    if (!input) return;
+    input.value = snap.value;
+    setActivePadInput(input);
+    input.focus();
+    input.selectionStart = snap.start; input.selectionEnd = snap.end;
+}
+function padUndo() {
+    const input = getActivePadInput(); if (!input || !padHistory.length) return;
+    padRedoHistory.push({ id: input.id, value: input.value, start: input.selectionStart ?? input.value.length, end: input.selectionEnd ?? input.value.length });
+    restorePadSnapshot(padHistory.pop());
+}
+function padRedo() {
+    const input = getActivePadInput(); if (!input || !padRedoHistory.length) return;
+    padHistory.push({ id: input.id, value: input.value, start: input.selectionStart ?? input.value.length, end: input.selectionEnd ?? input.value.length });
+    restorePadSnapshot(padRedoHistory.pop());
+}
+function insertSmartThrow(text) { insertAtCursor(text); }
+function wrapOrInsertMulti() {
+    const input = getActivePadInput(); if (!input) return;
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    snapshotPadInput(input);
+    if (start !== end) {
+        const selected = input.value.slice(start, end);
+        input.value = input.value.slice(0,start) + '[' + selected + ']' + input.value.slice(end);
+        input.selectionStart = start + 1; input.selectionEnd = end + 1;
+    } else {
+        input.value = input.value.slice(0,start) + '[]' + input.value.slice(end);
+        input.selectionStart = input.selectionEnd = start + 1;
+    }
+    input.focus();
+}
+
 function insertAtCursor(text) {
     const input = getActivePadInput();
     if (!input) return;
     setActivePadInput(input);
+    snapshotPadInput(input);
     const start = input.selectionStart ?? input.value.length;
     const end = input.selectionEnd ?? start;
     const val = input.value;
@@ -2319,6 +2491,7 @@ function moveCursor(dir) {
 function deleteAtCursor() {
     const input = getActivePadInput();
     if (!input) return;
+    snapshotPadInput(input);
     const start = input.selectionStart; const end = input.selectionEnd; const val = input.value;
     if (start === end) {
         if (start > 0) {
@@ -2335,6 +2508,7 @@ function deleteAtCursor() {
 function clearInput() {
     const input = getActivePadInput();
     if (!input) return;
+    snapshotPadInput(input);
     input.value = "";
     input.focus();
 }
@@ -2344,9 +2518,11 @@ function startRecording() {
     if (isRecording) return;
     initSimulation();
     
-    // 長い方の周期に合わせて録画時間を設定
+    // 長い方の周期に合わせる。
+    // 最初の1周期はウォームアップとして捨て、2周期目の先頭から3周期分を録画する。
     let maxCycles = Math.max(g_n, g_handN);
-    recordDuration = (maxCycles * BEAT_TIME) * 3;
+    recordWarmupDuration = maxCycles * BEAT_TIME;
+    recordDuration = recordWarmupDuration * 3;
     recordedChunks = [];
     const stream = canvas.captureStream(60);
     let options = { mimeType: 'video/mp4;codecs=avc1' };
@@ -2365,8 +2541,11 @@ function startRecording() {
         document.body.appendChild(a); a.click();
         setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
     };
-    recordStartTime = 0; isRecording = true;
-    document.getElementById("recordBtn").innerText = "録画中..."; document.getElementById("recordBtn").disabled = true;
+    recordStartTime = 0;
+    recordingStarted = false;
+    isRecording = true;
+    document.getElementById("recordBtn").innerText = "1周期待機中...";
+    document.getElementById("recordBtn").disabled = true;
 }
 
 document.getElementById("speedInput").addEventListener("input", function(e) { currentSpeed = parseFloat(e.target.value); document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x"; });
