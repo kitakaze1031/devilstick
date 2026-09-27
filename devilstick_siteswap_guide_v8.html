@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>デビルスティックのサイトスワップ</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f8fafc;color:#334155;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;line-height:1.8;padding:28px 16px}
+main{max-width:900px;margin:auto;background:#fff;padding:34px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+h1{font-size:30px;color:#1e3a8a;border-bottom:3px solid #3b82f6;padding-bottom:12px;margin-top:0}
+h2{font-size:22px;color:#1e3a8a;border-left:5px solid #3b82f6;padding-left:12px;margin-top:42px}
+h3{font-size:18px;color:#2563eb;margin-top:28px}
+code{font-family:Consolas,monospace;background:#f1f5f9;padding:2px 7px;border-radius:5px;font-weight:700}
+.box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px 18px;margin:18px 0}
+.note{background:#fff7ed;border-left:5px solid #f97316;border-radius:7px;padding:14px 17px;margin:18px 0}
+.patterns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:15px 0}
+.pattern{border:1px solid #dbe4ee;border-radius:9px;padding:14px;background:#f8fafc}
+.pattern code{font-size:16px}
+.name{display:block;font-weight:700;color:#1e3a8a;margin-top:7px}
+table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #cbd5e1;padding:11px;text-align:left;vertical-align:top}th{background:#f1f5f9}
+.sim{margin:12px 0 4px;border:1px solid #dbe4ee;border-radius:8px;overflow:hidden;background:#fff}.sim iframe{display:block;width:100%;aspect-ratio:8/6;border:0}.simcap{text-align:center;font-size:12px;color:#64748b;padding:5px 8px;background:#f8fafc}@media(max-width:650px){body{padding:10px}main{padding:20px 16px}.patterns{grid-template-columns:1fr}h1{font-size:24px}}
+</style>
+
+
+
+</head>
+<body><main>
+<h1>デビルスティックのサイトスワップ</h1>
+
+<p>デビルスティックのサイトスワップは、ボールのサイトスワップと同じように、数字によって「何拍後につながる動きなのか」を表します。ただし、デビルスティックにはボールにはない重要な要素があります。それが<strong>回転の向き</strong>です。</p>
+
+<div class="box">
+<strong>このシミュレーターでの回転方向</strong><br>
+画面を正面から見たとき、ｘなしの時はプロペラの」回転方向、ｘありの時はアイドリングの方向を正として扱います。<br>
+したがって、正の数字では基本的に正の向きへ回転しながらサイトスワップを実行し、数字の前に <code>-</code> を付けると、その反対向きの回転を表せます。
+</div>
+
+<p>また、数字は滞空時間だけでなく回転量にも関係します。基本的には<strong>数字が大きくなるほど滞空時間が長くなり、その間に行う回転数も増えていきます。</strong></p>
+
+<h2>1. デビルスティックではシンクロをよく使う</h2>
+<p>デビルスティックでは、、<code>(左,右)</code> の形で書く<strong>シンクロ・サイトスワップ</strong>を使うことが多くなります。</p>
+
+
+<h2>2. まずは正の数字の回転</h2>
+
+<h3>基本になる2つの動き</h3>
+<div class="patterns">
+<div class="pattern"><code>(2x,0)(0,2x)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%282x%2C0%29%280%2C2x%29" title="(2x,0)(0,2x) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(2x,0)(0,2x)</div></div><span class="name">アイドリング</span>1本のデビルスティックを左右へ渡しながら続ける基本パターンです。正の <code>2x</code> なので、正の向きへ回転しながら反対側へ移動します。</div>
+<div class="pattern"><code>(2,2)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%282%2C2%29" title="(2,2) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(2,2)</div></div><code>x</code> がないので、それぞれ同じ側へ戻ります。正の数字なので、基本となる正の向きの回転を確認できます。</div>
+</div>
+
+<h3>正の数字を使った例</h3>
+<div class="patterns">
+<div class="pattern"><code>(2x,2x)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%282x%2C2x%29" title="(2x,2x) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(2x,2x)</div></div><span class="name">デュアルアイドリング</span>2本を同時にアイドリングさせます。</div>
+<div class="pattern"><code>(4x,2x)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%284x%2C2x%29" title="(4x,2x) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(4x,2x)</div></div><br><code>4x</code> と <code>2x</code> を組み合わせます。4のほうが滞空時間が長く、回転量も増えます。</div>
+<div class="pattern"><code>(4,2x)(2x,0)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%284%2C2x%29%282x%2C0%29" title="(4,2x)(2x,0) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(4,2x)(2x,0)</div></div><br>同じ側へ戻る4と、反対側へ渡る2xを組み合わせたパターンです。</div>
+<div class="pattern"><code>(4,2x)(2x,4)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%284%2C2x%29%282x%2C4%29" title="(4,2x)(2x,4) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(4,2x)(2x,4)</div></div><br>3本を使う代表的なシンクロ・サイトスワップです。左右で4と2xを交互に入れ替えます。</div>
+</div>
+
+<div class="note"><strong>数字の大きさに注目：</strong> <code>2</code> より <code>4</code> のほうが長く空中にあり、その分だけデビルスティックの回転量も大きくなります。</div>
+
+<h2>3. 符号と回転方向</h2>
+
+<p>デビルスティックでは、数字の前に <code>-</code> を付けることで、回転に関する状態を反対にできます。ただし、実際の回転のつながりを見るときは、<strong>符号だけでなく <code>x</code> が付いているかどうか</strong>も重要です。</p>
+
+<div class="box">
+<strong>符号を切り替えたときの基本ルール</strong><br>
+<strong>xなし</strong>で正負の符号が切り替わると、同じ側にいながら<strong>回転方向が切り替わります</strong>。<br>
+<strong>xあり</strong>で正負の符号が切り替わると、<strong>回転の向きを保ったまま反対の手側へ移動します</strong>。
+</div>
+
+<p>この違いを、実際のパターンで見ていきます。</p>
+
+<h3>正のパターンと負のパターンを比べる</h3>
+<div class="patterns">
+<div class="pattern"><code>(-2x,0)(0,-2x)</code>
+<div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&amp;kind=devil&amp;mode=sync&amp;pattern=%28-2x%2C0%29%280%2C-2x%29" title="(-2x,0)(0,-2x) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(-2x,0)(0,-2x)</div></div>
+<p><code>(2x,0)(0,2x)</code> の<strong>アイドリング</strong>と左右の移動は同じですが、デビルスティックの回転は逆向きになります。</p>
+</div>
+
+<div class="pattern"><code>(-2,0)</code>
+<div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&amp;kind=devil&amp;mode=sync&amp;pattern=%28-2%2C0%29" title="(-2,0) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(-2,0)</div></div>
+<p><code>(2,0)</code> と比べると、同じ側で動きながらデビルスティックの回転が逆向きになります。</p>
+</div>
+</div>
+
+<h3>xなしで符号を切り替える</h3>
+<div class="patterns">
+<div class="pattern"><code>(2,0)(-2,0)</code><span class="name">ワンハンドアイドリング</span>
+<div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&amp;kind=devil&amp;mode=sync&amp;pattern=%282%2C0%29%28-2%2C0%29" title="(2,0)(-2,0) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(2,0)(-2,0)</div></div>
+<p><code>x</code> を使わず、同じ側で <code>2</code> と <code>-2</code> を交互に行います。符号が切り替わるたびに回転方向も切り替わります。</p>
+</div>
+</div>
+
+<h3>xありで符号を切り替える</h3>
+<div class="patterns">
+<div class="pattern"><code>(2x,0)(0,-2x)</code><span class="name">ウィンドミル</span>
+<div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&amp;kind=devil&amp;mode=sync&amp;pattern=%282x%2C0%29%280%2C-2x%29" title="(2x,0)(0,-2x) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(2x,0)(0,-2x)</div></div>
+<p><code>x</code> が付いた状態で <code>2x</code> と <code>-2x</code> を切り替えます。符号は切り替わりますが、回転の向きを保ったまま左右へ移動します。</p>
+</div>
+</div>
+
+<h2>5. 正負を組み合わせたサイトスワップ</h2>
+<p>正の数字と負の数字を組み合わせることで、単純なアイドリングだけでなく、途中で回転方向を変えたり、回転方向を保ったまま左右を移動したりするパターンを作れます。</p>
+
+<div class="patterns">
+<div class="pattern"><code>(2x,-2x)(2x,2x)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%282x%2C-2x%29%282x%2C2x%29" title="(2x,-2x)(2x,2x) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(2x,-2x)(2x,2x)</div></div><br>クロスする2xの中に正負を組み合わせた例。</div>
+<div class="pattern"><code>(-2,2)(2,-2)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%28-2%2C2%29%282%2C-2%29" title="(-2,2)(2,-2) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(-2,2)(2,-2)</div></div><br>左右それぞれで正負を入れ替えながら回転方向を切り替える例。</div>
+<div class="pattern"><code>(2,2)(-2,-2)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%282%2C2%29%28-2%2C-2%29" title="(2,2)(-2,-2) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(2,2)(-2,-2)</div></div><br>両側を同時に正から負へ切り替える例。</div>
+<div class="pattern"><code>(-4,2x)(2x,4)(4,2x)(2x,-4)</code><div class="sim"><iframe src="index_guide_embed_v6.html?embed=1&kind=devil&mode=sync&pattern=%28-4%2C2x%29%282x%2C4%29%284%2C2x%29%282x%2C-4%29" title="(-4,2x)(2x,4)(4,2x)(2x,-4) のデビルスティック動画" loading="lazy"></iframe><div class="simcap">(-4,2x)(2x,4)(4,2x)(2x,-4)</div></div><br>4と2x、さらに正負の4を組み合わせた3本のパターン。大きな数字による回転量の増加と、符号による回転方向の変化を同時に確認できます。</div>
+</div>
+
+<h2>まとめ</h2>
+<div class="box">
+<strong>デビルスティックのサイトスワップで見るポイント</strong><br>
+① 数字は「何拍後につながるか」を表す。<br>
+② 数字が大きくなるほど、基本的に滞空時間と回転量が増える。<br>
+③ 正の数字と負の数字で回転方向を表現できる。<br>
+④ <code>x</code> は反対側へ移動することを表す。<br>
+⑤ xなしで符号を切り替える場合と、xありで符号を切り替える場合では、回転のつながり方が異なる。<br>
+⑥ デビルスティックでは、左右の動きを同時に記述できるシンクロ・サイトスワップを使うことが多い。
+</div>
+</main></body></html>
