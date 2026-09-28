@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デビルスティック サイトスワップ シミュレーター</title>
+
+<style>
+/* =====================================
+   基本スタイル
+   ===================================== */
+body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f5f7fa; color: #333; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; box-sizing: border-box; min-height: 100vh; }
+h1 { font-size: 24px; margin: 0 0 10px 0; color: #2c3e50; text-align: center; }
+.main-container { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 1200px; }
+.canvas-container { width: 100%; max-width: 800px; display: flex; justify-content: center; }
+canvas { background: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; height: auto; aspect-ratio: 8 / 6; display: block; }
+.control-panel { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 800px; }
+#controls { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; }
+label { font-weight: bold; color: #4a5568; }
+input[type="text"] { padding: 8px 12px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px; width: 150px; outline: none; transition: border-color 0.2s; }
+input[type="text"]:focus { border-color: #3182ce; }
+.ui-row-container { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 5px 0; }
+.ui-row { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; }
+
+/* スライダー用スタイル */
+.slider-control { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4a5568; font-weight: bold; white-space: nowrap; }
+.slider-control input[type="range"] { cursor: pointer; width: 110px; }
+.val-label { min-width: 45px; text-align: left; color: #3182ce; }
+
+button { padding: 8px 16px; font-size: 14px; background-color: #3182ce; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+button:hover { background-color: #2b6cb0; }
+#togglePadBtn { background-color: #4a5568; }
+#togglePadBtn:hover { background-color: #2d3748; }
+#recordBtn { background-color: #e53e3e; }
+#recordBtn:hover { background-color: #c53030; }
+#recordBtn:disabled { background-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
+.result-container { display: none; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-direction: column; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; }
+.result-container video { width: 100%; max-width: 400px; border-radius: 6px; background: #000; }
+.record-options { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.record-option-label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.95rem; }
+.record-option-label input { width: 18px; height: 18px; margin: 0; accent-color: #3182ce; }
+@media (max-width: 600px) {
+    .record-options { width: 100%; }
+    .record-option-label { width: 100%; }
+    #recordBtn { width: 100%; }
+}
+
+.result-hint { font-size: 13px; color: #e53e3e; font-weight: bold; text-align: center; }
+.section-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2d3748; }
+.preset-container { display: flex; gap: 6px; flex-wrap: wrap; }
+.preset-btn { padding: 6px 10px; font-size: 12px; background-color: #e2e8f0; color: #4a5568; border-radius: 4px; border: none; cursor: pointer; font-weight: 500; transition: background-color 0.2s; }
+.preset-btn:hover { background-color: #cbd5e1; }
+.info-box { font-size: 13px; color: #718096; line-height: 1.7; background: #edf2f7; padding: 15px; border-radius: 6px; width: 100%; box-sizing: border-box; }
+footer { margin-top: 20px; padding: 20px; font-size: 13px; color: #718096; text-align: center; width: 100%; max-width: 800px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box; }
+footer p { margin: 5px 0; }
+footer a { color: #3182ce; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #3182ce; transition: color 0.2s; }
+footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
+
+/* =====================================
+   入力補助パッド用スタイル
+   ===================================== */
+.keyboard-pad { background: #edf2f7; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; display: none; flex-direction: column; gap: 8px; width: 100%; max-width: 550px; box-sizing: border-box; box-shadow: inset 0 2px 4px rgba(0,0,0,0.04); }
+.pad-row { display: flex; gap: 6px; justify-content: center; width: 100%; }
+.pad-btn { flex: 1; min-width: 32px; height: 40px; padding: 0; font-size: 15px; background-color: #ffffff; color: #2d3748; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: background-color 0.1s, transform 0.05s; user-select: none; }
+.pad-btn:hover { background-color: #f7fafc; border-color: #a0aec0; }
+.pad-btn:active { transform: scale(0.95); background-color: #e2e8f0; }
+.pad-btn.cmd { background-color: #cbd5e1; color: #2d3748; }
+.pad-btn.cmd.delete { background-color: #feb2b2; color: #9b2c2c; border-color: #f56565; }
+.pad-btn.cmd.delete:hover { background-color: #fed7d7; }
+.pad-btn.cmd.clear { background-color: #e2e8f0; color: #4a5568; }
+.pad-btn.action { background-color: #ebf8ff; color: #2b6cb0; border-color: #bee3f8; }
+.pad-btn.action:hover { background-color: #ebf8ff; border-color: #63b3ed; }
+.pad-btn.prefix { background-color: #feebc8; color: #9c4221; border-color: #fbd38d; }
+.pad-btn.prefix:hover { background-color: #feebc8; border-color: #f6ad55; }
+
+
+/* スマート入力パッド */
+.smart-pad-tools { display:flex; flex-direction:column; gap:8px; width:100%; }
+.smart-pad-label { font-size:12px; font-weight:bold; color:#4a5568; text-align:left; }
+.smart-pad-row { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.smart-pad-row .pad-btn { flex:0 1 auto; min-width:54px; padding:0 10px; }
+.pad-mode-tabs { display:flex; gap:8px; width:100%; margin-bottom:4px; }
+.pad-mode-tab { flex:1; margin:0; background:#e2e8f0; color:#4a5568; border:1px solid #cbd5e1; }
+.pad-mode-tab.active { background:#3182ce; color:#fff; border-color:#3182ce; }
+.pad-mode-panel { display:none; flex-direction:column; gap:8px; width:100%; }
+.pad-mode-panel.active { display:flex; }
+.pad-btn.favorite { background:#f0fff4; border-color:#9ae6b4; color:#276749; }
+.pad-btn.multi { background:#faf5ff; border-color:#d6bcfa; color:#6b46c1; }
+.pad-btn.undo { background:#fffaf0; border-color:#fbd38d; color:#975a16; }
+
+@media (max-width: 767px) { body { padding: 10px; } h1 { font-size: 18px; } #controls { padding: 12px; } input[type="text"] { width: 100%; box-sizing: border-box; } .ui-row { flex-direction: column; width: 100%; gap: 10px; } .preset-container { flex-direction: column; } .preset-btn { width: 100%; } .pad-btn { height: 44px; font-size: 14px; } }
+
+.result-filter {
+    margin: 12px 0;
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 10px;
+}
+.result-filter label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+.result-filter input.result-text-filter,
+.result-filter input.result-text-exclude-filter {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.filter-count {
+    grid-column: 2;
+    opacity: .75;
+    font-size: .9em;
+}
+@media (max-width: 767px) {
+    .result-filter {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+    .result-filter label { white-space: normal; }
+    .filter-count { grid-column: 1; }
+}
+.filter-no-match { padding: 12px; opacity: .75; }
+
+/* a-z 入力行 */
+.alphabet-row .pad-btn { flex: 0 0 38px; min-width: 38px; }
+@media (max-width: 600px) { .alphabet-row .pad-btn { flex: 0 0 36px; min-width: 36px; } }
+</style>
+</head>
+
+<body>
+
+<h1>デビルスティック サイトスワップ シミュレーター</h1>
+
+<div class="main-container">
+    <div class="canvas-container">
+        <canvas id="simCanvas" width="800" height="600"></canvas>
+    </div>
+
+     <div class="control-panel">
+
+        <div id="controls">
+
+            <div class="ui-row-container">
+                <div class="ui-row">
+                    <div>
+                        <label for="siteswapInput">パターン: </label>
+                        <input type="text" id="siteswapInput" value="(2x,2x)">
+                    </div>
+                    <div>
+                        <label for="handSiteswapInput">ハンド: </label>
+                        <input type="text" id="handSiteswapInput" value="(2,2)">
+                    </div>
+                    <button id="togglePadBtn">入力パッドを開く</button>
+                    <button id="startBtn">再生</button>
+                </div>
+                
+                <div id="inputPad" class="keyboard-pad">
+                    <div class="smart-pad-tools">
+                        <div class="pad-mode-tabs">
+                            <button type="button" id="syncPadTab" class="pad-mode-tab active" onclick="setPadMode('sync')">シンクロ入力</button>
+                            <button type="button" id="asyncPadTab" class="pad-mode-tab" onclick="setPadMode('async')">アシンクロ入力</button>
+                        </div>
+
+                        <div id="syncPadPanel" class="pad-mode-panel active">
+                            <div class="smart-pad-label">シンクロ：数字 / x</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn" onclick="insertAtCursor('0')">0</button>
+                                <button class="pad-btn" onclick="insertAtCursor('2')">2</button><button class="pad-btn action" onclick="insertAtCursor('2x')">2x</button>
+                                <button class="pad-btn" onclick="insertAtCursor('4')">4</button><button class="pad-btn action" onclick="insertAtCursor('4x')">4x</button>
+                                <button class="pad-btn" onclick="insertAtCursor('6')">6</button><button class="pad-btn action" onclick="insertAtCursor('6x')">6x</button>
+                                <button class="pad-btn" onclick="insertAtCursor('8')">8</button><button class="pad-btn action" onclick="insertAtCursor('8x')">8x</button>
+                            </div>
+                            <div class="smart-pad-label">シンクロ：修飾・記号</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('(')">(</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(')')">)</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(',')">,</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(',')">,</button>
+                                <button class="pad-btn action" onclick="insertAtCursor('-')">−</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('f')">f</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('sp')">sp</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('p')">p</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('t')">t</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('r1')">r1</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('r')">r</button>
+                            </div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('[')">[</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(']')">]</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(' ')">スペース</button>
+                            </div>
+                            <div class="smart-pad-label">シンクロ：アルファベット（低頻度）</div>
+                            <div class="smart-pad-row alphabet-row">
+                                <button class="pad-btn" onclick="insertAtCursor('a')">a</button><button class="pad-btn action" onclick="insertAtCursor('ax')">ax</button><button class="pad-btn" onclick="insertAtCursor('c')">c</button><button class="pad-btn action" onclick="insertAtCursor('cx')">cx</button><button class="pad-btn" onclick="insertAtCursor('e')">e</button><button class="pad-btn action" onclick="insertAtCursor('ex')">ex</button><button class="pad-btn" onclick="insertAtCursor('g')">g</button><button class="pad-btn action" onclick="insertAtCursor('gx')">gx</button><button class="pad-btn" onclick="insertAtCursor('i')">i</button><button class="pad-btn action" onclick="insertAtCursor('ix')">ix</button><button class="pad-btn" onclick="insertAtCursor('k')">k</button><button class="pad-btn action" onclick="insertAtCursor('kx')">kx</button><button class="pad-btn" onclick="insertAtCursor('m')">m</button><button class="pad-btn action" onclick="insertAtCursor('mx')">mx</button><button class="pad-btn" onclick="insertAtCursor('o')">o</button><button class="pad-btn action" onclick="insertAtCursor('ox')">ox</button><button class="pad-btn" onclick="insertAtCursor('q')">q</button><button class="pad-btn action" onclick="insertAtCursor('qx')">qx</button><button class="pad-btn" onclick="insertAtCursor('s')">s</button><button class="pad-btn action" onclick="insertAtCursor('sx')">sx</button><button class="pad-btn" onclick="insertAtCursor('u')">u</button><button class="pad-btn action" onclick="insertAtCursor('ux')">ux</button><button class="pad-btn" onclick="insertAtCursor('w')">w</button><button class="pad-btn action" onclick="insertAtCursor('wx')">wx</button><button class="pad-btn" onclick="insertAtCursor('y')">y</button><button class="pad-btn action" onclick="insertAtCursor('yx')">yx</button>
+                            </div>
+                        </div>
+
+                        <div id="asyncPadPanel" class="pad-mode-panel">
+                            <div class="smart-pad-label">アシンクロ：数字</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn" onclick="insertAtCursor('0')">0</button><button class="pad-btn" onclick="insertAtCursor('1')">1</button><button class="pad-btn" onclick="insertAtCursor('2')">2</button><button class="pad-btn" onclick="insertAtCursor('3')">3</button><button class="pad-btn" onclick="insertAtCursor('4')">4</button><button class="pad-btn" onclick="insertAtCursor('5')">5</button><button class="pad-btn" onclick="insertAtCursor('6')">6</button><button class="pad-btn" onclick="insertAtCursor('7')">7</button><button class="pad-btn" onclick="insertAtCursor('8')">8</button><button class="pad-btn" onclick="insertAtCursor('9')">9</button>
+                            </div>
+                            <div class="smart-pad-label">アシンクロ：修飾</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('-')">−</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(f)')">(f)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(sp)')">(sp)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(p)')">(p)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(t)')">(t)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(r1)')">(r1)</button>
+                                <button class="pad-btn prefix" onclick="insertAtCursor('(r)')">(r)</button>
+                            </div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn action" onclick="insertAtCursor('[')">[</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(']')">]</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(' ')">スペース</button>
+                            </div>
+                            <div class="smart-pad-label">アシンクロ：アルファベット a〜z（低頻度）</div>
+                            <div class="smart-pad-row alphabet-row">
+                                <button class="pad-btn" onclick="insertAtCursor('a')">a</button><button class="pad-btn" onclick="insertAtCursor('b')">b</button><button class="pad-btn" onclick="insertAtCursor('c')">c</button><button class="pad-btn" onclick="insertAtCursor('d')">d</button><button class="pad-btn" onclick="insertAtCursor('e')">e</button><button class="pad-btn" onclick="insertAtCursor('f')">f</button><button class="pad-btn" onclick="insertAtCursor('g')">g</button><button class="pad-btn" onclick="insertAtCursor('h')">h</button><button class="pad-btn" onclick="insertAtCursor('i')">i</button><button class="pad-btn" onclick="insertAtCursor('j')">j</button><button class="pad-btn" onclick="insertAtCursor('k')">k</button><button class="pad-btn" onclick="insertAtCursor('l')">l</button><button class="pad-btn" onclick="insertAtCursor('m')">m</button><button class="pad-btn" onclick="insertAtCursor('n')">n</button><button class="pad-btn" onclick="insertAtCursor('o')">o</button><button class="pad-btn" onclick="insertAtCursor('p')">p</button><button class="pad-btn" onclick="insertAtCursor('q')">q</button><button class="pad-btn" onclick="insertAtCursor('r')">r</button><button class="pad-btn" onclick="insertAtCursor('s')">s</button><button class="pad-btn" onclick="insertAtCursor('t')">t</button><button class="pad-btn" onclick="insertAtCursor('u')">u</button><button class="pad-btn" onclick="insertAtCursor('v')">v</button><button class="pad-btn" onclick="insertAtCursor('w')">w</button><button class="pad-btn" onclick="insertAtCursor('x')">x</button><button class="pad-btn" onclick="insertAtCursor('y')">y</button><button class="pad-btn" onclick="insertAtCursor('z')">z</button>
+                            </div>
+                        </div>
+
+                        <div id="handPadPanel" class="pad-mode-panel">
+                            <div class="smart-pad-label">ハンドスティック：数字 / x / 2+ / ( ) / ,</div>
+                            <div class="smart-pad-row">
+                                <button class="pad-btn" onclick="insertAtCursor('0')">0</button>
+                                <button class="pad-btn" onclick="insertAtCursor('1')">1</button>
+                                <button class="pad-btn" onclick="insertAtCursor('2')">2</button>
+                                <button class="pad-btn" onclick="insertAtCursor('3')">3</button>
+                                <button class="pad-btn" onclick="insertAtCursor('4')">4</button>
+                                <button class="pad-btn" onclick="insertAtCursor('5')">5</button>
+                                <button class="pad-btn" onclick="insertAtCursor('6')">6</button>
+                                <button class="pad-btn" onclick="insertAtCursor('7')">7</button>
+                                <button class="pad-btn" onclick="insertAtCursor('8')">8</button>
+                                <button class="pad-btn" onclick="insertAtCursor('9')">9</button>
+                                <button class="pad-btn action" onclick="insertAtCursor('x')">x</button>
+                                <button class="pad-btn action" onclick="insertAtCursor('2+')">2+</button>
+                                <button class="pad-btn action" onclick="insertAtCursor('(')">(</button>
+                                <button class="pad-btn action" onclick="insertAtCursor(')')">)</button>
+                            </div>
+                        </div>
+
+                        <div class="smart-pad-label">共通編集</div>
+                        <div class="smart-pad-row">
+                            <button class="pad-btn cmd" onclick="moveCursor(-1)">◀</button><button class="pad-btn cmd" onclick="moveCursor(1)">▶</button><button class="pad-btn undo" onclick="padUndo()">↶ Undo</button><button class="pad-btn undo" onclick="padRedo()">↷ Redo</button><button class="pad-btn cmd delete" onclick="deleteAtCursor()">⌫</button><button class="pad-btn cmd clear" onclick="clearInput()">クリア</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui-row">
+                    <div class="slider-control">
+                        <label for="speedInput">スピード: </label>
+                        <input type="range" id="speedInput" min="0.25" max="2.0" step="0.05" value="1.0">
+                        <span id="speedVal" class="val-label">1.00x</span>
+                    </div>
+                    <div class="slider-control">
+                        <label for="heightInput">高さ: </label>
+                        <input type="range" id="heightInput" min="0.0" max="1.0" step="0.05" value="1.0">
+                        <span id="heightVal" class="val-label">1.0x</span>
+                    </div>
+                    <div class="record-options">
+                        <label class="record-option-label">
+                            <input type="checkbox" id="recordSiteswapLabel" checked>
+                            <span>サイトスワップ表記を動画に表示</span>
+                        </label>
+                        <button id="recordBtn">動画を録画する</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="result-container">
+                <div class="section-title">🎥 録画が完了しました！</div>
+                <video id="resultVideo" controls playsinline></video>
+                <div class="result-hint">【スマホの方】動画を長押し、またはシェアボタンから「ビデオを保存」を選択して写真アプリに保存してください。</div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">ハンドスティック(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyHandPreset('(2,2)')">(2,2) 保持</button>
+                    <button class="preset-btn" onclick="applyHandPreset('(2+,2+)')">(2+,2+)</button>
+                    <button class="preset-btn" onclick="applyHandPreset('(2x,2x)')">(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyHandPreset('(4,4)')">(4,4)</button>
+                    <button class="preset-btn" onclick="applyHandPreset('(2,4x)(4x,2)')">(2,4x)(4x,2)</button>
+                    <button class="preset-btn" onclick="applyHandPreset('(2,6)(6,2)')">(2,6)(6,2)</button>
+                    
+                    
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">1本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('1')">1</button>
+                    <button class="preset-btn" onclick="applyPreset('-1')">-1</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,-2)(0,2)(0,2x)(-2,0)(2,0)')">(2x,0)(0,-2)(0,2)(0,2x)(-2,0)(2,0)</button>
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">2本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)')">(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(-2x,2x)')">(2x,2x)(-2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(f2x,2x)')">(2x,2x)(f2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,f2x)(f2x,2x)')">(2x,f2x)(f2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(p2x,2x)(2x,p2x)')">(p2x,2x)(2x,p2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(sp2x,2x)(2x,sp2x)')">(sp2x,2x)(2x,sp2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(t2,t2)')">(t2,t2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,0)')">(4,2x)(2x,0)</button>
+                    
+                    <button class="preset-btn" onclick="applyPreset('(2,2)')">(2,2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,2)(-2,-2)')">(2,2)(-2,-2)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2,-2)(-2,2)')">(2,-2)(-2,2)</button>
+                    <button class="preset-btn" onclick="applyPreset('31')">31</button>
+                    <button class="preset-btn" onclick="applyPreset('312')">312</button>
+                    <button class="preset-btn" onclick="applyPreset('2-2-22')">2-2-22</button>
+                    <button class="preset-btn" onclick="applyPreset('(f)2')">(f)2</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(2,2x)([2,2x],0)')">(2x,2x)(2,2x)([2,2x],0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,2x)(2,2x)([2x,2],0)')">(2x,2x)(2,2x)([2x,2],0)</button>
+                    <button class="preset-btn" onclick="applyPreset('[1 -1]')">[1 -1]</button>
+                    
+                </div>
+            </div>
+
+            <div class="preset-wrapper">
+                <div class="section-title">3本(入力例)</div>
+                <div class="preset-container">
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(2x,4)')">(4,2x)(2x,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4x,2x)')">(4x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(6x,2x)(2x,2x)')">(6x,2x)(2x,2x)</button>
+                    <button class="preset-btn" onclick="applyPreset('(-4,2x)(2x,4)(4,2x)(2x,-4)')">(-4,2x)(2x,4)(4,2x)(2x,-4)</button>
+                    <button class="preset-btn" onclick="applyPreset('(4,2x)(4,4)(4,0)(2x,4)(4,4)(0,4)')">(4,2x)(4,4)...(0,4)</button>
+                    <button class="preset-btn" onclick="applyPreset('3')">3</button>
+                    <button class="preset-btn" onclick="applyPreset('3(r1)')">3(r1)</button>
+                    <button class="preset-btn" onclick="applyPreset('531')">531</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="info-box">
+            <strong>💡 インフォメーション</strong><br>
+            ・<a href="siteswap_guide_v4.html" target="_blank" style="color: #3182ce; text-decoration: none; font-weight: bold;">サイトスワップとは？</a><br>
+            ・<a href="features.html" target="_blank" style="color: #3182ce; text-decoration: none; font-weight: bold;">このシミュレーターの機能</a><br>
+            ・<a href="HS.html" target="_blank" rel="noopener noreferrer" style="color: #3182ce; text-decoration: none; font-weight: bold;">HSシミュレーターを開く</a>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2026 Devilstick Siteswap Simulator. Created by <a href="https://youtube.com/channel/UCbcdXraTC6ENOy4v3ybRlrQ" target="_blank">北風</a>.</p>
+</footer>
+
+<script>
+// =====================================
+// 定数・グローバル変数
+// =====================================
+const BEAT_TIME = 1.4;
+const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5", "#f56565", "#4299e1", "#48bb78", "#ed8936", "#9f7aea"];
+const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
+const DEG_TO_RAD = Math.PI / 180;
+const GUIDE_EMBED_KIND = new URLSearchParams(location.search).get("kind") || "";
+function guideHandstickColor(ballIndex) { return GUIDE_EMBED_KIND === "devil" ? "#111111" : COLORS[ballIndex % COLORS.length]; }
+function drawGuideHandObject(center, angle, ballIndex, p1 = null, p2 = null) {
+    const color = guideHandstickColor(ballIndex);
+    if (GUIDE_EMBED_KIND === "hand") {
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, 13, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#1a202c";
+        ctx.stroke();
+    } else if (p1 && p2) {
+        drawLineEx(p1, p2, 8, color);
+    } else {
+        draw_flying_handstick(center, angle, color);
+    }
+}
+
+let currentSpeed = 1.0;
+let currentHeight = 1.0;
+
+// センタースティック用変数
+let table = null;
+let g_balls = 0;
+let g_seq = [];
+let g_n = 0;
+let T = 0;
+let g_isAsync = false; 
+
+// ハンドスティック用変数
+let handTable = null;
+let g_handBalls = 0;
+let g_handSeq = [];
+let g_handN = 0;
+let handT = 0;
+let g_handIsAsync = false; 
+
+let animationFrameId = null;
+let lastTimestamp = 0;
+let virtualTime = 0;
+let g_scale = 1.0; 
+
+let g_leftHand = { x: 340, y: 400 };
+let g_rightHand = { x: 460, y: 400 };
+
+const canvas = document.getElementById("simCanvas");
+const ctx = canvas.getContext("2d");
+
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recordStartTime = 0;
+let recordDuration = 0;
+let recordWarmupDuration = 0;
+let recordingStarted = false;
+let logicalTimeAccumulator = 0;
+
+// =====================================
+// 座標・角度取得関数
+// =====================================
+function get_data(id) {
+    const data = {
+        "-4": { x: 300, y: 460, angle: 50 * DEG_TO_RAD },
+        "-3": { x: 340, y: 400, angle: 50 * DEG_TO_RAD },
+        "-2": { x: 340, y: 400, angle: -50 * DEG_TO_RAD },
+        "-1": { x: 400, y: 460, angle: -50 * DEG_TO_RAD },
+        "f-1": { x: 340, y: 400, angle: 90 * DEG_TO_RAD },
+        "f0": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },
+        "f1": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
+        "f-1o": { x: 340, y: 400, angle: 90 * DEG_TO_RAD },
+        "f-1i": { x: 340, y: 400, angle: 90 * DEG_TO_RAD },
+        "f0l": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },
+        "f0r": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },
+        "f1o": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
+        "f1i": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
+         "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },
+         "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },
+         "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
+         "4": { x: 500, y: 460, angle: -50 * DEG_TO_RAD },
+         // sp: スティックを鉛直(0deg)で受ける専用状態
+         "sp-1": { x: 340, y: 350, angle: 0 * DEG_TO_RAD },
+         "sp1": { x: 460, y: 350, angle: 0 * DEG_TO_RAD }
+    };
+    return data[id] || { x: 400, y: 460, angle: 0 };
+}
+
+function getAsyncThrowCount(sv) {
+    return (sv % 4 === 0) ? sv / 4 : (sv + 2) / 4;
+}
+
+// =====================================
+// 同期・非同期 状態遷移のルール表
+// =====================================
+const SYNC_PATTERN_TRANSITIONS = {
+    "-2al":  { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
+    "-2ar":  { "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 } },
+    "2al":   { "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 } },
+    "2ar":   { "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 } },
+    "-2axl": { "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 } },
+    "-2axr": { "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 } },
+    "2axl":  { "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 } },
+    "2axr":  { "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 } }
+};
+
+const ASYNC_PATTERN_TRANSITIONS = {
+    "-2nl": { "-2nl": { to: -3 }, "2nl":  { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l":  { to: -1 } },
+    "2nl": { "-2nl": { to: -1 }, "2nl":  { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l":  { to: -1 } },
+    "-(2n-1)l": { "-2nr": { to: 3 }, "2nr":  { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r":  { to: 1 } },
+    "(2n-1)l": { "-2nr": { to: 1 }, "2nr":  { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r":  { to: 1 } },
+    "-2nr": { "-2nr": { to: 3 }, "2nr":  { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r":  { to: 1 } },
+    "2nr": { "-2nr": { to: 1 }, "2nr":  { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r":  { to: 1 } },
+    "-(2n-1)r": { "-2nl": { to: -3 }, "2nl":  { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l":  { to: -1 } },
+    "(2n-1)r": { "-2nl": { to: -1 }, "2nl":  { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l":  { to: -1 } }
+};
+
+const F_TRANSITION_MAP = {
+    "2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" } },
+    "-2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" } },
+    "2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" } },
+    "-2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" } },
+    "2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" } },
+    "-2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" } },
+    "2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" } },
+    "-2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" } },
+    "f2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "2axr": { to: "f0r" }, "-2axl": { to: "f0l" }, "-2ar": { to: "3" }, "2ar": { to: "2" } },
+    "f-2axl": { "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "2axr": { to: "f0r" }, "-2axl": { to: "f0l" }, "-2ar": { to: "3" }, "2ar": { to: "2" } },
+    "f2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "2axl": { to: "f0l" }, "-2axl": { to: "f0r" }, "-2al": { to: "-3" }, "2al": { to: "-2" } },
+    "f-2axr": { "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "2axl": { to: "f0l" }, "-2axl": { to: "f0r" }, "-2al": { to: "-3" }, "2al": { to: "-2" } },
+    "f2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "-2al": { to: "f-1o" }, "2al": { to: "f-1i" }, "-2axl": { to: "f0r" }, "2axl": { to: "f0l" } },
+    "f-2al": { "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "-2al": { to: "f-1o" }, "2al": { to: "f-1i" }, "-2axl": { to: "f0r" }, "2axl": { to: "f0l" } },
+    "f2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "-2ar": { to: "f1o" }, "2ar": { to: "f1i" }, "-2axr": { to: "f0l" }, "2axr": { to: "f0r" } },
+    "f-2ar": { "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "-2ar": { to: "f1o" }, "2ar": { to: "f1i" }, "-2axr": { to: "f0l" }, "2axr": { to: "f0r" } }
+};
+
+const AF_TRANSITION_MAP = {
+    "(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" } },
+    "-(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" } },
+    "(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" } },
+    "-(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" } },
+    "2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" } },
+    "-2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" } },
+    "2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" } },
+    "-2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" } },
+    "f(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "(2n-1)r": { to: "f0r" }, "-(2n-1)l": { to: "f0l" }, "-2nr": { to: "3" }, "2nr": { to: "2" } },
+    "f-(2n-1)l": { "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "(2n-1)r": { to: "f0r" }, "-(2n-1)l": { to: "f0l" }, "-2nr": { to: "3" }, "2nr": { to: "2" } },
+    "f(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "(2n-1)l": { to: "f0l" }, "-(2n-1)l": { to: "f0r" }, "-2nl": { to: "-3" }, "2nl": { to: "-2" } },
+    "f-(2n-1)r": { "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "(2n-1)l": { to: "f0l" }, "-(2n-1)l": { to: "f0r" }, "-2nl": { to: "-3" }, "2nl": { to: "-2" } },
+    "f2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "-2nl": { to: "f-1o" }, "2nl": { to: "f-1i" }, "-(2n-1)l": { to: "f0r" }, "(2n-1)l": { to: "f0l" } },
+    "f-2nl": { "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "-2nl": { to: "f-1o" }, "2nl": { to: "f-1i" }, "-(2n-1)l": { to: "f0r" }, "(2n-1)l": { to: "f0l" } },
+    "f2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "-2nr": { to: "f1o" }, "2nr": { to: "f1i" }, "-(2n-1)r": { to: "f0l" }, "(2n-1)r": { to: "f0r" } },
+    "f-2nr": { "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "-2nr": { to: "f1o" }, "2nr": { to: "f1i" }, "-(2n-1)r": { to: "f0l" }, "(2n-1)r": { to: "f0r" } }
+};
+
+// =====================================
+// sp 状態遷移表
+// sp が付いた投げは、次の到達状態を sp-1 / sp1 にして
+// get_data() の angle=0 により鉛直方向を向く。
+// ※ 元のテキスト表で同じキーが複数行に分かれていた箇所は、
+//    JavaScript の重複キー上書きを避けるため1つに統合している。
+// =====================================
+const SP_TRANSITIONS_MAP = {
+    "-2al":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "-2ar":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "2al":   { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axl": { to: "sp-1" } },
+    "2ar":   { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "-2axl": { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "-2axr": { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "2axl":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "2axr":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axr": { to: "sp-1" } },
+
+    "f-2al":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "f-2ar":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "f2al":   { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axl": { to: "sp-1" } },
+    "f2ar":   { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "f-2axl": { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp1" },  "sp2axr": { to: "sp1" } },
+    "f-2axr": { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp-1" }, "sp2axl": { to: "sp-1" } },
+    "f2axl":  { "sp-2ar": { to: "sp1" },  "sp2ar": { to: "sp1" },  "sp-2axr": { to: "sp-1" }, "sp2axr": { to: "sp1" } },
+    "f2axr":  { "sp-2al": { to: "sp-1" }, "sp2al": { to: "sp-1" }, "sp-2axl": { to: "sp1" },  "sp2axr": { to: "sp-1" } },
+
+    // sp -> 通常 / f の遷移。重複していた行は統合済み。
+    "sp-2al": {
+        "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 },
+        "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }
+    },
+    "sp-2ar": {
+        "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 },
+        "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }
+    },
+    "sp2al": {
+        "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 },
+        "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }, "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }
+    },
+    "sp2ar": {
+        "-2ar": { to: 1 }, "2ar": { to: 2 }, "-2axr": { to: -1 }, "2axr": { to: 1 },
+        "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }, "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }
+    },
+    "sp-2axl": {
+        "-2ar": { to: 3 }, "2ar": { to: 4 }, "-2axr": { to: 4 }, "2axr": { to: 1 },
+        "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }
+    },
+    "sp-2axr": {
+        "-2al": { to: -3 }, "2al": { to: -4 }, "-2axl": { to: -4 }, "2axl": { to: -1 },
+        "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }
+    },
+    "sp2axr": {
+        "-2al": { to: -1 }, "2al": { to: -2 }, "-2axl": { to: 1 }, "2axl": { to: -1 },
+        "f2axl": { to: "f0" }, "f-2axl": { to: "f0" }, "f2al": { to: "f-1" }, "f-2al": { to: "f-1" }
+    },
+    "sp2axl": {
+        "f2axr": { to: "f0" }, "f-2axr": { to: "f0" }, "f2ar": { to: "f1" }, "f-2ar": { to: "f1" }
+    }
+};
+
+// =====================================
+// sp 非同期状態遷移表
+// 同期版 SP_TRANSITIONS_MAP と同じ対応関係を、
+// 2a -> 2n / 2ax -> (2n-1) に置き換えた非同期専用表。
+// =====================================
+const SP_ASYNC_TRANSITIONS_MAP = {
+    "-2nl":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "-2nr":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "2nl":   { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)l": { to: "sp-1" } },
+    "2nr":   { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "-(2n-1)l": { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "-(2n-1)r": { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "(2n-1)l":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "(2n-1)r":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)r": { to: "sp-1" } },
+
+    "f-2nl":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "f-2nr":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "f2nl":   { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)l": { to: "sp-1" } },
+    "f2nr":   { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "f-(2n-1)l": { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp1" },  "sp(2n-1)r": { to: "sp1" } },
+    "f-(2n-1)r": { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp-1" }, "sp(2n-1)l": { to: "sp-1" } },
+    "f(2n-1)l":  { "sp-2nr": { to: "sp1" },  "sp2nr": { to: "sp1" },  "sp-(2n-1)r": { to: "sp-1" }, "sp(2n-1)r": { to: "sp1" } },
+    "f(2n-1)r":  { "sp-2nl": { to: "sp-1" }, "sp2nl": { to: "sp-1" }, "sp-(2n-1)l": { to: "sp1" },  "sp(2n-1)r": { to: "sp-1" } },
+
+    // sp -> 通常 / f の遷移。重複していた行は統合済み。
+    "sp-2nl": {
+        "-2nl": { to: -3 }, "2nl": { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l": { to: -1 },
+        "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }
+    },
+    "sp-2nr": {
+        "-2nr": { to: 3 }, "2nr": { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r": { to: 1 },
+        "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }
+    },
+    "sp2nl": {
+        "-2nl": { to: -1 }, "2nl": { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l": { to: -1 },
+        "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }, "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }
+    },
+    "sp2nr": {
+        "-2nr": { to: 1 }, "2nr": { to: 2 }, "-(2n-1)r": { to: -1 }, "(2n-1)r": { to: 1 },
+        "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }, "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }
+    },
+    "sp-(2n-1)l": {
+        "-2nr": { to: 3 }, "2nr": { to: 4 }, "-(2n-1)r": { to: 4 }, "(2n-1)r": { to: 1 },
+        "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }
+    },
+    "sp-(2n-1)r": {
+        "-2nl": { to: -3 }, "2nl": { to: -4 }, "-(2n-1)l": { to: -4 }, "(2n-1)l": { to: -1 },
+        "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }
+    },
+    "sp(2n-1)r": {
+        "-2nl": { to: -1 }, "2nl": { to: -2 }, "-(2n-1)l": { to: 1 }, "(2n-1)l": { to: -1 },
+        "f(2n-1)l": { to: "f0" }, "f-(2n-1)l": { to: "f0" }, "f2nl": { to: "f-1" }, "f-2nl": { to: "f-1" }
+    },
+    "sp(2n-1)l": {
+        "f(2n-1)r": { to: "f0" }, "f-(2n-1)r": { to: "f0" }, "f2nr": { to: "f1" }, "f-2nr": { to: "f1" }
+    }
+};
+
+const SYNC_ANGLE_RULES = {
+    "-4": { "4": "-(100+(a-1)*180)", "-2": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)", "1": "-180a" },
+     "4": { "-4": "(100+(a-1)*180)", "2": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a" },
+    "-3": { "-4": "180a", "-1": "(80+(a-1)*180)", "1": "180a" , "-3": "180a"},
+     "3": { "4": "-180a", "1": "-(80+(a-1)*180)", "-1": "-180a"  , "3": "-180a"},
+    "-2": { "-1": "-180a", "1": "-(80+(a-1)*180)" , "-2": "-180a"},
+     "2": { "1": "180a", "-1": "(80+(a-1)*180)" , "2": "180a"},
+    "-1": { "-4": "(100+(a-1)*180)", "1": "(100+(a-1)*180)", "-1": "180a", "2": "(100+(a-1)*180)", "-3": "(100+(a-1)*180)" },
+     "1": { "4": "-(100+(a-1)*180)", "-1": "-(100+(a-1)*180)","1": "-180a", "-2": "-(100+(a-1)*180)", "3": "-(100+(a-1)*180)" }
+};
+
+const ASYNC_ANGLE_RULES = {
+    "-4": { "4": "-(100+(n-1)*180)", "-2": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)", "1": "-180n" },
+     "4": { "-4": "(100+(n-1)*180)", "2": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n" },
+    "-3": { "-4": "180n", "-1": "(80+(n-1)*180)", "1": "180n" , "-3": "180n"},
+     "3": { "4": "-180n", "1": "-(80+(n-1)*180)", "-1": "-180n"  , "3": "-180n"},
+    "-2": { "-1": "-180n", "1": "-(80+(n-1)*180)" , "-2": "-180n"},
+     "2": { "1": "180n", "-1": "(80+(n-1)*180)" , "2": "180n"},
+    "-1": { "-4": "(100+(n-1)*180)", "1": "(100+(n-1)*180)", "-1": "180n", "2": "(100+(n-1)*180)", "-3": "(100+(n-1)*180)" },
+     "1": { "4": "-(100+(n-1)*180)", "-1": "-(100+(n-1)*180)","1": "-180n",  "-2": "-(100+(n-1)*180)", "3": "-(100+(n-1)*180)" }
+};
+
+
+// =====================================
+// sp 専用角度遷移表（ユーザー指定値をそのまま反映／同期・非同期共通）
+// get_data() の sp-1 / sp1 の基準姿勢は 0°（鉛直）のまま、
+// ここでは「遷移元 -> 遷移先」で飛行中の総回転角を決める。
+// =====================================
+const SP_ANGLE_RULES = {
+    "-4": { "sp-1": "-(50+(n-1)*180)", "sp1": "-(50+(n-1)*180)" },
+     "4": { "sp1": "(50+(n-1)*180)", "sp-1": "(50+(n-1)*180)" },
+    "-3": { "sp-1": "-(50+(n-1)*180)", "sp1": "-(50+(n-1)*180)" },
+     "3": { "sp1": "(50+(n-1)*180)", "sp-1": "(50+(n-1)*180)" },
+    "-2": { "sp-1": "(50+(n-1)*180)", "sp1": "(50+(n-1)*180)" },
+     "2": { "sp1": "-(50+(n-1)*180)", "sp-1": "-(50+(n-1)*180)" },
+    "-1": { "sp-1": "(50+(n-1)*180)", "sp1": "(50+(n-1)*180)" },
+     "1": { "sp1": "-(50+(n-1)*180)", "sp-1": "-(50+(n-1)*180)" },
+
+     "sp-1": { "4": "-(50+(n-1)*180)","-4": "(50+(n-1)*180)","-3": "(50+(n-1)*180)", "-2": "-(50+(n-1)*180)", "-1": "-(50+(n-1)*180)", "1": "(50+(n-1)*180)" },
+     "sp1": { "-4": "(50+(n-1)*180)","4": "-(50+(n-1)*180)","3": "-(50+(n-1)*180)", "2": "(50+(n-1)*180)", "1": "(50+(n-1)*180)", "-1": "-(50+(n-1)*180)" }
+};
+
+const F_ANGLE_RULES = {
+    "-4": { "f-1": "-(140+(a-1)*180)", "f0": "-(140+(a-1)*180)" },
+    "4": { "f1": "(140+(a-1)*180)", "f0": "(140+(a-1)*180)" },
+    "-3": { "f-1": "(140+(a-1)*180)", "f0": "(140+(a-1)*180)" },
+    "3": { "f1": "-(140+(a-1)*180)", "f0": "-(140+(a-1)*180)" },
+    "-2": { "f-1": "-(220+(a-1)*180)", "f0": "-(220+(a-1)*180)" },
+    "2": { "f1": "(220+(a-1)*180)", "f0": "(220+(a-1)*180)" },
+    "-1": { "f-1": "-(220+(a-1)*180)", "f0": "(140+(a-1)*180)", "f1": "(140+(a-1)*180)" },
+    "1": { "f1": "(220+(a-1)*180)", "f0": "-(140+(a-1)*180)", "f-1": "-(140+(a-1)*180)" },
+    "f0": { "f0": "0", "f-1": "0", "f1": "0", "f0l": "0", "f0r": "0", "f-1o": "0", "f1o": "0", "f-1i": "0", "f1i": "0" },
+    "f-1": { "f0": "0", "f-1": "0", "f1": "0", "f0l": "0", "f0r": "0", "f-1o": "0", "f1o": "0", "f-1i": "0", "f1i": "0" },
+    "f1": { "f0": "0", "f-1": "0", "f1": "0", "f0l": "0", "f0r": "0", "f-1o": "0", "f1o": "0", "f-1i": "0", "f1i": "0" },
+    "f0l": { "f0": "180a", "f-1": "180a", "f1": "180a", "-4": "(140+(a-1)*180)", "1": "(140+(a-1)*180)", "-1": "(220+(a-1)*180)", "2": "(140+(a-1)*180)", "-3": "(220+(a-1)*180)" },
+    "f0r": { "f0": "-180a", "f-1": "-180a", "f1": "-180a", "4": "-(140+(a-1)*180)", "-1": "-(140+(a-1)*180)", "1": "-(220+(a-1)*180)", "-2": "-(140+(a-1)*180)", "3": "-(220+(a-1)*180)" },
+    "f-1o": { "f0": "180a", "f-1": "180a", "f1": "180a", "-4": "(140+(a-1)*180)", "-1": "(220+(a-1)*180)", "1": "(140+(a-1)*180)", "-3": "180a" },
+    "f1o": { "f0": "-180a", "f1": "-180a", "f-1": "-180a", "4": "-(140+(a-1)*180)", "1": "-(220+(a-1)*180)", "-1": "-(140+(a-1)*180)", "3": "-180a" },
+    "f-1i": { "f0": "-180a", "f1": "-180a", "f-1": "-180a", "1": "-(220+(a-1)*180)", "-1": "-(140+(a-1)*180)", "-2": "-(140+(a-1)*180)" },
+    "f1i": { "f0": "180a", "f-1": "180a", "f1": "180a", "-1": "(220+(a-1)*180)", "1": "(140+(a-1)*180)", "2": "(140+(a-1)*180)" }
+};
+
+// =====================================
+// サイトスワップ構文解析
+// =====================================
+function parse(s) {
+    let i = 0;
+    let seq = [];
+    let isAsync = false;
+    
+    if (s.indexOf(',') === -1) {
+        isAsync = true;
+        let async_beats = [];
+
+        let normalized = s.replace(/([0-9a-zA-Z])\(r(-?[0-9]+)\)/g, "$1r$2 ");
+        normalized = normalized.replace(/\(f\)\(r(-?[0-9]+)\)([0-9a-zA-Z])/g, "f$2r$1 ");
+        // 括弧プレフィックスを「直後の1投」に適用する。例: (f)2 -> f2, (sp)2 -> sp2
+        // sp は s + p ではなく専用の propeller=6 として扱う。
+        // (sp) / (f) は「直後の1投だけ」に付くプレフィックスとして先に展開する。
+        // 例: 2(sp)22(sp)2 -> 2 / sp2 / 2 / sp2
+        normalized = normalized.replace(/\(sp\)(?=-?(?:10|[0-9a-zA-Z]))/g, "sp");
+        normalized = normalized.replace(/\(f\)(?=-?(?:10|[0-9a-zA-Z]))/g, "f");
+        normalized = normalized.replace(/[\(\)]/g, ""); 
+
+        let parseSingleAsyncThrow = (tokenIndex, tokens) => {
+            if (tokenIndex >= tokens.length) return null;
+            let token = tokens[tokenIndex];
+            
+            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null };
+            
+            if (token.startsWith('-')) {
+                th.is_minus = true;
+                token = token.substring(1);
+            }
+            if (token.startsWith('sp')) {
+                th.propeller = 6;
+                token = token.substring(2);
+            } else if (token.startsWith('f')) {
+                th.propeller = 5;
+                token = token.substring(1);
+            }
+            
+            // アシンクロでは「10」と「a」がどちらもサイトスワップ値10。
+            // 10を1と0の2ビートに分割しないよう、先に2桁の10を判定する。
+            let numMatch = token.match(/^10|^[0-9a-zA-Z]/);
+            if (!numMatch) return null;
+            const valueToken = numMatch[0];
+            if (valueToken === '10') {
+                th.val = 10;
+            } else if (/^[0-9]$/.test(valueToken)) {
+                th.val = parseInt(valueToken);
+            } else {
+                th.val = valueToken.toLowerCase().charCodeAt(0) - 87;
+            }
+            token = token.substring(valueToken.length); 
+            
+            if (token.includes('x')) th.cross = 1;
+            if (token.includes('*')) th.hs = HS_HAND1;
+            if (token.includes('+')) th.hs = HS_HAND2;
+            
+            let rMatch = token.match(/r(-?[0-9]*)/);
+            if (rMatch) {
+                if (rMatch[1] !== "" && rMatch[1] !== "-") {
+                    th.rot = parseInt(rMatch[1]);
+                }
+            }
+            
+            if (th.cross === null) {
+                th.cross = (th.val % 2 !== 0) ? 1 : 0;
+            }
+            if (th.propeller === 5 && th.val % 2 !== 0) {
+                th.cross = 1;
+            }
+            th.val = th.val * 2; 
+            
+            return th;
+        };
+
+        // アシンクロ multiplex 対応。
+        // [2 3(r1)] のような [...] 全体を「1ビート」として扱う。
+        // 括弧正規化後は [2 3r1 ] の形になるため、[] の境界を先に保持して解析する。
+        // 「10」は1・0ではなく1つのサイトスワップ値、a は従来どおり10を表す。
+        const throwRegex = /-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
+        const beatRegex = /\[[^\]]*\]|-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
+        const beatTokens = normalized.match(beatRegex) || [];
+
+        for (const beatToken of beatTokens) {
+            if (beatToken.startsWith('[')) {
+                const inner = beatToken.slice(1, -1);
+                const multiplexTokens = inner.match(throwRegex) || [];
+                const multiplexThrows = [];
+                for (let k = 0; k < multiplexTokens.length; k++) {
+                    const th = parseSingleAsyncThrow(k, multiplexTokens);
+                    if (th) multiplexThrows.push(th);
+                }
+                if (multiplexThrows.length > 0) async_beats.push(multiplexThrows);
+            } else {
+                const th = parseSingleAsyncThrow(0, [beatToken]);
+                if (th) async_beats.push([th]);
+            }
+        }
+
+        if (async_beats.length === 0) return { seq: [], isAsync: true };
+        if (async_beats.length % 2 !== 0) {
+            let copy = async_beats.map(beat => beat.map(th => ({...th})));
+            async_beats = async_beats.concat(copy);
+        }
+        for (let j = 0; j < async_beats.length; j++) {
+            let b_throws = async_beats[j];
+            let empty_th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: 0, rot: null };
+            let clone_throws = b_throws.map(th => ({...th}));
+            if (j % 2 === 0) {
+                seq.push({ throws_a: clone_throws, throws_b: [empty_th] });
+            } else {
+                seq.push({ throws_a: [empty_th], throws_b: clone_throws });
+            }
+        }
+        return { seq: seq, isAsync: isAsync };
+    }
+
+    isAsync = false;
+    let pending_prefix = '';
+    while (i < s.length) {
+        if (s[i] === 's' || s[i] === 't' || s[i] === 'p') {
+            pending_prefix = s[i];
+            i++;
+            if (pending_prefix === 's' && i < s.length && s[i] === 'r') {
+                pending_prefix = 'sr';
+                i++;
+            }
+            continue;
+        }
+
+        if (s[i] === '(') {
+            i++;
+            let t = { throws_a: [], throws_b: [] };
+            
+            let p_mode = 0;
+            if (pending_prefix === 'p') p_mode = 1;
+            if (pending_prefix === 't') p_mode = 2;
+            if (pending_prefix === 's') p_mode = 3; 
+            if (pending_prefix === 'sr') p_mode = 4;
+            pending_prefix = ''; 
+
+            let parseSingleThrow = () => {
+                let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null };
+                // sp は2文字で1つの接頭記号。p より先に判定する。
+                if (i + 1 < s.length && s[i] === 's' && s[i + 1] === 'p') { th.propeller = 6; i += 2; }
+                else if (i < s.length && s[i] === 'p') { th.propeller = 1; i++; } 
+                else if (i < s.length && s[i] === 't') { th.propeller = 2; i++; }
+                else if (i < s.length && s[i] === 'f') { th.propeller = 5; i++; } 
+                
+                if (i < s.length && s[i] === '-') { th.is_minus = true; i++; } 
+                
+                let hasNum = false;
+                // シンクロでは「10」も「a」も同じ値10として扱う。
+                if (s[i] === 'a' || s[i] === 'A') {
+                    th.val = 10;
+                    i++;
+                    hasNum = true;
+                } else {
+                    while (i < s.length && s[i] >= '0' && s[i] <= '9') { 
+                        th.val = th.val * 10 + parseInt(s[i]); 
+                        i++; 
+                        hasNum = true;
+                    }
+                }
+                if (!hasNum) return null;
+
+                while (i < s.length && s[i] !== ' ' && s[i] !== ',' && s[i] !== ')' && s[i] !== ']') {
+                    if (s[i] === 'x') { th.cross = 1; i++; }
+                    else if (s[i] === '*') { if (th.val === 0) th.hs = HS_HAND1; i++; }
+                    else if (s[i] === '+') { th.hs = HS_HAND2; i++; }
+                    else if (s[i] === '^') { i++; if (i < s.length && s[i] >= '0' && s[i] <= '9') { th.mode = parseInt(s[i]); i++; } }
+                    else if (s[i] === 'r') { 
+                        i++; 
+                        let r_sign = 1;
+                        if (i < s.length && s[i] === '-') { r_sign = -1; i++; }
+                        let r_val = 0; let has_r = false;
+                        while(i < s.length && s[i] >= '0' && s[i] <= '9') { 
+                            r_val = r_val * 10 + parseInt(s[i]); 
+                            i++; 
+                            has_r = true; 
+                        }
+                        if(has_r) th.rot = r_val * r_sign; 
+                    }
+                    else break;
+                }
+                return th;
+            };
+
+            let readSide = () => {
+                let throws = [];
+                while(i < s.length && s[i] === ' ') i++; 
+                
+                if (i < s.length && s[i] === '[') {
+                    i++; 
+                    while(i < s.length && s[i] !== ']') {
+                        while(i < s.length && s[i] === ' ') i++; 
+                        if (s[i] === ']') break;
+                        let th = parseSingleThrow();
+                        if (th) throws.push(th);
+                        else i++; 
+                    }
+                    if (i < s.length && s[i] === ']') i++; 
+                } else {
+                    let th = parseSingleThrow();
+                    if (th) throws.push(th);
+                }
+                return throws;
+            };
+
+            t.throws_a = readSide();
+            
+            while(i < s.length && s[i] === ' ') i++;
+            if (i < s.length && s[i] === ',') {
+                i++;
+                t.throws_b = readSide();
+            }
+
+            while (i < s.length && s[i] !== ')') {
+                if (s[i] === 'r') {
+                    let applyProp4 = (th) => { if (th.val === 2 && th.cross === 1) th.propeller = 4; };
+                    t.throws_a.forEach(applyProp4);
+                    t.throws_b.forEach(applyProp4);
+                    i++;
+                } else {
+                    i++; 
+                }
+            }
+            if (i < s.length && s[i] === ')') i++;
+
+            if (p_mode === 3 || p_mode === 4) {
+                let applyProp = (th) => { if (th.val === 2 && th.cross === 1) th.propeller = p_mode; };
+                t.throws_a.forEach(applyProp);
+                t.throws_b.forEach(applyProp);
+            }
+
+            if (i < s.length && s[i] === 'r') {
+                let applyProp4 = (th) => { if (th.val === 2 && th.cross === 1) th.propeller = 4; };
+                t.throws_a.forEach(applyProp4);
+                t.throws_b.forEach(applyProp4);
+                i++;
+            }
+
+            seq.push(t);
+        } else { i++; }
+    }
+    return { seq: seq, isAsync: isAsync };
+}
+
+function object_count(seq) {
+    let sum = 0;
+    for (let i = 0; i < seq.length; i++) { 
+        seq[i].throws_a.forEach(th => sum += th.val);
+        seq[i].throws_b.forEach(th => sum += th.val);
+    }
+    return Math.floor(sum / (2 * seq.length));
+}
+
+// =====================================
+// 軌道構築
+// =====================================
+function build(seq, balls, localT, isAsync) {
+    let outTable = Array.from({ length: balls }, () => Array.from({ length: localT }, () => ({ value: -1, from: -1, to: -1, angleExpr: "", action_str: "", propeller: 0, rot: null, handSide: 0 })) );
+    
+    let ex = [];
+    for (let t = 0; t < localT; t++) { 
+        let src = seq[t % seq.length];
+        ex.push({ 
+            throws_a: src.throws_a.map(th => ({...th})), 
+            throws_b: src.throws_b.map(th => ({...th})) 
+        }); 
+    }
+
+    let ball = 0;
+    for (let start_t = 0; start_t < localT; start_t++) {
+        for (let a_idx = 0; a_idx < ex[start_t].throws_a.length; a_idx++) {
+            if (ex[start_t].throws_a[a_idx].val > 0) {
+                track_ball(start_t, 0, a_idx);
+                ball++;
+            }
+        }
+        for (let b_idx = 0; b_idx < ex[start_t].throws_b.length; b_idx++) {
+            if (ex[start_t].throws_b[b_idx].val > 0) {
+                track_ball(start_t, 1, b_idx);
+                ball++;
+            }
+        }
+    }
+
+    function track_ball(start_t, start_side, start_idx) {
+        let t = start_t;
+        let side = start_side;
+        let is_first = true;
+
+        while (t < localT) {
+            let tr = ex[t];
+            let current_throws = (side === 0) ? tr.throws_a : tr.throws_b;
+            let picked_idx = -1;
+
+            if (is_first) {
+                picked_idx = start_idx;
+                is_first = false;
+            } else {
+                for (let i = 0; i < current_throws.length; i++) {
+                    if (current_throws[i].val > 0) {
+                        picked_idx = i;
+                        break;
+                    }
+                }
+            }
+
+            if (picked_idx === -1) break;
+
+            let th = current_throws[picked_idx];
+            let value = th.val;
+            let propeller = th.propeller;
+            let cross = th.cross;
+            let is_minus = th.is_minus;
+
+            th.val = -1; 
+
+            let action_str;
+            if (isAsync) {
+                let action_prefix = is_minus ? "-" : "";
+                let action_type = cross ? "(2n-1)" : "2n";
+                action_str = action_prefix + action_type + (side === 0 ? "l" : "r");
+            } else {
+                let action_prefix = is_minus ? "-2" : "2";
+                let action_cross = cross ? "ax" : "a";
+                action_str = action_prefix + action_cross + (side === 0 ? "l" : "r");
+            }
+
+            let from = (side === 0) ? (cross ? -1 : -2) : (cross ? 1 : 2);
+            let to = (side === 0) ? (cross ? 1 : -2) : (cross ? -1 : 2);
+            let rot = th.rot;
+            let hs = th.hs;
+
+            outTable[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot, hs, handSide: side };
+
+            t += Math.floor(value / 2);
+            if (to === -1 || to === 1) side ^= 1;
+        }
+    }
+
+    for (let b = 0; b < balls; b++) {
+        let path = [];
+        for (let t = 0; t < localT; t++) {
+            if (outTable[b][t].value > 0) path.push(t);
+        }
+        if (path.length === 0) continue;
+
+        for (let i = 0; i < path.length; i++) {
+            let curr_t = path[i];
+            let next_t = path[(i + 1) % path.length];
+            let curr_throw = outTable[b][curr_t];
+            let next_throw = outTable[b][next_t];
+
+            let curr_key = curr_throw.action_str;
+            let mapped_curr_key = curr_key;
+            if (isAsync) mapped_curr_key = mapped_curr_key.replace(/\(2n\-1\)/g, "2ax").replace(/2n/g, "2a");
+            if (curr_throw.propeller === 5) mapped_curr_key = "f" + mapped_curr_key;
+            else if (curr_throw.propeller === 6) mapped_curr_key = "sp" + mapped_curr_key;
+
+            let next_key = next_throw.action_str;
+            let mapped_next_key = next_key;
+            if (isAsync) mapped_next_key = mapped_next_key.replace(/\(2n\-1\)/g, "2ax").replace(/2n/g, "2a");
+            if (next_throw.propeller === 5) mapped_next_key = "f" + mapped_next_key;
+            else if (next_throw.propeller === 6) mapped_next_key = "sp" + mapped_next_key;
+
+            let af_curr_key = curr_throw.propeller === 5 ? "f" + curr_key : curr_key;
+            let af_next_key = next_throw.propeller === 5 ? "f" + next_key : next_key;
+
+            let transitionTable = isAsync ? ASYNC_PATTERN_TRANSITIONS : SYNC_PATTERN_TRANSITIONS;
+
+            // sp 遷移表を最優先で適用する。
+            // 同期は SP_TRANSITIONS_MAP、非同期は SP_ASYNC_TRANSITIONS_MAP を直接参照する。
+            // 非同期側は 2n / (2n-1) の表記を正規化せず、そのまま専用表へ渡す。
+            const spTransitionTable = isAsync ? SP_ASYNC_TRANSITIONS_MAP : SP_TRANSITIONS_MAP;
+            let spCurrKey = isAsync ? curr_key : mapped_curr_key;
+            let spNextKey = isAsync ? next_key : mapped_next_key;
+            if (curr_throw.propeller === 5) spCurrKey = "f" + spCurrKey;
+            else if (curr_throw.propeller === 6) spCurrKey = "sp" + spCurrKey;
+            if (next_throw.propeller === 5) spNextKey = "f" + spNextKey;
+            else if (next_throw.propeller === 6) spNextKey = "sp" + spNextKey;
+
+            if (spTransitionTable[spCurrKey] && spTransitionTable[spCurrKey][spNextKey]) {
+                curr_throw.to = spTransitionTable[spCurrKey][spNextKey].to;
+            } else if (next_throw.propeller === 6) {
+                // (sp)2 のように sp が連続する場合も、次の sp 投げの側へ鉛直状態で接続する。
+                // 専用表に sp -> sp の組合せが無い場合の補完。
+                curr_throw.to = next_key.endsWith('l') ? "sp-1" : "sp1";
+            } else if (isAsync && AF_TRANSITION_MAP[af_curr_key] && AF_TRANSITION_MAP[af_curr_key][af_next_key]) {
+                curr_throw.to = AF_TRANSITION_MAP[af_curr_key][af_next_key].to;
+            } else if (!isAsync && F_TRANSITION_MAP[mapped_curr_key] && F_TRANSITION_MAP[mapped_curr_key][mapped_next_key]) {
+                curr_throw.to = F_TRANSITION_MAP[mapped_curr_key][mapped_next_key].to;
+            } else if (transitionTable[curr_key] && transitionTable[curr_key][next_key]) {
+                curr_throw.to = transitionTable[curr_key][next_key].to;
+            } else {
+                curr_throw.to = next_key.endsWith('l') ? -2 : 2;
+            }
+        }
+
+        for (let i = 0; i < path.length; i++) {
+            let prev_t = path[(i - 1 + path.length) % path.length];
+            let curr_t = path[i];
+            let prev_throw = outTable[b][prev_t];
+            let curr_throw = outTable[b][curr_t];
+
+            curr_throw.from = prev_throw.to;
+
+            let angleTable = isAsync ? ASYNC_ANGLE_RULES : SYNC_ANGLE_RULES;
+            let f = String(curr_throw.from);
+            let t = String(curr_throw.to);
+
+            // sp を含む状態遷移では、同期・非同期を問わず sp 専用角度表を最優先する。
+            // (2,sp2)(sp2,2) のような同期パターンでも左右で鏡像の回転規則が適用される。
+            // sp-1 / sp1 の基準姿勢は get_data() の 0°（鉛直）のまま。
+            if (SP_ANGLE_RULES[f] && SP_ANGLE_RULES[f][t] !== undefined) {
+                curr_throw.angleExpr = SP_ANGLE_RULES[f][t];
+            } else if (F_ANGLE_RULES[f] && F_ANGLE_RULES[f][t] !== undefined) {
+                curr_throw.angleExpr = F_ANGLE_RULES[f][t];
+            } else if (angleTable[f] && angleTable[f][t] !== undefined) {
+                curr_throw.angleExpr = angleTable[f][t];
+            } else {
+                curr_throw.angleExpr = isAsync ? ((Number(t) <= -1) ? "-180n" : "180n") : ((Number(t) <= -1) ? "-180a" : "180a");
+            }
+        }
+    }
+    return outTable;
+}
+
+function make_siteswap_table(centerInput, handInput) {
+    let parsedCenter = parse(centerInput);
+    g_seq = parsedCenter.seq;
+    g_isAsync = parsedCenter.isAsync;
+    g_n = g_seq.length;
+    
+    if (g_n === 0) return 0;
+    
+    let parsedHand = parse(handInput);
+    g_handSeq = parsedHand.seq;
+    g_handIsAsync = parsedHand.isAsync;
+    g_handN = g_handSeq.length;
+
+    // ハンドスティック専用記法：2+ は「フラーリッシュする2」として扱う。
+    // parse() では + を HS_HAND2 として保持しているので、ハンド側だけ
+    // propeller=5（フラーリッシュ）へ変換する。通常の 2 や他の数字には影響しない。
+    for (const beat of g_handSeq) {
+        for (const th of [...beat.throws_a, ...beat.throws_b]) {
+            if (th.val === 4 && th.hs === HS_HAND2) {
+                th.propeller = 5;
+            }
+        }
+    }
+
+    let max_val = 0;
+    for (let i = 0; i < g_n; i++) {
+        g_seq[i].throws_a.forEach(th => { if (th.val > max_val) max_val = th.val; });
+        g_seq[i].throws_b.forEach(th => { if (th.val > max_val) max_val = th.val; });
+    }
+    // 見切れ防止用のスケールは、センタースティックだけでなく
+    // ハンドスティック側のサイトスワップも含めて決める。
+    // 以前は g_seq の最大値だけを見ていたため、ハンド側だけ高い
+    // サイトスワップ（例: (8,8)）では g_scale が 1.0 のままとなり、
+    // ハンドスティックの頂点がキャンバス上端を越えることがあった。
+    let handMaxVal = 0;
+    for (let i = 0; i < g_handN; i++) {
+        g_handSeq[i].throws_a.forEach(th => { if (th.val > handMaxVal) handMaxVal = th.val; });
+        g_handSeq[i].throws_b.forEach(th => { if (th.val > handMaxVal) handMaxVal = th.val; });
+    }
+    let logicalMaxValue = g_isAsync ? max_val / 2.0 : max_val;
+    let logicalHandMaxValue = g_handIsAsync ? handMaxVal / 2.0 : handMaxVal;
+    logicalMaxValue = Math.max(logicalMaxValue, logicalHandMaxValue);
+
+    let maxThrowHeight = 10.0 * logicalMaxValue * logicalMaxValue * currentHeight;
+    let sceneMinY = Math.min(155.0, 460.0 - maxThrowHeight - 125.0);
+    let sceneMaxY = Math.max(530.0, 460.0 + 125.0);
+    let sceneMaxX = 400.0 + 125.0;
+    let topScale = 430.0 / (450.0 - sceneMinY);
+    let bottomScale = 130.0 / (sceneMaxY - 450.0);
+    let horizontalScale = 380.0 / (sceneMaxX - 400.0);
+    g_scale = Math.min(1.0, topScale, bottomScale, horizontalScale);
+
+    g_balls = object_count(g_seq);
+    let calcBalls = g_balls > 0 ? g_balls : 1;
+    T = g_n * calcBalls * 4;
+    table = build(g_seq, g_balls, T, g_isAsync);
+
+    g_handBalls = object_count(g_handSeq);
+    let calcHandBalls = g_handBalls > 0 ? g_handBalls : 1;
+    handT = g_handN * calcHandBalls * 4;
+    if (g_handN > 0) {
+        handTable = build(g_handSeq, g_handBalls, handT, g_handIsAsync);
+    } else {
+        handTable = null;
+        handT = 0;
+    }
+
+    return Math.max(T, handT);
+}
+
+// =====================================
+// モーション・描画系関数
+// =====================================
+function triwave(u) { return (u < 0.5) ? (u * 2.0) : (2.0 - u * 2.0); }
+function calcHandMotion(t, period, phase) {
+    let u = ((t + phase) % period) / period; if (u < 0) u += 1.0; 
+    let v = triwave(u); return -(v - 0.5) * 2.0;
+}
+function drawLineEx(p1, p2, thickness, color) {
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    ctx.lineWidth = thickness; ctx.strokeStyle = color; ctx.lineCap = "round"; ctx.stroke();
+}
+function drawTaperedStick(p1, p2, endThickness, centerThickness, color) {
+    let dx = p2.x - p1.x; let dy = p2.y - p1.y; let length = Math.sqrt(dx * dx + dy * dy);
+    if (length < 0.0001) return;
+    let nx = -dy / length; let ny = dx / length;
+    let steps = 20; let left = []; let right = [];
+    for (let i = 0; i <= steps; i++) {
+        let ratio = i / steps;
+        let distanceFromCenter = Math.abs(ratio - 0.5) * 2.0;
+        let thickness = centerThickness + (endThickness - centerThickness) * distanceFromCenter * distanceFromCenter;
+        let centerX = p1.x + dx * ratio; let centerY = p1.y + dy * ratio;
+        left.push({ x: centerX + nx * thickness / 2, y: centerY + ny * thickness / 2 });
+        right.push({ x: centerX - nx * thickness / 2, y: centerY - ny * thickness / 2 });
+    }
+    ctx.beginPath(); ctx.moveTo(left[0].x, left[0].y);
+    left.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+    right.reverse().forEach(point => ctx.lineTo(point.x, point.y));
+    ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+}
+function drawCenterMarker(center, angle) {
+    const size = 6; ctx.save(); ctx.translate(center.x, center.y); ctx.rotate(angle);
+    ctx.fillStyle = "#1a202c"; ctx.fillRect(-size / 2, -size / 2, size, size); ctx.restore();
+}
+function draw_hand1(center, a, side) {
+    let flare = 0.1;
+    let baseAngle = (side === 0) ? -flare : Math.PI + flare;
+    let angle = baseAngle + (side === 0 ? -a : a) * 0.35;
+
+    const L = 80.0;
+    const gripOffset = 15.0;
+
+    let dx = Math.cos(angle);
+    let dy = Math.sin(angle);
+
+    // 手を体側の端寄りで持つ
+    let p1 = {
+        x: center.x - dx * (L - gripOffset),
+        y: center.y - dy * (L - gripOffset)
+    };
+
+    let p2 = {
+        x: center.x + dx * gripOffset,
+        y: center.y + dy * gripOffset
+    };
+
+    drawLineEx(p1, p2, 8, "#4a5568");
+}
+function draw_hand2(center, a, side) {
+    let flare = 0.1;
+    let baseAngle = (side === 0) ? -flare : Math.PI + flare;
+    let angle = baseAngle + (side === 0 ? -a : a) * 0.35;
+
+    const L = 80.0;
+    const gripOffset = 15.0;
+
+    let dx = Math.cos(angle);
+    let dy = Math.sin(angle);
+
+    // 手を体側の端寄りで持つ
+    let p1 = {
+        x: center.x - dx * (L - gripOffset),
+        y: center.y - dy * (L - gripOffset)
+    };
+
+    let p2 = {
+        x: center.x + dx * gripOffset,
+        y: center.y + dy * gripOffset
+    };
+
+    drawLineEx(p1, p2, 8, "#4a5568");
+}
+function draw_stick(center, angle, color) {
+    const L = 140.0; let dx = Math.cos(angle) * (L / 2.0); let dy = Math.sin(angle) * (L / 2.0);
+    drawTaperedStick({ x: center.x - dx, y: center.y - dy }, { x: center.x + dx, y: center.y + dy }, 18, 8, color);
+    drawCenterMarker(center, angle);
+}
+function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
+
+function draw_horizontal_devilstick(center, angle, color) {
+    const L = 108.0; const PITCH_SCALE = 0.25; const TILT_ANGLE = 15 * Math.PI / 180; 
+    let x1_3d = L * Math.sin(angle); let y1_3d = L * Math.cos(angle);
+    let x2_3d = -L * Math.sin(angle); let y2_3d = -L * Math.cos(angle);
+    let cosT = Math.cos(TILT_ANGLE);
+    let scr_x1 = center.x + x1_3d; let scr_y1 = center.y + (y1_3d * cosT) * PITCH_SCALE;
+    let scr_x2 = center.x + x2_3d; let scr_y2 = center.y + (y2_3d * cosT) * PITCH_SCALE;
+    drawTaperedStick({ x: scr_x1, y: scr_y1 }, { x: scr_x2, y: scr_y2 }, 18, 8, color);
+    let dx = scr_x2 - scr_x1; let dy = scr_y2 - scr_y1; let len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.0001) { dx /= len; dy /= len; }
+    const cap = 14.0;
+    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x1 + dx * cap, y: scr_y1 + dy * cap }, 15, "#1a202c");
+    drawLineEx({ x: scr_x2, y: scr_y2 }, { x: scr_x2 - dx * cap, y: scr_y2 - dy * cap }, 15, "#1a202c");
+    drawCenterMarker(center, angle);
+}
+
+function draw_devilstick(center, angle, color) {
+    const L = 108.0;
+    let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
+    let x2 = center.x - L * Math.sin(angle); let y2 = center.y + L * Math.cos(angle);
+    drawTaperedStick({ x: x1, y: y1 }, { x: x2, y: y2 }, 18, 8, color);
+    let dx = x2 - x1; let dy = y2 - y1; let len = Math.sqrt(dx * dx + dy * dy);
+    if (len > 0.0001) { dx /= len; dy /= len; }
+    const cap = 16.0;
+    drawLineEx({ x: x1, y: y1 }, { x: x1 + dx * cap, y: y1 + dy * cap }, 14, "#1a202c");
+    drawLineEx({ x: x2, y: y2 }, { x: x2 - dx * cap, y: y2 - dy * cap }, 14, "#1a202c");
+    drawCenterMarker(center, angle);
+}
+
+function draw_flying_handstick(center, angle, color = "#4a5568") {
+    const L = 80.0;
+    let dx = Math.cos(angle); let dy = Math.sin(angle);
+    let p1 = { x: center.x - dx * (L/2), y: center.y - dy * (L/2) };
+    let p2 = { x: center.x + dx * (L/2), y: center.y + dy * (L/2) };
+    drawLineEx(p1, p2, 8, color);
+}
+
+function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
+    if (!balls) return;
+    for (let t = 0; t < localT; t++) {
+        let c = balls[t];
+        if (!c || c.value <= 0) continue;
+
+        let startTime = t * BEAT_TIME;
+        let duration = (c.value / 2.0) * BEAT_TIME;
+        let endTime = startTime + duration;
+
+        let gt = globalTime;
+        if (endTime > localT * BEAT_TIME) {
+            if (gt < startTime) { gt += localT * BEAT_TIME; }
+        }
+
+        if (gt >= startTime && gt < endTime) {
+            let dt = gt - startTime; // スロー開始からの経過時間
+            let sv = c.value;
+            let logicalValue = isAsync ? sv / 2.0 : sv;
+
+            // ★ 1. 空中時間(Air Time)と保持時間(Dwell Time)の分割
+            let dwellDuration = BEAT_TIME * 0.5; // 手の中に0.5カウント(0.5テンポ)保持する
+            if (duration <= dwellDuration) {
+                // スローにかかる時間が極端に短い場合の安全策
+                dwellDuration = duration * 0.5;
+            }
+            let airDuration = duration - dwellDuration;
+
+            let isCross = isAsync ? c.action_str.includes("(2n-1)") : c.action_str.includes("ax");
+            let isHeld = (logicalValue <= 2 && !isCross);
+
+            // ★ 2. 完全に保持するスローか、空中の時間が終わってキャッチしたかを判定
+            let inHandPhase = isHeld || (dt >= airDuration);
+
+            if (inHandPhase) {
+                // --- 【手の中にある（保持中）の描画】 ---
+                let side;
+                if (isHeld) {
+                    side = c.handSide; // 元々持っている手
+                } else {
+                    // 飛んできてキャッチした先の手
+                    side = (typeof c.to === "number") ? ((c.to <= -1) ? 0 : 1) : (c.handSide || 0);
+                }
+
+                let tip = side === 0 ? { ...g_leftHand } : { ...g_rightHand };
+
+                let centerPeriod = g_isAsync ? (BEAT_TIME * 2) : BEAT_TIME;
+                let centerLeftPhase = g_isAsync ? BEAT_TIME : 0;
+                let centerRightPhase = 0;
+                let hs_val = side === 0 
+                    ? calcHandMotion(virtualTime, centerPeriod, centerLeftPhase) 
+                    : calcHandMotion(virtualTime, centerPeriod, centerRightPhase);
+
+                let flare = 1.2;
+                let baseAngle = (side === 0) ? flare : Math.PI - flare;
+                let angle = baseAngle + (side === 0 ? -hs_val : hs_val) * 0.35 + Math.PI;
+
+                // 2+ はフラーリッシュ。手元を支点に1カウントで1回転させる。
+                // 2 の通常保持は従来どおり。
+                if (c.propeller === 5 && logicalValue === 2) {
+                    const flourishProgress = Math.min(1, Math.max(0, dt / Math.max(duration, 0.0001)));
+                    const spinDirection = side === 0 ? 1 : -1;
+                    angle += spinDirection * flourishProgress * Math.PI * 2;
+                }
+
+                const L = 80.0;
+                const gripOffset = 15.0; // 根元から15pxの位置を握るように調整
+                let dx = Math.cos(angle);
+                let dy = Math.sin(angle);
+
+                // 手(tip)の位置を支点とし、上部(L - 15)と下部(-15)へスティックを伸ばす
+                let stick_p1 = { x: tip.x + dx * (L - gripOffset), y: tip.y + dy * (L - gripOffset) };
+                let stick_p2 = { x: tip.x - dx * gripOffset, y: tip.y - dy * gripOffset };
+
+                // 「+」付きの2だけ、画面上の白い手玉(actualHand)を中心に回転させる。
+                // 元の2の位置・角度・長さはそのままにし、回転分だけを追加する。
+                if (c.hs === HS_HAND2 && logicalValue === 2) {
+                    const handCenterOffset = 40.0;
+                    const center = {
+                        x: tip.x + dx * handCenterOffset,
+                        y: tip.y + dy * handCenterOffset
+                    };
+                    const phase = Math.min(1, Math.max(0, dt / Math.max(dwellDuration, 0.001)));
+                    const spin = (side === 0 ? -1 : 1) * phase * Math.PI * 2;
+
+                    const rotateAround = (p) => {
+                        const rx = p.x - center.x;
+                        const ry = p.y - center.y;
+                        const cs = Math.cos(spin);
+                        const sn = Math.sin(spin);
+                        return {
+                            x: center.x + rx * cs - ry * sn,
+                            y: center.y + rx * sn + ry * cs
+                        };
+                    };
+
+                    stick_p1 = rotateAround(stick_p1);
+                    stick_p2 = rotateAround(stick_p2);
+                }
+
+                const heldCenter = { x: (stick_p1.x + stick_p2.x) / 2, y: (stick_p1.y + stick_p2.y) / 2 };
+                drawGuideHandObject(heldCenter, angle, ballIndex, stick_p1, stick_p2);
+
+            } else {
+                // --- 【空中を飛んでいる（滞空）の描画】 ---
+                // ★ 3. 0.5テンポ早く軌道を描き切るように timeRatio を加速
+                let timeRatio = dt / airDuration;
+                
+                let heightScale = 8.0 * (logicalValue * logicalValue) * currentHeight;
+                let hOffset = 0;
+                let angle = 0;
+
+                let startSide = (typeof c.from === "number") ? ((c.from <= -1) ? 0 : 1) : (c.handSide || 0);
+                let endSide = (typeof c.to === "number") ? ((c.to <= -1) ? 0 : 1) : (c.handSide || 0);
+                const HS_FLARE = 1.2;
+
+                let A_start = (startSide === 0) ? HS_FLARE + Math.PI : Math.PI - HS_FLARE + Math.PI;
+                let A_target = (endSide === 0) ? HS_FLARE + Math.PI : Math.PI - HS_FLARE + Math.PI;
+
+                let startTip = (typeof c.from === "number")
+                    ? (c.from <= -1 ? g_leftHand : g_rightHand)
+                    : ((c.handSide === 0) ? g_leftHand : g_rightHand);
+                let endTip = (typeof c.to === "number")
+                    ? (c.to <= -1 ? g_leftHand : g_rightHand)
+                    : ((c.handSide === 0) ? g_leftHand : g_rightHand);
+                
+                const centerOffset = 40.0;
+                let startCenter = {
+                    x: startTip.x + Math.cos(A_start) * centerOffset,
+                    y: startTip.y + Math.sin(A_start) * centerOffset
+                };
+                let endCenter = {
+                    x: endTip.x + Math.cos(A_target) * centerOffset,
+                    y: endTip.y + Math.sin(A_target) * centerOffset
+                };
+
+                let p = lerp(startCenter, endCenter, timeRatio);
+
+                // 高さの計算も airDuration ベースで完結する
+                let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
+                hOffset = bounce * Math.max(heightScale, 45.0);
+                p.y -= hOffset;
+
+                let TotalRotDeg = 0;
+                let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
+                // Guide hand-stick rotation: 1 = no rotation, 3 = one full rotation while passing.
+                // rot_base is 180deg * a_val, so a_val=2 gives exactly 360deg.
+                if (c.rot === null || c.rot === undefined) {
+                    if (logicalValue === 1) a_val = 0;
+                    else if (logicalValue === 3) a_val = 2;
+                    else if (logicalValue === 2) a_val = 0;
+                }
+                let rot_base = 180 * a_val;
+                if (c.from <= -2) TotalRotDeg = -rot_base;
+                else if (c.from >= 2) TotalRotDeg = rot_base;
+                else {
+                    let dir = (c.to > c.from) ? 1.0 : -1.0;
+                    TotalRotDeg = dir * rot_base;
+                }
+
+                let totalRotRad = TotalRotDeg * DEG_TO_RAD;
+                let idealEndAngle = A_start + totalRotRad;
+                let k = Math.round((idealEndAngle - A_target) / Math.PI);
+                let safeEndAngle = A_target + k * Math.PI;
+                let diff = Math.abs(idealEndAngle - safeEndAngle);
+                
+                if (diff <= 0.001) { angle = A_start + totalRotRad * timeRatio; } 
+                else { angle = A_start + (safeEndAngle - A_start) * timeRatio; }
+
+                drawGuideHandObject(p, angle, ballIndex);
+            }
+            return;
+        }
+    }
+}
+
+function draw_ball(balls, globalTime, color, ballIndex) {
+    if (!balls) return;
+    for (let t = 0; t < T; t++) {
+        let c = balls[t];
+        if (!c || c.value <= 0) continue;
+
+        let startTime = t * BEAT_TIME;
+        let duration = (c.value / 2.0) * BEAT_TIME;
+        let endTime = startTime + duration;
+
+        if (c.propeller === 3) {
+            let t_s = t; let t_r = -1;
+            for (let offset = 1; offset < T; offset++) {
+                let check_t = (t + offset) % T;
+                if (balls[check_t] && balls[check_t].propeller === 4 && balls[check_t].value > 0) {
+                    t_r = check_t; break;
+                }
+            }
+            if (t_r === -1) t_r = (t_s + 1) % T;
+            let total_beats = 0;
+            if (t_r >= t_s) { total_beats = t_r - t_s + Math.floor(balls[t_r].value / 2); } 
+            else { total_beats = (t_r + T) - t_s + Math.floor(balls[t_r].value / 2); }
+            duration = total_beats * BEAT_TIME;
+            endTime = startTime + duration;
+        }
+
+        let gt = globalTime;
+        if (endTime > T * BEAT_TIME) {
+            if (gt < startTime) { gt += T * BEAT_TIME; }
+        }
+
+        if (gt >= startTime && gt < endTime) {
+            let timeRatio = (gt - startTime) / duration; 
+            let sv = c.value; 
+            let logicalValue = g_isAsync ? sv / 2.0 : sv;
+            let heightScale = 8.0 * (logicalValue * logicalValue) * currentHeight;
+            let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
+            let hOffset = bounce * heightScale;
+
+            if (c.propeller === 1) {
+                let isHorizontal2x = (c.value === 2 && (c.from === -1 || c.from === 1) && c.propeller === 1);
+                let p, angle;
+
+                if (isHorizontal2x) {
+                    let p0, p1;
+                    if (c.from === -1) { p0 = g_leftHand; p1 = g_rightHand; angle = timeRatio * Math.PI; } 
+                    else { p0 = g_rightHand; p1 = g_leftHand; angle = -timeRatio * Math.PI; }
+                    p = lerp(p0, p1, timeRatio);
+                    draw_horizontal_devilstick(p, angle, color);
+                } 
+                else {
+                    let p0 = get_data(c.from); let p1 = get_data(c.to);
+                    p = lerp(p0, p1, timeRatio);
+                    p.y -= hOffset;
+
+                    let s = Math.floor(c.value / 2);
+                    let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
+                    let angle = 0.0; let baseTilt = 25.0 * Math.PI / 180.0;
+                    if (c.from <= -2) { angle = -baseTilt - timeRatio * Math.PI * base_s; } 
+                    else if (c.from === -1 || c.from === 1) {
+                        let dir = (c.to > c.from) ? 1.0 : -1.0;
+                        let swing = 2 * Math.sin(timeRatio * Math.PI - Math.PI / 2) * (25.0 * Math.PI / 180.0);
+                        let turns = 0.5 * base_s - 0.5;
+                        let spin = timeRatio * turns * Math.PI * 2.0;
+                        angle = dir * swing + dir * spin;
+                    } else if (c.from >= 2) { angle = baseTilt + timeRatio * Math.PI * base_s; }
+                    draw_devilstick(p, angle, color);
+                }
+            } 
+            else if (c.propeller === 2) {
+                let p; let s = Math.floor(c.value / 2);
+                let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
+                let handStart, handEnd;
+                if (c.from <= -1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
+                if (c.to <= -1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
+                p = lerp(handStart, handEnd, timeRatio);
+                p.y -= hOffset;
+                let angle = timeRatio * Math.PI * base_s;
+                draw_horizontal_devilstick(p, angle, color);
+            }
+            else if (c.propeller === 5) {
+                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p = lerp(p0, p1, timeRatio);
+                p.y = (g_leftHand.y + g_rightHand.y) / 2.0 - 20.0 - hOffset;
+                let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
+                draw_devilstick(p, angle, color);
+            }
+            else if (c.propeller === 3) {
+                let current_dt = gt - startTime;
+                let spinRatio = current_dt / duration;
+                if (spinRatio > 1.0) spinRatio = 1.0;
+
+                let centerX = (g_leftHand.x + g_rightHand.x) / 2;
+                let centerY = (g_leftHand.y + g_rightHand.y) / 2;
+                let p = { x: centerX, y: centerY - 20 };
+
+                let A_start = get_data(c.from).angle; let deg_start = A_start / DEG_TO_RAD;
+                let isRightStart = (deg_start > 0);
+
+                if (spinRatio <= 0.20) {
+                    let p_phase = spinRatio / 0.20;
+                    let deg_horizontal = isRightStart ? 90 : -90;
+                    let deg = deg_start + (deg_horizontal - deg_start) * p_phase;
+                    draw_devilstick(p, deg * DEG_TO_RAD, color);
+                }
+                else if (spinRatio <= 0.80) {
+                    let p_phase = (spinRatio - 0.20) / 0.60;
+                    let flat_start = (isRightStart ? 90 : -90) * DEG_TO_RAD;
+                    let spin_dir = isRightStart ? -1 : 1;
+                    let flat_angle = flat_start + spin_dir * p_phase * Math.PI * 3;
+                    draw_horizontal_devilstick(p, flat_angle, color);
+                }
+                else {
+                    let p_phase = (spinRatio - 0.80) / 0.20;
+                    let deg_flat_end = isRightStart ? (90 - 540) : (-90 - 540);
+                    let deg_end_target = isRightStart ? (deg_flat_end + 140) : (deg_flat_end - 140);
+                    let deg = deg_flat_end + (deg_end_target - deg_flat_end) * p_phase;
+                    draw_devilstick(p, deg * DEG_TO_RAD, color);
+                }
+            }
+            else {
+                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p = lerp(p0, p1, timeRatio);
+
+                let isCenterHit = (c.from === -1 && c.to === -1) || (c.from === 1 && c.to === 1);
+                if (isCenterHit) {
+                    const centerStrike = { x: 400, y: 460 };
+                    let strikeProgress = Math.sin(timeRatio * Math.PI);
+                    p = lerp(p0, centerStrike, strikeProgress);
+                }
+                p.y -= hOffset;
+
+                let A_start = p0.angle; let A_target = p1.angle; let TotalRotDeg = 0;
+                let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
+                let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
+                let isAsyncOdd = g_isAsync && (sv % 4 !== 0);
+         let asyncOddRot = 100 + 180 * (a_val - 1);
+                if (g_isAsync && c.rot !== null) {
+                    let rot_base = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    if (typeof c.from === "number" && c.from <= -2) TotalRotDeg = -rot_base;
+                    else if (typeof c.from === "number" && c.from >= 2) TotalRotDeg = rot_base;
+                    else if (c.angleExpr && c.angleExpr.startsWith("-")) TotalRotDeg = -rot_base;
+                    else TotalRotDeg = rot_base;
+                } else if (c.angleExpr) {
+                    if (c.angleExpr === "0") TotalRotDeg = 0;
+                    else if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    else if (c.angleExpr === "-180a" || c.angleExpr === "-180n") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
+                    else if (c.angleExpr === "-(100+(a-1)*180)" || c.angleExpr === "-(100+(n-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
+                    else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(50+(a-1)*180)" || c.angleExpr === "-(50+(n-1)*180)") TotalRotDeg = -(50 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(50+(a-1)*180)" || c.angleExpr === "(50+(n-1)*180)") TotalRotDeg = (50 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(140+(a-1)*180)" || c.angleExpr === "-(140+(n-1)*180)") TotalRotDeg = -(140 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(140+(a-1)*180)" || c.angleExpr === "(140+(n-1)*180)") TotalRotDeg = (140 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(220+(a-1)*180)" || c.angleExpr === "-(220+(n-1)*180)") TotalRotDeg = -(220 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(220+(a-1)*180)" || c.angleExpr === "(220+(n-1)*180)") TotalRotDeg = (220 + (a_val-1) * 180);
+                    else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                } else {
+                    let s_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (g_isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
+                    let rot_base = 180 * s_val;
+                    if (g_isAsync && (sv % 4 !== 0)) { rot_base = 100 + 180 * (s_val - 1); }
+                    if (c.from <= -2) TotalRotDeg = -rot_base;
+                    else if (c.from >= 2) TotalRotDeg = rot_base;
+                    else { let dir = (c.to > c.from) ? 1.0 : -1.0; TotalRotDeg = dir * rot_base; }
+                }
+
+                let totalRotRad = TotalRotDeg * DEG_TO_RAD;
+                let idealEndAngle = A_start + totalRotRad;
+                let k = Math.round((idealEndAngle - A_target) / Math.PI);
+                let safeEndAngle = A_target + k * Math.PI;
+                let diff = Math.abs(idealEndAngle - safeEndAngle);
+                
+                let angle;
+                if (diff <= 0.001) { angle = A_start + totalRotRad * timeRatio; } 
+                else { angle = A_start + (safeEndAngle - A_start) * timeRatio; }
+                
+                draw_devilstick(p, angle, color);
+            }
+            return;
+        }
+    }
+}
+
+// =====================================
+// メインループ
+// =====================================
+function getCenterHitProgress(globalTime, handSide) {
+    if (!table) return null;
+    let totalTime = T * BEAT_TIME;
+
+    for (let b = 0; b < g_balls; b++) {
+        for (let t = 0; t < T; t++) {
+            let c = table[b][t];
+            if (!c || c.value <= 0) continue;
+            if (c.handSide !== handSide) continue;
+            if (c.from !== c.to) continue;
+            if (c.from !== -1 && c.from !== 1) continue;
+
+            let startTime = t * BEAT_TIME;
+            let duration = (c.value / 2.0) * BEAT_TIME;
+
+            if (c.propeller === 3) {
+                let t_s = t; let t_r = -1;
+                for (let offset = 1; offset < T; offset++) {
+                    let check_t = (t + offset) % T;
+                    if (table[b][check_t] && table[b][check_t].propeller === 4 && table[b][check_t].value > 0) {
+                        t_r = check_t; break;
+                    }
+                }
+                if (t_r === -1) t_r = (t_s + 1) % T;
+                let total_beats = 0;
+                if (t_r >= t_s) { total_beats = t_r - t_s + Math.floor(c.value / 2); } 
+                else { total_beats = (t_r + T) - t_s + Math.floor(c.value / 2); }
+                duration = total_beats * BEAT_TIME;
+            }
+
+            let endTime = startTime + duration;
+            let gt = globalTime;
+            if (endTime > totalTime && gt < startTime) { gt += totalTime; }
+
+            if (gt >= startTime && gt < endTime) {
+                let timeRatio = (gt - startTime) / duration;
+                return Math.sin(timeRatio * Math.PI);
+            }
+        }
+    }
+    return null;
+}
+
+function getFlatHitMotion(globalTime, handSide, basePos) {
+    if (!table) return null;
+    let totalTime = T * BEAT_TIME;
+
+    for (let b = 0; b < g_balls; b++) {
+        for (let t = 0; t < T; t++) {
+            let c = table[b][t];
+            if (!c || c.value <= 0) continue;
+            if (c.handSide !== handSide) continue;
+            if (c.propeller !== 5) continue; 
+            if (g_isAsync && c.value % 4 !== 0) continue;
+
+            let baseTime = t * BEAT_TIME;
+            let diff = (globalTime - baseTime) % totalTime;
+            if (diff > totalTime / 2) diff -= totalTime;
+            if (diff < -totalTime / 2) diff += totalTime;
+
+            if (diff >= -0.25 * BEAT_TIME && diff <= 0.75 * BEAT_TIME) {
+                let progress = 0;
+                if (diff <= 0) { progress = 1.0 - Math.abs(diff) / (0.25 * BEAT_TIME); } 
+                else { progress = 1.0 - diff / (0.75 * BEAT_TIME); }
+
+                let targetX = basePos.x;
+                let targetY = 400; 
+                let isCross = c.action_str.includes("ax") || c.action_str.includes("(2n-1)");
+
+                if (isCross) { 
+                    let sv = c.value;
+                    let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
+                    let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : default_a;
+                    let isAsyncOdd = g_isAsync && (sv % 4 !== 0);
+           let asyncOddRot = 100 + 180 * (a_val - 1);
+                    
+                    let TotalRotDeg = 0;
+                    if (c.angleExpr) {
+                        if (c.angleExpr === "0") TotalRotDeg = 0;
+                        else if (c.angleExpr === "180a" || c.angleExpr === "180n") TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                        else if (c.angleExpr === "-180a" || c.angleExpr === "-180n") TotalRotDeg = isAsyncOdd ? -asyncOddRot : -180 * a_val;
+                        else if (c.angleExpr === "-(100+(a-1)*180)" || c.angleExpr === "-(100+(n-1)*180)") TotalRotDeg = -(100 + (a_val - 1) * 180);
+                        else if (c.angleExpr === "(100+(a-1)*180)" || c.angleExpr === "(100+(n-1)*180)") TotalRotDeg = (100 + (a_val - 1) * 180);
+                        else if (c.angleExpr === "-(80+(a-1)*180)" || c.angleExpr === "-(80+(n-1)*180)") TotalRotDeg = -(80 + (a_val-1) * 180);
+                        else if (c.angleExpr === "(80+(a-1)*180)" || c.angleExpr === "(80+(n-1)*180)") TotalRotDeg = (80 + (a_val-1) * 180);
+                    else if (c.angleExpr === "-(50+(a-1)*180)" || c.angleExpr === "-(50+(n-1)*180)") TotalRotDeg = -(50 + (a_val-1) * 180);
+                    else if (c.angleExpr === "(50+(a-1)*180)" || c.angleExpr === "(50+(n-1)*180)") TotalRotDeg = (50 + (a_val-1) * 180);
+                        else if (c.angleExpr === "-(140+(a-1)*180)" || c.angleExpr === "-(140+(n-1)*180)") TotalRotDeg = -(140 + (a_val-1) * 180);
+                        else if (c.angleExpr === "(140+(a-1)*180)" || c.angleExpr === "(140+(n-1)*180)") TotalRotDeg = (140 + (a_val-1) * 180);
+                        else if (c.angleExpr === "-(220+(a-1)*180)" || c.angleExpr === "-(220+(n-1)*180)") TotalRotDeg = -(220 + (a_val-1) * 180);
+                        else if (c.angleExpr === "(220+(a-1)*180)" || c.angleExpr === "(220+(n-1)*180)") TotalRotDeg = (220 + (a_val-1) * 180);
+                        else TotalRotDeg = isAsyncOdd ? asyncOddRot : 180 * a_val;
+                    } else {
+                        let rot_base = 180 * a_val;
+                        if (isAsyncOdd) { rot_base = 100 + 180 * (a_val - 1); }
+                        if (c.from <= -2) TotalRotDeg = -rot_base;
+                        else if (c.from >= 2) TotalRotDeg = rot_base;
+                        else { let dir = (c.to > c.from) ? 1.0 : -1.0; TotalRotDeg = dir * rot_base; }
+                    }
+
+                    if (TotalRotDeg > 0) targetX = 480;       
+                    else if (TotalRotDeg < 0) targetX = 320;  
+                    else targetX = 400;                       
+
+                } else { 
+                    let prev_t = (t - 1 + T) % T;
+                    let max_loops = T;
+                    while (prev_t !== t && max_loops > 0 && (!table[b][prev_t] || table[b][prev_t].value <= 0)) {
+                        prev_t = (prev_t - 1 + T) % T; max_loops--;
+                    }
+                    let prev_throw = table[b][prev_t];
+                    let from_minus = prev_throw && prev_throw.action_str && prev_throw.action_str.startsWith("-");
+
+                    if (from_minus) { targetX = 400; } 
+                    else { if (handSide === 0) targetX = 280; else targetX = 520; }
+                }
+
+                let currentX = basePos.x + (targetX - basePos.x) * progress;
+                return { x: currentX, y: targetY };
+            }
+        }
+    }
+    return null;
+}
+
+// =====================================
+// 人物描画（インバースキネマティクス）
+// =====================================
+function drawStickman(ctx, leftTarget, rightTarget) {
+    ctx.save(); ctx.strokeStyle = "#4a5568"; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    // 頭
+    ctx.beginPath(); ctx.arc(400, 180, 25, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.stroke();
+    // 背骨
+    ctx.beginPath(); ctx.moveTo(400, 205); ctx.lineTo(400, 380); ctx.stroke();
+    // 肩
+    ctx.beginPath(); ctx.moveTo(340, 230); ctx.lineTo(460, 230); ctx.stroke();
+    // 足
+    ctx.beginPath(); ctx.moveTo(400, 380); ctx.lineTo(350, 530); ctx.moveTo(400, 380); ctx.lineTo(450, 530); ctx.stroke();
+
+    function drawArm(shoulder, target, isLeft) {
+        let dx = target.x - shoulder.x; let dy = target.y - shoulder.y;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        let L1 = 90; let L2 = 100;
+        if (dist >= L1 + L2) {
+            ctx.beginPath(); ctx.moveTo(shoulder.x, shoulder.y); ctx.lineTo(target.x, target.y); ctx.stroke();
+            return;
+        }
+        let angle1 = Math.atan2(dy, dx);
+        let cosAngle2 = (L1*L1 + dist*dist - L2*L2) / (2 * L1 * dist);
+        cosAngle2 = Math.max(-1, Math.min(1, cosAngle2)); 
+        let angle2 = Math.acos(cosAngle2);
+        let elbowAngle = isLeft ? (angle1 + angle2) : (angle1 - angle2);
+        let elbowX = shoulder.x + L1 * Math.cos(elbowAngle); let elbowY = shoulder.y + L1 * Math.sin(elbowAngle);
+        ctx.beginPath(); ctx.moveTo(shoulder.x, shoulder.y); ctx.lineTo(elbowX, elbowY); ctx.lineTo(target.x, target.y); ctx.stroke();
+    }
+    drawArm({x: 340, y: 230}, leftTarget, true);
+    drawArm({x: 460, y: 230}, rightTarget, false);
+    ctx.restore();
+}
+
+function update(timestamp) {
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    let dt = (timestamp - lastTimestamp) / 1000.0;
+    lastTimestamp = timestamp;
+    if (dt > 0.1) dt = 0.1;
+
+    let asyncSpeedFactor = g_isAsync ? 2.0 : 1.0;
+    virtualTime += dt * currentSpeed * asyncSpeedFactor;
+
+    let totalTime = T * BEAT_TIME;
+    let globalTime = virtualTime % totalTime;
+    
+    let handTotalTime = handT * BEAT_TIME;
+    let handGlobalTime = handTotalTime > 0 ? (virtualTime % handTotalTime) : 0;
+
+    if (isRecording) {
+        if (recordStartTime === 0) {
+            // まず1周期分をウォームアップとして再生する。
+            // MediaRecorder はまだ開始しないので、この周期は動画に入らない。
+            recordStartTime = timestamp;
+            virtualTime = 0;
+            globalTime = 0;
+            logicalTimeAccumulator = 0;
+            recordingStarted = false;
+        }
+
+        logicalTimeAccumulator += dt * currentSpeed * asyncSpeedFactor;
+
+        // 1周期が終わった瞬間（= 2周期目の先頭）から録画開始。
+        if (!recordingStarted && logicalTimeAccumulator >= recordWarmupDuration) {
+            recordingStarted = true;
+            logicalTimeAccumulator -= recordWarmupDuration;
+            mediaRecorder.start();
+            document.getElementById("recordBtn").innerText = "録画中...";
+        }
+
+        // 録画開始後だけ録画時間を数える。従来どおり3周期分を保存する。
+        if (recordingStarted && logicalTimeAccumulator >= recordDuration) {
+            isRecording = false;
+            recordingStarted = false;
+            mediaRecorder.stop();
+            document.getElementById("recordBtn").innerText = "動画を録画する";
+            document.getElementById("recordBtn").disabled = false;
+        }
+    }
+
+    let beat = g_n > 0 ? (Math.floor(globalTime / BEAT_TIME) % g_n) : 0;
+    let u = (globalTime % BEAT_TIME) / BEAT_TIME;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(400, 450); ctx.scale(g_scale, g_scale); ctx.translate(-400, -450);
+
+    let leftBaseX = 340, rightBaseX = 460, handBaseY = 400;
+    let period = g_isAsync ? (BEAT_TIME * 2) : BEAT_TIME;
+    let left_phase = g_isAsync ? BEAT_TIME : 0;
+    let right_phase = 0;
+    
+    let left_hs = calcHandMotion(virtualTime, period, left_phase);
+let right_hs = calcHandMotion(virtualTime, period, right_phase);
+// if (g_isAsync) { [left_hs, right_hs] = [right_hs, left_hs]; } // ←この行を無効化
+    
+    let leftHY = handBaseY + left_hs * 20.0; let rightHY = handBaseY + right_hs * 20.0;
+    
+    g_leftHand = { x: leftBaseX, y: leftHY }; g_rightHand = { x: rightBaseX, y: rightHY };
+
+    let handLeftTip = { ...g_leftHand }; let handRightTip = { ...g_rightHand };
+
+    let leftCenterProgress = getCenterHitProgress(globalTime, 0);
+    let rightCenterProgress = getCenterHitProgress(globalTime, 1);
+    
+    if (leftCenterProgress !== null) { handLeftTip = lerp(g_leftHand, { x: 400, y: 460 }, leftCenterProgress); }
+    if (rightCenterProgress !== null) { handRightTip = lerp(g_rightHand, { x: 400, y: 460 }, rightCenterProgress); }
+
+    let flatLeftPos = getFlatHitMotion(globalTime, 0, { x: leftBaseX, y: handBaseY });
+    if (flatLeftPos !== null) { handLeftTip.x = flatLeftPos.x; handLeftTip.y = flatLeftPos.y; g_leftHand = { ...handLeftTip }; } 
+    else if (leftCenterProgress !== null) { g_leftHand = { ...handLeftTip }; }
+
+    let flatRightPos = getFlatHitMotion(globalTime, 1, { x: rightBaseX, y: handBaseY });
+    if (flatRightPos !== null) { handRightTip.x = flatRightPos.x; handRightTip.y = flatRightPos.y; g_rightHand = { ...handRightTip }; } 
+    else if (rightCenterProgress !== null) { g_rightHand = { ...handRightTip }; }
+
+    // ★ flareを大きくして傾きを持たせる
+    let flare = 1.2;
+    let leftAngle = flare - left_hs * 0.35 + Math.PI;
+    let rightAngle = Math.PI - flare + right_hs * 0.35 + Math.PI;
+    
+    const gripOffset = 40.0; 
+
+    let actualLeftHand = {
+        x: handLeftTip.x + Math.cos(leftAngle) * gripOffset,
+        y: handLeftTip.y + Math.sin(leftAngle) * gripOffset
+    };
+    let actualRightHand = {
+        x: handRightTip.x + Math.cos(rightAngle) * gripOffset,
+        y: handRightTip.y + Math.sin(rightAngle) * gripOffset
+    };
+
+    drawStickman(ctx, actualLeftHand, actualRightHand);
+
+    ctx.beginPath(); ctx.arc(actualLeftHand.x, actualLeftHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
+    ctx.beginPath(); ctx.arc(actualRightHand.x, actualRightHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
+
+    if (handTable && g_handBalls > 0) {
+        for (let b = 0; b < g_handBalls; b++) {
+            draw_handstick_ball(handTable[b], handGlobalTime, b, g_handIsAsync, handT);
+        }
+    }
+
+    if (table && g_balls > 0) {
+        for (let b = 0; b < g_balls; b++) {
+            draw_ball(table[b], globalTime, COLORS[b % COLORS.length], b);
+        }
+    }
+
+    ctx.restore();
+
+    // 録画時のみ、選択に応じて2つのサイトスワップ表記を同じ隅にまとめて描画する。
+    // 1行目＝パターン、2行目＝ハンド。
+    if (isRecording && document.getElementById("recordSiteswapLabel")?.checked) {
+        const patternLabel = document.getElementById("siteswapInput")?.value.trim();
+        const handLabel = document.getElementById("handSiteswapInput")?.value.trim();
+
+        if (patternLabel || handLabel) {
+            ctx.save();
+            ctx.font = "bold 18px sans-serif";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+
+            const margin = 12;
+            const padX = 7;
+            const padY = 5;
+            const lineHeight = 23;
+            const lines = [];
+            if (patternLabel) lines.push(patternLabel);
+            if (handLabel) lines.push(handLabel);
+
+            const widths = lines.map(label => ctx.measureText(label).width);
+            const boxWidth = Math.max(...widths) + padX * 2;
+            const boxHeight = lines.length * lineHeight + padY * 2 - 2;
+            const boxX = margin;
+            const boxY = margin;
+
+            ctx.fillStyle = "rgba(255,255,255,0.88)";
+            ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+            ctx.fillStyle = "#1a202c";
+            lines.forEach((label, index) => {
+                ctx.fillText(label, boxX + padX, boxY + padY + index * lineHeight);
+            });
+
+            ctx.restore();
+        }
+    }
+
+    animationFrameId = requestAnimationFrame(update);
+}
+
+// =====================================
+// アスタリスク(*)展開処理
+// =====================================
+function expandAsterisk(pattern) {
+    pattern = pattern.trim();
+    if (pattern.endsWith('*')) {
+        let base = pattern.slice(0, -1);
+        let flipped = base.replace(/\(([^,()]+),([^()]+)\)/g, function(match, left, right) {
+            return "(" + right.trim() + "," + left.trim() + ")";
+        });
+        return base + flipped;
+    }
+    return pattern;
+}
+
+// =====================================
+// 初期化・操作系イベント
+// =====================================
+function initSimulation() {
+    if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
+    
+    let inputEl = document.getElementById("siteswapInput");
+    inputEl.value = expandAsterisk(inputEl.value);
+    let inputStr = inputEl.value;
+
+    let handInputEl = document.getElementById("handSiteswapInput");
+    if(handInputEl) {
+        handInputEl.value = expandAsterisk(handInputEl.value);
+    }
+    let handInputStr = handInputEl ? handInputEl.value : "";
+
+    let parsedT = make_siteswap_table(inputStr, handInputStr);
+    
+    if (parsedT > 0 || (handT > 0 && inputStr === "")) {
+        lastTimestamp = 0;
+        virtualTime = 0;
+        animationFrameId = requestAnimationFrame(update);
+    } else {
+        alert("有効なサイトスワップパターンを入力してください。");
+    }
+}
+
+function applyPreset(val) {
+    const input = document.getElementById("siteswapInput");
+    input.value = val;
+    // ボタンの入力例から設定した場合も検索機へ即時反映
+    if (typeof window.syncSimulatorToSearch === "function") {
+        window.syncSimulatorToSearch();
+    }
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    initSimulation();
+}
+
+function applyHandPreset(val) {
+    const input = document.getElementById("handSiteswapInput");
+    input.value = val;
+    // ハンドの入力例から設定した場合も検索機へ即時反映
+    if (typeof window.syncSimulatorToSearch === "function") {
+        window.syncSimulatorToSearch();
+    }
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    initSimulation();
+}
+
+// =====================================
+// 入力補助パッド制御系ロジック
+// =====================================
+// パッドの入力先。最後にフォーカスしたサイトスワップ欄を記憶する。
+// これにより「パターン」だけでなく「ハンド」欄にも同じ入力パッドを使える。
+let currentPadMode = "sync";
+function renderPadMode() {
+    const isHand = activePadInput && activePadInput.id === "handSiteswapInput";
+    const syncPanel = document.getElementById("syncPadPanel");
+    const asyncPanel = document.getElementById("asyncPadPanel");
+    const handPanel = document.getElementById("handPadPanel");
+    const syncTab = document.getElementById("syncPadTab");
+    const asyncTab = document.getElementById("asyncPadTab");
+
+    if (handPanel) handPanel.classList.toggle("active", isHand);
+    if (syncPanel) syncPanel.classList.toggle("active", !isHand && currentPadMode === "sync");
+    if (asyncPanel) asyncPanel.classList.toggle("active", !isHand && currentPadMode === "async");
+    if (syncTab) syncTab.classList.toggle("active", !isHand && currentPadMode === "sync");
+    if (asyncTab) asyncTab.classList.toggle("active", !isHand && currentPadMode === "async");
+}
+
+function setPadMode(mode) {
+    currentPadMode = (mode === "async") ? "async" : "sync";
+    renderPadMode();
+}
+
+let activePadInput = document.getElementById("siteswapInput");
+
+function setActivePadInput(input) {
+    if (input && (input.id === "siteswapInput" || input.id === "handSiteswapInput")) {
+        activePadInput = input;
+        updatePadForActiveInput();
+    }
+}
+
+function updatePadForActiveInput() {
+    const isHand = activePadInput && activePadInput.id === "handSiteswapInput";
+    const tabs = document.querySelector("#inputPad .pad-mode-tabs");
+    const syncPanel = document.getElementById("syncPadPanel");
+    const asyncPanel = document.getElementById("asyncPadPanel");
+    const handPanel = document.getElementById("handPadPanel");
+    if (tabs) tabs.style.display = isHand ? "none" : "flex";
+    renderPadMode();
+}
+
+["siteswapInput", "handSiteswapInput"].forEach(function(id) {
+    const input = document.getElementById(id);
+    if (input) {
+        input.addEventListener("focus", function() { setActivePadInput(input); });
+        input.addEventListener("click", function() { setActivePadInput(input); });
+    }
+});
+
+updatePadForActiveInput();
+
+document.getElementById("togglePadBtn").addEventListener("click", function() {
+    const pad = document.getElementById("inputPad");
+    if (pad.style.display === "none" || pad.style.display === "") {
+        updatePadForActiveInput();
+        pad.style.display = "flex"; this.innerText = "パッドを閉じる";
+    } else {
+        pad.style.display = "none"; this.innerText = "入力パッドを開く";
+    }
+});
+
+function getActivePadInput() {
+    const handInput = document.getElementById("handSiteswapInput");
+    const mainInput = document.getElementById("siteswapInput");
+    if (activePadInput && document.body.contains(activePadInput)) return activePadInput;
+    return mainInput || handInput;
+}
+
+const padHistory = [];
+const padRedoHistory = [];
+function snapshotPadInput(input) {
+    if (!input) return;
+    padHistory.push({ id: input.id, value: input.value, start: input.selectionStart ?? input.value.length, end: input.selectionEnd ?? input.value.length });
+    if (padHistory.length > 100) padHistory.shift();
+    padRedoHistory.length = 0;
+}
+function restorePadSnapshot(snap) {
+    if (!snap) return;
+    const input = document.getElementById(snap.id) || getActivePadInput();
+    if (!input) return;
+    input.value = snap.value;
+    setActivePadInput(input);
+    input.focus();
+    input.selectionStart = snap.start; input.selectionEnd = snap.end;
+}
+function padUndo() {
+    const input = getActivePadInput(); if (!input || !padHistory.length) return;
+    padRedoHistory.push({ id: input.id, value: input.value, start: input.selectionStart ?? input.value.length, end: input.selectionEnd ?? input.value.length });
+    restorePadSnapshot(padHistory.pop());
+}
+function padRedo() {
+    const input = getActivePadInput(); if (!input || !padRedoHistory.length) return;
+    padHistory.push({ id: input.id, value: input.value, start: input.selectionStart ?? input.value.length, end: input.selectionEnd ?? input.value.length });
+    restorePadSnapshot(padRedoHistory.pop());
+}
+function insertSmartThrow(text) { insertAtCursor(text); }
+function wrapOrInsertMulti() {
+    const input = getActivePadInput(); if (!input) return;
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    snapshotPadInput(input);
+    if (start !== end) {
+        const selected = input.value.slice(start, end);
+        input.value = input.value.slice(0,start) + '[' + selected + ']' + input.value.slice(end);
+        input.selectionStart = start + 1; input.selectionEnd = end + 1;
+    } else {
+        input.value = input.value.slice(0,start) + '[]' + input.value.slice(end);
+        input.selectionStart = input.selectionEnd = start + 1;
+    }
+    input.focus();
+}
+
+function insertAtCursor(text) {
+    const input = getActivePadInput();
+    if (!input) return;
+    setActivePadInput(input);
+    snapshotPadInput(input);
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const val = input.value;
+    input.value = val.substring(0, start) + text + val.substring(end);
+    input.selectionStart = input.selectionEnd = start + text.length;
+    input.focus();
+}
+
+function moveCursor(dir) {
+    const input = getActivePadInput();
+    if (!input) return;
+    let pos = input.selectionStart + dir;
+    if (pos < 0) pos = 0; if (pos > input.value.length) pos = input.value.length;
+    input.selectionStart = input.selectionEnd = pos; input.focus();
+}
+
+function deleteAtCursor() {
+    const input = getActivePadInput();
+    if (!input) return;
+    snapshotPadInput(input);
+    const start = input.selectionStart; const end = input.selectionEnd; const val = input.value;
+    if (start === end) {
+        if (start > 0) {
+            input.value = val.substring(0, start - 1) + val.substring(end);
+            input.selectionStart = input.selectionEnd = start - 1;
+        }
+    } else {
+        input.value = val.substring(0, start) + val.substring(end);
+        input.selectionStart = input.selectionEnd = start;
+    }
+    input.focus();
+}
+
+function clearInput() {
+    const input = getActivePadInput();
+    if (!input) return;
+    snapshotPadInput(input);
+    input.value = "";
+    input.focus();
+}
+
+// 録画機能
+function startRecording() {
+    if (isRecording) return;
+    initSimulation();
+    
+    // 長い方の周期に合わせる。
+    // 最初の1周期はウォームアップとして捨て、2周期目の先頭から3周期分を録画する。
+    let maxCycles = Math.max(g_n, g_handN);
+    recordWarmupDuration = maxCycles * BEAT_TIME;
+    recordDuration = recordWarmupDuration * 3;
+    recordedChunks = [];
+    const stream = canvas.captureStream(60);
+    let options = { mimeType: 'video/mp4;codecs=avc1' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm;codecs=vp9' }; }
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm;codecs=vp8' }; }
+    try { mediaRecorder = new MediaRecorder(stream, options); } catch (e) { mediaRecorder = new MediaRecorder(stream); }
+    mediaRecorder.ondataavailable = function(e) { if (e.data && e.data.size > 0) { recordedChunks.push(e.data); } };
+    mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const patternName = document.getElementById("siteswapInput").value.replace(/[^a-zA-Z0-9()^*-]/g, "") || "video";
+        const extension = mediaRecorder.mimeType.includes("mp4") ? "mp4" : "webm";
+        a.download = `devilstick_siteswap_${patternName}.${extension}`;
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); window.URL.revokeObjectURL(url); }, 100);
+    };
+    recordStartTime = 0;
+    recordingStarted = false;
+    isRecording = true;
+    document.getElementById("recordBtn").innerText = "1周期待機中...";
+    document.getElementById("recordBtn").disabled = true;
+}
+
+document.getElementById("speedInput").addEventListener("input", function(e) { currentSpeed = parseFloat(e.target.value); document.getElementById("speedVal").innerText = currentSpeed.toFixed(2) + "x"; });
+document.getElementById("heightInput").addEventListener("input", function(e) { 
+    currentHeight = parseFloat(e.target.value); document.getElementById("heightVal").innerText = currentHeight.toFixed(1) + "x"; initSimulation();
+});
+
+document.getElementById("startBtn").addEventListener("click", initSimulation);
+document.getElementById("recordBtn").addEventListener("click", startRecording);
+
+// Guide embed mode: reuse this simulator's exact motion engine, but show only the canvas.
+(function setupGuideEmbed(){
+    const q = new URLSearchParams(location.search);
+    if (q.get('embed') !== '1') return;
+    const handPattern = q.get('hand') || '(2,2)';
+    const devilPattern = q.get('pattern');
+    const mode = q.get('mode') === 'async' ? 'async' : 'sync';
+    const kind = q.get('kind') || 'hand';
+    const main = document.getElementById('siteswapInput');
+    const hand = document.getElementById('handSiteswapInput');
+    if (kind === 'both' && devilPattern) {
+        if (main) main.value = devilPattern;
+        if (hand) hand.value = handPattern;
+    } else if (kind === 'devil' && devilPattern) {
+        if (main) main.value = devilPattern;
+        if (hand) hand.value = mode === 'async' ? '2' : '(2,2)';
+    } else {
+        if (main) main.value = mode === 'async' ? '0' : '(0,0)';
+        if (hand) hand.value = handPattern;
+    }
+    document.documentElement.classList.add('guide-embed');
+    const style = document.createElement('style');
+    style.textContent = `
+      html.guide-embed, html.guide-embed body { margin:0!important; padding:0!important; background:#fff!important; min-height:0!important; overflow:hidden!important; }
+      html.guide-embed body > h1, html.guide-embed .control-panel, html.guide-embed #hs-integrated, html.guide-embed footer { display:none!important; }
+      html.guide-embed .main-container { display:block!important; width:100%!important; max-width:none!important; }
+      html.guide-embed .canvas-container { width:100%!important; max-width:none!important; display:block!important; }
+      html.guide-embed #simCanvas { width:100%!important; height:auto!important; border-radius:0!important; box-shadow:none!important; display:block!important; }
+    `;
+    document.head.appendChild(style);
+})();
+
+initSimulation();
+</script>
+</body>
+</html>
