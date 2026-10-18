@@ -294,7 +294,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                     <button class="preset-btn" onclick="applyPreset('-1')">-1</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,-2)(0,2)(0,2x)(-2,0)(2,0)')">(2x,0)(0,-2)(0,2)(0,2x)(-2,0)(2,0)</button>
-                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,r-2x)(o2x,0)(0,l-2x)')">クローバー(反時計回り)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,r-2x)(o2x,0)(0,l-2x)')">クローバー（反時計回り）</button>
                 </div>
             </div>
 
@@ -714,7 +714,9 @@ let logicalTimeAccumulator = 0;
 // 座標・角度取得関数
 // =====================================
 function get_data(id) {
-    const data = {
+    // l/r/o の位置は、接頭辞と状態の組み合わせごとに定義する。
+    // l4 / 4l の両方を受け付ける。末尾の x は位置判定では無視する。
+    const baseData = {
         "-4": { x: 300, y: 460, angle: 50 * DEG_TO_RAD },
         "-3": { x: 340, y: 400, angle: 50 * DEG_TO_RAD },
         "-2": { x: 340, y: 400, angle: -50 * DEG_TO_RAD },
@@ -735,45 +737,40 @@ function get_data(id) {
         "sp-1": { x: 340, y: 350, angle: 0 * DEG_TO_RAD },
         "sp1": { x: 460, y: 350, angle: 0 * DEG_TO_RAD }
     };
-    // ユーザー指定の l/r/o 状態座標。数字・f・sp・i/o/l/r の組合せごとに
-    // 個別の座標を使い、接頭辞だけで一律の座標へ置き換えない。
-    const positionData = {
-        "-4l": [240,400,50], "-3l": [280,340,50], "-2l": [280,340,-50], "-1l": [340,400,-50],
-        "f-1l": [280,340,90], "f0l": [340,340,90], "f1l": [400,340,90],
-        "f-1ol": [280,340,90], "f-1il": [280,340,90], "f0ll": [340,340,90], "f0rl": [340,340,90],
-        "f1ol": [400,340,90], "f1il": [400,340,90],
-        "1l": [340,400,50], "2l": [400,340,50], "3l": [400,340,-50], "4l": [440,400,-50],
-        "sp-1l": [280,290,0], "sp1l": [400,290,0],
-        "-4r": [360,400,50], "-3r": [400,340,50], "-2r": [400,340,-50], "-1r": [460,400,-50],
-        "f-1r": [400,340,90], "f0r": [460,340,90], "f1r": [520,340,90],
-        "f-1or": [400,340,90], "f-1ir": [400,340,90], "f0lr": [460,340,90], "f0rr": [460,340,90],
-        "f1or": [520,340,90], "f1ir": [520,340,90],
-        "1r": [460,400,50], "2r": [520,340,50], "3r": [520,340,-50], "4r": [560,400,-50],
-        "sp-1r": [400,290,0], "sp1r": [520,290,0],
-        "-4o": [300,340,50], "-3o": [340,280,50], "-2o": [340,280,-50], "-1o": [400,340,-50],
-        "f-1o": [340,280,90], "f0o": [400,280,90], "f1o": [460,280,90],
-        "f-1oo": [340,280,90], "f-1io": [340,280,90], "f0lo": [400,280,90], "f0ro": [400,280,90],
-        "f1oo": [460,280,90], "f1io": [460,280,90],
-        "1o": [400,340,50], "2o": [460,280,50], "3o": [460,280,-50], "4o": [500,340,-50],
-        "sp-1o": [340,230,0], "sp1o": [460,230,0]
+    const prefixData = {
+        l: { "-4": [240,400], "-3": [280,340], "-2": [280,340], "-1": [340,400],
+             "f-1": [280,340], "f0": [340,340], "f1": [400,340],
+             "1": [340,400], "2": [400,340], "3": [400,340], "4": [440,400],
+             "sp-1": [280,290], "sp1": [400,290] },
+        r: { "-4": [360,400], "-3": [400,340], "-2": [400,340], "-1": [460,400],
+             "f-1": [400,340], "f0": [460,340], "f1": [520,340],
+             "1": [460,400], "2": [520,340], "3": [520,340], "4": [560,400],
+             "sp-1": [400,290], "sp1": [520,290] },
+        o: { "-4": [300,340], "-3": [340,280], "-2": [340,280], "-1": [400,340],
+             "f-1": [340,280], "f0": [400,280], "f1": [460,280],
+             "1": [400,340], "2": [460,280], "3": [460,280], "4": [500,340],
+             "sp-1": [340,230], "sp1": [460,230] }
     };
-
-    let key = String(id).replace(/x$/i, '');
-    // 接頭辞形式 l2/r2/o2 と、座標表の末尾形式 2l/2r/2o の両方を受け付ける。
-    let explicitKey = key;
-    const prefixMatch = key.match(/^([lro])(?=(?:sp|f|-?\d))/i);
-    if (prefixMatch) explicitKey = key.slice(1) + prefixMatch[1].toLowerCase();
-    const explicit = positionData[explicitKey];
-    if (explicit) return { x: explicit[0], y: explicit[1], angle: explicit[2] * DEG_TO_RAD };
-
-    const baseKey = prefixMatch ? key.slice(1) : key;
-    const base = data[baseKey];
+    let key = String(id).replace(/x$/i, "");
+    let prefix = "";
+    let state = key;
+    let m = key.match(/^([lro])(?=(?:sp|f|-?\d))/i);
+    if (m) { prefix = m[1].toLowerCase(); state = key.slice(1); }
+    else {
+        m = key.match(/^(sp-?\d+|f-?\d+|-?\d+)([lro])$/i);
+        if (m) { state = m[1]; prefix = m[2].toLowerCase(); }
+    }
+    const base = baseData[state];
     if (!base) return { x: 400, y: 460, angle: 0 };
-    // 未登録の組合せだけ、従来の基準オフセットで補完する。
-    if (prefixMatch) {
-        const prefix = prefixMatch[1].toLowerCase();
-        const delta = prefix === 'l' ? {x:-60,y:-60} : prefix === 'r' ? {x:60,y:-60} : {x:0,y:-120};
-        return { x: base.x + delta.x, y: base.y + delta.y, angle: base.angle };
+    if (prefix && prefixData[prefix] && prefixData[prefix][state]) {
+        const xy = prefixData[prefix][state];
+        return { x: xy[0], y: xy[1], angle: base.angle };
+    }
+    // f の派生状態は提供された座標表に従って同じ高さに配置する。
+    if (prefix && prefixData[prefix] && state.startsWith('f')) {
+        const n = state.endsWith('1') ? 1 : state.includes('-1') ? -1 : 0;
+        const xy = prefixData[prefix]['f' + n];
+        if (xy) return { x: xy[0], y: xy[1], angle: base.angle };
     }
     return { x: base.x, y: base.y, angle: base.angle };
 }
@@ -1952,8 +1949,9 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 else {
                     let p0 = get_center_point(c, "from"); let p1 = get_center_point(c, "to");
                     p = lerp(p0, p1, timeRatio);
-                    // l/r/o が指定された移動は、弧を描かず中心座標間を等速直線運動する。
-                    if (!(c.fromPrefix || c.toPrefix)) p.y -= hOffset;
+                    // 接頭辞付きでも、4 などの通常スローは上下に弾む。
+                    // 中心の横方向の移動は座標間の直線補間を保ち、弾みは y にだけ加える。
+                    p.y -= hOffset;
 
                     let s = Math.floor(c.value / 2);
                     let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
@@ -2049,8 +2047,9 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                     let strikeProgress = Math.sin(timeRatio * Math.PI);
                     p = lerp(p0, centerStrike, strikeProgress);
                 }
-                // 接頭辞付きの中心移動は、座標間を等速直線運動させる。
-                if (!(c.fromPrefix || c.toPrefix)) p.y -= hOffset;
+                // 通常のデビルスティックは、接頭辞 l/r/o の有無にかかわらず弾む。
+                // 中心の x は座標間を補間し、y にはサイトスワップ値に応じた弾みを重ねる。
+                p.y -= hOffset;
 
                 let A_start = p0.angle; let A_target = p1.angle; let TotalRotDeg = 0;
                 let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
@@ -2111,37 +2110,41 @@ function getPrefixHandOffset(globalTime, handSide) {
     const cycleDuration = T * BEAT_TIME;
     if (cycleDuration <= 0) return { x: 0, y: 0 };
     const gt = ((globalTime % cycleDuration) + cycleDuration) % cycleDuration;
-    const byTime = new Map();
-    const displacement = (c, endPoint) => {
-        const isEnd = endPoint === 'to';
-        const prefix = (isEnd ? c.toPrefix : c.fromPrefix) || '';
-        const state = isEnd ? c.to : c.from;
+
+    // 各拍の「その手の目標オフセット」を、実際にその手から出るトークンから作る。
+    // l/r/o は左右の手そのものを表す記号ではない。どちらの手が動くかは
+    // トークンの handSide（同期パターンの左右のスロット）で決める。
+    const targets = Array.from({ length: T }, () => ({ x: 0, y: 0, priority: 0 }));
+    const displacement = (state, prefix) => {
+        const rawState = String(state).replace(/x$/i, '');
+        const plain = get_data(rawState);
         if (!prefix) return { x: 0, y: 0 };
-        const ordinary = get_data(String(state));
-        const positioned = get_data(prefix + String(state));
-        return { x: positioned.x - ordinary.x, y: positioned.y - ordinary.y };
+        const positioned = get_data(prefix + rawState);
+        return { x: positioned.x - plain.x, y: positioned.y - plain.y };
     };
+
     for (let b = 0; b < g_balls; b++) {
         for (let t = 0; t < T; t++) {
             const c = table[b] && table[b][t];
-            if (!c || c.value <= 0 || c.handSide !== handSide) continue;
-            if (!(c.fromPrefix || c.toPrefix)) continue;
-            const time = t * BEAT_TIME;
-            const candidate = { time, from: displacement(c, 'from'), to: displacement(c, 'to') };
-            const previous = byTime.get(time);
-            if (!previous || ((candidate.from.x !== candidate.to.x || candidate.from.y !== candidate.to.y) &&
-                previous.from.x === previous.to.x && previous.from.y === previous.to.y)) byTime.set(time, candidate);
+            if (!c || !(c.value > 0) || c.handSide !== handSide) continue;
+            const prefix = c.toPrefix || '';
+            if (!prefix) continue; // 無記号の拍は目標オフセット 0 のまま
+            const d = displacement(c.value, prefix);
+            // 同じ手・同じ拍に複数の位置指定があれば、最初の指定を安定して採用する。
+            if (targets[t].priority === 0) targets[t] = { x: d.x, y: d.y, priority: 1 };
         }
     }
-    const events = Array.from(byTime.values()).sort((a,b) => a.time - b.time);
-    if (!events.length) return { x: 0, y: 0 };
-    let current = events[events.length - 1];
-    for (const event of events) { if (event.time <= gt) current = event; else break; }
-    const elapsed = gt >= current.time ? gt - current.time : gt + cycleDuration - current.time;
-    const ratio = Math.max(0, Math.min(1, elapsed / BEAT_TIME));
+
+    // 目標は「拍の時点」で切り替わるため、現在の拍では前拍の目標から
+    // 現在の拍の目標へ補間する。これで r4/l4 に向かう移動が次拍まで遅れない。
+    const beat = Math.floor(gt / BEAT_TIME) % T;
+    const u = (gt % BEAT_TIME) / BEAT_TIME;
+    const prevBeat = (beat - 1 + T) % T;
+    const from = targets[prevBeat];
+    const to = targets[beat];
     return {
-        x: current.from.x + (current.to.x - current.from.x) * ratio,
-        y: current.from.y + (current.to.y - current.from.y) * ratio
+        x: from.x + (to.x - from.x) * u,
+        y: from.y + (to.y - from.y) * u
     };
 }
 
