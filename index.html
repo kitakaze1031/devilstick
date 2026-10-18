@@ -294,6 +294,8 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                     <button class="preset-btn" onclick="applyPreset('-1')">-1</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,2x)')">(2x,0)(0,2x)</button>
                     <button class="preset-btn" onclick="applyPreset('(2x,0)(0,-2)(0,2)(0,2x)(-2,0)(2,0)')">(2x,0)(0,-2)(0,2)(0,2x)(-2,0)(2,0)</button>
+                    <button class="preset-btn" onclick="applyPreset('(2x,0)(0,r-2x)(o2x,0)(0,l-2x)')">クローバー</button>
+                    <button class="preset-btn" onclick="applyPreset('(r-2x,0)(0,l-2x)')">チョップ</button>
                 </div>
             </div>
 
@@ -342,9 +344,8 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
         <div class="info-box">
             <strong>💡 インフォメーション</strong><br>
             ・<a href="siteswap_guide_index_motion_v10.html" target="_blank" style="color: #3182ce; text-decoration: none; font-weight: bold;">サイトスワップとは？</a><br>
-            ・<a href="devilstick_siteswap_guide_v8" target="_blank" style="color: #3182ce; text-decoration: none; font-weight: bold;">デビルスティックのサイトスワップの説明</a><br>
-           ・<a href="devilstick_special_symbols_guide_v4" target="_blank" style="color: #3182ce; text-decoration: none; font-weight: bold;">特殊な記号の説明</a><br>
-            ・<a href="HS.html" target="_blank" rel="noopener noreferrer" style="color: #3182ce; text-decoration: none; font-weight: bold;">サイトスワップ検索機とは(準備中)</a>
+            ・<a href="features.html" target="_blank" style="color: #3182ce; text-decoration: none; font-weight: bold;">このシミュレーターの機能</a><br>
+            ・<a href="HS.html" target="_blank" rel="noopener noreferrer" style="color: #3182ce; text-decoration: none; font-weight: bold;">HSシミュレーターを開く</a>
         </div>
     </div>
 </div>
@@ -714,6 +715,8 @@ let logicalTimeAccumulator = 0;
 // 座標・角度取得関数
 // =====================================
 function get_data(id) {
+    // 基本状態。l/r/o は状態名の先頭に付ける位置修飾子として扱う。
+    // l = (-60, -60), r = (+60, -60), o = (0, -120)。角度は維持する。
     const data = {
         "-4": { x: 300, y: 460, angle: 50 * DEG_TO_RAD },
         "-3": { x: 340, y: 400, angle: 50 * DEG_TO_RAD },
@@ -728,15 +731,74 @@ function get_data(id) {
         "f0r": { x: 400, y: 400, angle: 90 * DEG_TO_RAD },
         "f1o": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
         "f1i": { x: 460, y: 400, angle: 90 * DEG_TO_RAD },
-         "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },
-         "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },
-         "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
-         "4": { x: 500, y: 460, angle: -50 * DEG_TO_RAD },
-         // sp: スティックを鉛直(0deg)で受ける専用状態
-         "sp-1": { x: 340, y: 350, angle: 0 * DEG_TO_RAD },
-         "sp1": { x: 460, y: 350, angle: 0 * DEG_TO_RAD }
+        "1": { x: 400, y: 460, angle: 50 * DEG_TO_RAD },
+        "2": { x: 460, y: 400, angle: 50 * DEG_TO_RAD },
+        "3": { x: 460, y: 400, angle: -50 * DEG_TO_RAD },
+        "4": { x: 500, y: 460, angle: -50 * DEG_TO_RAD },
+        "sp-1": { x: 340, y: 350, angle: 0 * DEG_TO_RAD },
+        "sp1": { x: 460, y: 350, angle: 0 * DEG_TO_RAD }
     };
-    return data[id] || { x: 400, y: 460, angle: 0 };
+
+    const key = String(id);
+    // 先頭の l/r/o だけを位置修飾子として読む。
+    // その後ろは f-1、sp-1、-2 などの状態名として通常どおり解釈する。
+    const prefixMatch = key.match(/^([lro])(?=sp|f|-?\d)/i);
+    const prefix = prefixMatch ? prefixMatch[1].toLowerCase() : "";
+    const baseKey = prefix ? key.slice(1) : key;
+    const base = data[baseKey];
+    if (!base) return { x: 400, y: 460, angle: 0 };
+
+    // l/r/o は基準状態からのオフセットではなく、中心座標そのものを指定する。
+    // 例: r-2x -> (460,400), o2x -> (400,340), l-2x -> (340,400)
+    if (prefix === "l") return { x: 340, y: 400, angle: base.angle };
+    if (prefix === "r") return { x: 460, y: 400, angle: base.angle };
+    if (prefix === "o") return { x: 400, y: 340, angle: base.angle };
+    return { x: base.x, y: base.y, angle: base.angle };
+}
+
+// l/r/o の接頭辞遷移で、中心位置に加える移動量。
+// Δは「移動元の接頭辞 → 移動先の接頭辞」の値をそのまま使う。
+const PREFIX_MOVE = {
+    "|l": { x: 60, y: -60 }, "|o": { x: 0, y: -120 }, "|r": { x: -60, y: -60 },
+    "l|": { x: -60, y: 60 }, "l|o": { x: -60, y: -60 }, "l|r": { x: -120, y: 0 },
+    "r|": { x: 60, y: -60 }, "r|l": { x: 120, y: 0 }, "r|o": { x: 60, y: -60 },
+    // 未指定の o 遷移は、対応する逆方向の移動量から補完。
+    "o|": { x: 0, y: 120 }, "o|l": { x: 60, y: 60 }, "o|r": { x: -60, y: 60 }
+};
+function prefixMove(fromPrefix, toPrefix) {
+    const key = (fromPrefix || "") + "|" + (toPrefix || "");
+    return PREFIX_MOVE[key] || { x: 0, y: 0 };
+}
+function get_center_point(c, endPoint) {
+    const isEnd = endPoint === "to";
+    const state = isEnd ? c.to : c.from;
+    const prefix = (isEnd ? c.toPrefix : c.fromPrefix) || "";
+
+    // 接頭辞付き状態は累積オフセットではなく、その接頭辞の中心座標を直接使う。
+    // これにより l2x は (340,400)、r2x は (460,400) となり、
+    // l/r の並び順に関係なく両座標の間を移動する。
+    const stateKey = prefix ? prefix + String(state) : String(state);
+    const base = get_data(stateKey);
+    return { x: base.x, y: base.y, angle: base.angle };
+}
+
+// HS先端用の移動量。接頭辞付き中心と同じ状態の無接頭辞中心との差を求め、
+// HS本来の先端位置に加算する。l2x の基準位置 (400,460) から
+// l2x の中心 (340,400) への移動は (-60,-60) になる。
+function get_hs_transition_offset(c, progress = 0) {
+    const displacement = (endPoint) => {
+        const isEnd = endPoint === "to";
+        const prefix = (isEnd ? c.toPrefix : c.fromPrefix) || "";
+        if (!prefix) return { x: 0, y: 0 };
+        const state = isEnd ? c.to : c.from;
+        const ordinary = get_data(String(state));
+        const positioned = get_center_point(c, endPoint);
+        return { x: positioned.x - ordinary.x, y: positioned.y - ordinary.y };
+    };
+    const from = displacement("from");
+    const to = displacement("to");
+    const t = Math.max(0, Math.min(1, progress));
+    return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t };
 }
 
 function getAsyncThrowCount(sv) {
@@ -1012,8 +1074,14 @@ function parse(s) {
             if (tokenIndex >= tokens.length) return null;
             let token = tokens[tokenIndex];
             
-            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null };
-            
+            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null, positionPrefix: "" };
+
+            // l/r/o は投げ状態の座標修飾子。lf2、lsp-2、l-2 も認識する。
+            const posMatch = token.match(/^([lro])(?=(?:sp|f)?-?(?:10|[0-9a-zA-Z]))/i);
+            if (posMatch) {
+                th.positionPrefix = posMatch[1].toLowerCase();
+                token = token.substring(1);
+            }
             if (token.startsWith('-')) {
                 th.is_minus = true;
                 token = token.substring(1);
@@ -1066,8 +1134,8 @@ function parse(s) {
         // [2 3(r1)] のような [...] 全体を「1ビート」として扱う。
         // 括弧正規化後は [2 3r1 ] の形になるため、[] の境界を先に保持して解析する。
         // 「10」は1・0ではなく1つのサイトスワップ値、a は従来どおり10を表す。
-        const throwRegex = /-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
-        const beatRegex = /\[[^\]]*\]|-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/g;
+        const throwRegex = /[lro]?-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/gi;
+        const beatRegex = /\[[^\]]*\]|[lro]?-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/gi;
         const beatTokens = normalized.match(beatRegex) || [];
 
         for (const beatToken of beatTokens) {
@@ -1129,7 +1197,12 @@ function parse(s) {
             pending_prefix = ''; 
 
             let parseSingleThrow = () => {
-                let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null };
+                let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null, positionPrefix: "" };
+                // l/r/o は状態座標の修飾子。lf、lsp、l- などを識別する。
+                if (/[lro]/i.test(s[i] || "") && /^(?:[lro])(?=(?:sp|f)?-?(?:\d|a))/i.test(s.slice(i))) {
+                    th.positionPrefix = s[i].toLowerCase();
+                    i++;
+                }
                 // sp は2文字で1つの接頭記号。p より先に判定する。
                 if (i + 1 < s.length && s[i] === 's' && s[i + 1] === 'p') { th.propeller = 6; i += 2; }
                 else if (i < s.length && s[i] === 'p') { th.propeller = 1; i++; } 
@@ -1248,7 +1321,7 @@ function object_count(seq) {
 // 軌道構築
 // =====================================
 function build(seq, balls, localT, isAsync) {
-    let outTable = Array.from({ length: balls }, () => Array.from({ length: localT }, () => ({ value: -1, from: -1, to: -1, angleExpr: "", action_str: "", propeller: 0, rot: null, handSide: 0 })) );
+    let outTable = Array.from({ length: balls }, () => Array.from({ length: localT }, () => ({ value: -1, from: -1, to: -1, fromPrefix: "", toPrefix: "", angleExpr: "", action_str: "", propeller: 0, rot: null, handSide: 0 })) );
     
     let ex = [];
     for (let t = 0; t < localT; t++) { 
@@ -1323,7 +1396,7 @@ function build(seq, balls, localT, isAsync) {
             let rot = th.rot;
             let hs = th.hs;
 
-            outTable[ball][t] = { value, from, to, angleExpr: "", action_str, propeller, rot, hs, handSide: side };
+            outTable[ball][t] = { value, from, to, fromPrefix: "", toPrefix: th.positionPrefix || "", angleExpr: "", action_str, propeller, rot, hs, handSide: side };
 
             t += Math.floor(value / 2);
             if (to === -1 || to === 1) side ^= 1;
@@ -1386,6 +1459,9 @@ function build(seq, balls, localT, isAsync) {
             } else {
                 curr_throw.to = next_key.endsWith('l') ? -2 : 2;
             }
+            // この投げに書かれた l/r/o 修飾を、この投げの到達側の座標として保持する。
+            // 次のトークンの接頭辞にずらすと、r/o/l の指定が1拍ずれて中心が動かない。
+            curr_throw.toPrefix = curr_throw.toPrefix || "";
         }
 
         for (let i = 0; i < path.length; i++) {
@@ -1395,6 +1471,8 @@ function build(seq, balls, localT, isAsync) {
             let curr_throw = outTable[b][curr_t];
 
             curr_throw.from = prev_throw.to;
+            curr_throw.fromPrefix = prev_throw.toPrefix || "";
+            // toPrefix は outTable 作成時に現在の入力トークンから設定済み。
 
             let angleTable = isAsync ? ASYNC_ANGLE_RULES : SYNC_ANGLE_RULES;
             let f = String(curr_throw.from);
@@ -1412,6 +1490,17 @@ function build(seq, balls, localT, isAsync) {
             } else {
                 curr_throw.angleExpr = isAsync ? ((Number(t) <= -1) ? "-180n" : "180n") : ((Number(t) <= -1) ? "-180a" : "180a");
             }
+        }
+
+        // HS先端には遷移表の座標差を累積して適用する。
+        // デビルスティックの中心座標そのものは get_center_point() の絶対座標を維持する。
+        let hsRunningOffset = { x: 0, y: 0 };
+        for (let i = 0; i < path.length; i++) {
+            const c = outTable[b][path[i]];
+            c.hsFromOffset = { x: hsRunningOffset.x, y: hsRunningOffset.y };
+            const delta = prefixMove(c.fromPrefix || "", c.toPrefix || "");
+            hsRunningOffset = { x: hsRunningOffset.x + delta.x, y: hsRunningOffset.y + delta.y };
+            c.hsToOffset = { x: hsRunningOffset.x, y: hsRunningOffset.y };
         }
     }
     return outTable;
@@ -1657,6 +1746,7 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
                     side = (typeof c.to === "number") ? ((c.to <= -1) ? 0 : 1) : (c.handSide || 0);
                 }
 
+                const hasPositionPrefix = !!(c.fromPrefix || c.toPrefix);
                 let tip = side === 0 ? { ...g_leftHand } : { ...g_rightHand };
 
                 let centerPeriod = g_isAsync ? (BEAT_TIME * 2) : BEAT_TIME;
@@ -1683,7 +1773,8 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
                 let dx = Math.cos(angle);
                 let dy = Math.sin(angle);
 
-                // 手(tip)の位置を支点とし、上部(L - 15)と下部(-15)へスティックを伸ばす
+                // HSを握っている間は、握り手（白い丸）そのものを中心の遷移量だけ移動させる。
+                // そのため、ここではスティックに別途オフセットを足さない（二重移動を防ぐ）。
                 let stick_p1 = { x: tip.x + dx * (L - gripOffset), y: tip.y + dy * (L - gripOffset) };
                 let stick_p2 = { x: tip.x - dx * gripOffset, y: tip.y - dy * gripOffset };
 
@@ -1749,11 +1840,15 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
                 };
 
                 let p = lerp(startCenter, endCenter, timeRatio);
-
-                // 高さの計算も airDuration ベースで完結する
-                let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
-                hOffset = bounce * Math.max(heightScale, 45.0);
-                p.y -= hOffset;
+                // HSの飛行中心にも、HSの基準軌道に対して接頭辞の座標差を加算する。
+                const hasPositionPrefix = !!(c.fromPrefix || c.toPrefix);
+                if (!hasPositionPrefix) {
+                    let bounce = Math.abs(Math.sin(timeRatio * Math.PI));
+                    hOffset = bounce * Math.max(heightScale, 45.0);
+                    p.y -= hOffset;
+                }
+                // 接頭辞の移動は握り手側に一度だけ適用する。
+                // 飛行中のHSにも同じオフセットを重ねると二重移動になるため加算しない。
 
                 let TotalRotDeg = 0;
                 let a_val = (c.rot !== null && c.rot !== undefined) ? c.rot : (isAsync ? getAsyncThrowCount(sv) : Math.floor(sv / 2));
@@ -1825,7 +1920,7 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 let isHorizontal2x = (c.value === 2 && (c.from === -1 || c.from === 1) && c.propeller === 1);
                 let p, angle;
 
-                if (isHorizontal2x) {
+                if (isHorizontal2x && !(c.fromPrefix || c.toPrefix)) {
                     let p0, p1;
                     if (c.from === -1) { p0 = g_leftHand; p1 = g_rightHand; angle = timeRatio * Math.PI; } 
                     else { p0 = g_rightHand; p1 = g_leftHand; angle = -timeRatio * Math.PI; }
@@ -1833,9 +1928,10 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                     draw_horizontal_devilstick(p, angle, color);
                 } 
                 else {
-                    let p0 = get_data(c.from); let p1 = get_data(c.to);
+                    let p0 = get_center_point(c, "from"); let p1 = get_center_point(c, "to");
                     p = lerp(p0, p1, timeRatio);
-                    p.y -= hOffset;
+                    // l/r/o が指定された移動は、弧を描かず中心座標間を等速直線運動する。
+                    if (!(c.fromPrefix || c.toPrefix)) p.y -= hOffset;
 
                     let s = Math.floor(c.value / 2);
                     let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
@@ -1854,18 +1950,30 @@ function draw_ball(balls, globalTime, color, ballIndex) {
             else if (c.propeller === 2) {
                 let p; let s = Math.floor(c.value / 2);
                 let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
-                let handStart, handEnd;
-                if (c.from <= -1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
-                if (c.to <= -1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
-                p = lerp(handStart, handEnd, timeRatio);
-                p.y -= hOffset;
+                if (c.fromPrefix || c.toPrefix) {
+                    // 接頭辞付きの 2x も、手の位置ではなく中心座標の遷移を使う。
+                    // get_center_point() は接頭辞遷移の累積オフセットを含むため、
+                    // 指定された Δx/Δy に沿って中心が等速直線運動する。
+                    const p0 = get_center_point(c, "from");
+                    const p1 = get_center_point(c, "to");
+                    p = lerp(p0, p1, timeRatio);
+                } else {
+                    let handStart, handEnd;
+                    if (c.from <= -1) { handStart = g_leftHand; } else { handStart = g_rightHand; }
+                    if (c.to <= -1) { handEnd = g_leftHand; } else { handEnd = g_rightHand; }
+                    p = lerp(handStart, handEnd, timeRatio);
+                    p.y -= hOffset;
+                }
                 let angle = timeRatio * Math.PI * base_s;
                 draw_horizontal_devilstick(p, angle, color);
             }
             else if (c.propeller === 5) {
-                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p0 = get_center_point(c, "from"); let p1 = get_center_point(c, "to");
                 let p = lerp(p0, p1, timeRatio);
-                p.y = (g_leftHand.y + g_rightHand.y) / 2.0 - 20.0 - hOffset;
+                // 接頭辞がある場合は指定中心をそのまま使い、手位置や弧で上書きしない。
+                if (!(c.fromPrefix || c.toPrefix)) {
+                    p.y = (g_leftHand.y + g_rightHand.y) / 2.0 - 20.0 - hOffset;
+                }
                 let angle = (c.from <= -1) ? 90 * DEG_TO_RAD : -90 * DEG_TO_RAD;
                 draw_devilstick(p, angle, color);
             }
@@ -1876,9 +1984,16 @@ function draw_ball(balls, globalTime, color, ballIndex) {
 
                 let centerX = (g_leftHand.x + g_rightHand.x) / 2;
                 let centerY = (g_leftHand.y + g_rightHand.y) / 2;
-                let p = { x: centerX, y: centerY - 20 };
+                let p;
+                if (c.fromPrefix || c.toPrefix) {
+                    const p0 = get_center_point(c, "from");
+                    const p1 = get_center_point(c, "to");
+                    p = lerp(p0, p1, timeRatio);
+                } else {
+                    p = { x: centerX, y: centerY - 20 };
+                }
 
-                let A_start = get_data(c.from).angle; let deg_start = A_start / DEG_TO_RAD;
+                let A_start = get_center_point(c, "from").angle; let deg_start = A_start / DEG_TO_RAD;
                 let isRightStart = (deg_start > 0);
 
                 if (spinRatio <= 0.20) {
@@ -1903,16 +2018,17 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                 }
             }
             else {
-                let p0 = get_data(c.from); let p1 = get_data(c.to);
+                let p0 = get_center_point(c, "from"); let p1 = get_center_point(c, "to");
                 let p = lerp(p0, p1, timeRatio);
 
-                let isCenterHit = (c.from === -1 && c.to === -1) || (c.from === 1 && c.to === 1);
+                let isCenterHit = !(c.fromPrefix || c.toPrefix) && ((c.from === -1 && c.to === -1) || (c.from === 1 && c.to === 1));
                 if (isCenterHit) {
                     const centerStrike = { x: 400, y: 460 };
                     let strikeProgress = Math.sin(timeRatio * Math.PI);
                     p = lerp(p0, centerStrike, strikeProgress);
                 }
-                p.y -= hOffset;
+                // 接頭辞付きの中心移動は、座標間を等速直線運動させる。
+                if (!(c.fromPrefix || c.toPrefix)) p.y -= hOffset;
 
                 let A_start = p0.angle; let A_target = p1.angle; let TotalRotDeg = 0;
                 let default_a = g_isAsync ? getAsyncThrowCount(sv) : sv / 2.0;
@@ -1964,6 +2080,62 @@ function draw_ball(balls, globalTime, color, ballIndex) {
             return;
         }
     }
+}
+
+// 接頭辞による中心移動を、該当する側の握り手だけに反映する。
+// 左右を共有オフセットで動かさず、table の handSide ごとに独立して求める。
+function getPrefixHandOffset(globalTime, handSide) {
+    if (!table || !T) return { x: 0, y: 0 };
+    const cycleDuration = T * BEAT_TIME;
+    if (cycleDuration <= 0) return { x: 0, y: 0 };
+    const gt = ((globalTime % cycleDuration) + cycleDuration) % cycleDuration;
+
+    // 接頭辞の変化を「その拍の開始位置→終了位置」へ、1拍の間で
+    // 一定速度の直線移動として再生する。移動が終わったら次のイベントまで
+    // 終点を保持し、イベント間を勝手に補間して動き続けない。
+    const byTime = new Map();
+    const prefixOffset = (prefix) => {
+        if (prefix === 'l') return { x: -60, y: -60 };
+        if (prefix === 'r') return { x: 60, y: -60 };
+        if (prefix === 'o') return { x: 0, y: -120 };
+        return { x: 0, y: 0 };
+    };
+
+    for (let b = 0; b < g_balls; b++) {
+        for (let t = 0; t < T; t++) {
+            const c = table[b] && table[b][t];
+            if (!c || c.value <= 0 || c.handSide !== handSide) continue;
+            if (!(c.fromPrefix || c.toPrefix)) continue;
+            const time = t * BEAT_TIME;
+            const from = prefixOffset(c.fromPrefix || '');
+            const to = prefixOffset(c.toPrefix || '');
+            const candidate = { time, from, to };
+            const previous = byTime.get(time);
+            // 同じ手・同じ拍に複数候補がある場合、実際に位置が変わる遷移を優先。
+            if (!previous ||
+                ((from.x !== to.x || from.y !== to.y) &&
+                 previous.from.x === previous.to.x && previous.from.y === previous.to.y)) {
+                byTime.set(time, candidate);
+            }
+        }
+    }
+
+    const events = Array.from(byTime.values()).sort((a, b) => a.time - b.time);
+    if (!events.length) return { x: 0, y: 0 };
+
+    // 直近のイベントを取得。周期先頭では前周期最後のイベントの終点を保持する。
+    let current = events[events.length - 1];
+    for (const event of events) {
+        if (event.time <= gt) current = event;
+        else break;
+    }
+    const elapsed = (gt >= current.time) ? gt - current.time : gt + cycleDuration - current.time;
+    const duration = Math.max(1, BEAT_TIME);
+    const ratio = Math.max(0, Math.min(1, elapsed / duration));
+    return {
+        x: current.from.x + (current.to.x - current.from.x) * ratio,
+        y: current.from.y + (current.to.y - current.from.y) * ratio
+    };
 }
 
 // =====================================
@@ -2212,6 +2384,15 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
     let flatRightPos = getFlatHitMotion(globalTime, 1, { x: rightBaseX, y: handBaseY });
     if (flatRightPos !== null) { handRightTip.x = flatRightPos.x; handRightTip.y = flatRightPos.y; g_rightHand = { ...handRightTip }; } 
     else if (rightCenterProgress !== null) { g_rightHand = { ...handRightTip }; }
+
+    // 接頭辞移動は、対応する側の握り手だけに反映する。
+    // 左右を独立に計算し、片側の l/r/o 指定で反対側の手を動かさない。
+    const leftPrefixOffset = getPrefixHandOffset(globalTime, 0);
+    const rightPrefixOffset = getPrefixHandOffset(globalTime, 1);
+    g_leftHand = { x: g_leftHand.x + leftPrefixOffset.x, y: g_leftHand.y + leftPrefixOffset.y };
+    g_rightHand = { x: g_rightHand.x + rightPrefixOffset.x, y: g_rightHand.y + rightPrefixOffset.y };
+    handLeftTip = { x: handLeftTip.x + leftPrefixOffset.x, y: handLeftTip.y + leftPrefixOffset.y };
+    handRightTip = { x: handRightTip.x + rightPrefixOffset.x, y: handRightTip.y + rightPrefixOffset.y };
 
     // ★ flareを大きくして傾きを持たせる
     let flare = 1.2;
