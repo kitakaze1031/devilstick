@@ -2309,34 +2309,30 @@ function draw_ball(balls, globalTime, color, ballIndex) {
     }
 }
 
-// 接頭辞による中心移動を、該当する側の握り手だけに反映する。
-// 左右を共有オフセットで動かさず、table の handSide ごとに独立して求める。
+// 接頭辞の到達位置へ受け手側の握り手を移動させる。
+// 左右の手は別々に目標位置を計算する。
 function getPrefixHandOffset(globalTime, handSide) {
     if (!table || !T) return { x: 0, y: 0 };
     const cycleDuration = T * BEAT_TIME;
     if (cycleDuration <= 0) return { x: 0, y: 0 };
     const gt = ((globalTime % cycleDuration) + cycleDuration) % cycleDuration;
 
-    // 各拍の「その手の目標オフセット」を、実際にその手から出るトークンから作る。
-    // l/r/o は左右の手そのものを表す記号ではない。どちらの手が動くかは
-    // トークンの handSide（同期パターンの左右のスロット）で決める。
+    // 到達位置の接頭辞は、投げた手ではなく受け取る手の目標位置に反映する。
     const targets = Array.from({ length: T }, () => ({ x: 0, y: 0, priority: 0 }));
-    const displacement = (state, prefix) => {
-        const rawState = String(state).replace(/x$/i, '');
-        const plain = get_data(rawState);
-        if (!prefix) return { x: 0, y: 0 };
-        const positioned = get_data(prefix + rawState);
-        return { x: positioned.x - plain.x, y: positioned.y - plain.y };
-    };
-
     for (let b = 0; b < g_balls; b++) {
         for (let t = 0; t < T; t++) {
             const c = table[b] && table[b][t];
-            if (!c || !(c.value > 0) || c.handSide !== handSide) continue;
-            const prefix = c.toPrefix || '';
-            if (!prefix) continue; // 無記号の拍は目標オフセット 0 のまま
+            if (!c || !(c.value > 0) || !c.toPrefix) continue;
+            const catchHandSide = typeof c.to === "number"
+                ? (c.to <= -1 ? 0 : 1)
+                : c.handSide;
+            if (catchHandSide !== handSide) continue;
             const arrivalBeat = (t + Math.floor(c.value / 2)) % T;
-            const d = displacement(c.to, prefix);
+            const positioned = get_center_point(c, "to");
+            const d = {
+                x: positioned.x - (handSide === 0 ? 340 : 460),
+                y: positioned.y - 400
+            };
             // 位置指定は投げた拍ではなく、オブジェクトが到達する拍に適用する。
             if (targets[arrivalBeat].priority === 0) targets[arrivalBeat] = { x: d.x, y: d.y, priority: 1 };
         }
