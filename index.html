@@ -125,6 +125,33 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 /* a-z 入力行 */
 .alphabet-row .pad-btn { flex: 0 0 38px; min-width: 38px; }
 @media (max-width: 600px) { .alphabet-row .pad-btn { flex: 0 0 36px; min-width: 36px; } }
+
+/* デビルスティック見た目カスタマイズ */
+#stickDesignPanel{display:none;background:#fff;border:1px solid #dbe2ea;border-radius:12px;padding:16px;margin:14px 0;box-shadow:0 3px 12px rgba(0,0,0,.05)}
+#stickDesignToggle{margin:12px 0;padding:10px 16px;border:0;border-radius:8px;background:#2b6cb0;color:#fff;font-weight:700;cursor:pointer}
+#devilDesignPreview{display:block;width:100%;max-width:560px;height:190px;margin:8px auto 14px;border:1px solid #dbe2ea;border-radius:10px;background:#f7fafc}
+#stickDesignPanel h2{font-size:18px;margin:0 0 12px;color:#2d3748}
+.stick-design-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
+.stick-design-field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:#4a5568}
+.stick-design-field input[type=color]{width:100%;height:38px;padding:3px;border:1px solid #cbd5e0;border-radius:7px;background:#fff}
+.stick-design-field input[type=range],.stick-design-field select,.stick-design-field input[type=text]{width:100%;box-sizing:border-box}
+.stick-design-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;align-items:center}
+.stick-design-actions button{margin-top:0;padding:9px 13px;font-size:13px}
+#stickDesignStatus{font-size:12px;color:#4a5568;margin-top:8px;min-height:1em}
+
+
+.color-select{width:100%;min-width:0;padding:7px;border:1px solid #cbd5e0;border-radius:7px;background:#fff;color:#20252d;font:inherit}
+.stick-design-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin:12px 0}
+.stick-design-field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#4a5568}
+.stick-design-options{display:flex;flex-wrap:wrap;gap:10px 18px;margin:14px 0;font-size:13px}
+.stick-design-options label{display:flex;align-items:center;gap:6px}
+.stick-design-options input{width:18px;height:18px;accent-color:#2563eb}
+.stick-design-note,#stickDesignStatus{font-size:12px;color:#687180;margin:8px 0}
+.stick-design-field input[type=range]{width:100%;accent-color:#365de8}
+.stick-design-field output{float:right;color:#687180;font-variant-numeric:tabular-nums}
+.stick-design-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.stick-design-actions button{margin:0;padding:8px 12px}
+
 </style>
 </head>
 
@@ -266,6 +293,27 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
                     </div>
                 </div>
             </div>
+
+
+            <button type="button" id="stickDesignToggle" aria-expanded="false" aria-controls="stickDesignPanel">🎨 デザインを開く</button>
+            <section id="stickDesignPanel" aria-labelledby="stickDesignHeading" style="display:none; padding:16px; border:1px solid #dbe2ea; border-radius:12px; margin:16px 0; background:#fff;">
+<h2 id="stickDesignHeading" style="margin:0 0 12px;">🎨 デビルスティック・デザインスタジオ</h2>
+<div class="stick-design-grid"><label class="stick-design-field"><span>本体</span><select id="bodyColor" class="color-select"><option value="#ffb3b3">赤・薄い</option><option value="#ff5b4d">赤・普通</option><option value="#b5121b">赤・濃い</option><option value="#ffd1a3">オレンジ・薄い</option><option value="#ff8a00">オレンジ・普通</option><option value="#a84300">オレンジ・濃い</option><option value="#fff2a6">黄色・薄い</option><option value="#ffd400">黄色・普通</option><option value="#b38f00">黄色・濃い</option><option value="#d9f7a5">黄緑・薄い</option><option value="#8bcf32">黄緑・普通</option><option value="#426b12">黄緑・濃い</option><option value="#a8e6b0">緑・薄い</option><option value="#00b84a">緑・普通</option><option value="#00652b">緑・濃い</option><option value="#b8f0f5">水色・薄い</option><option value="#00c8d7">水色・普通</option><option value="#007c91">水色・濃い</option><option value="#b8d4ff">青・薄い</option><option value="#2463eb" selected>青・普通</option><option value="#102b7a">青・濃い</option><option value="#aab8e8">紺・薄い</option><option value="#293f8f">紺・普通</option><option value="#10183f">紺・濃い</option><option value="#ddc2ff">紫・薄い</option><option value="#7b2cff">紫・普通</option><option value="#431078">紫・濃い</option><option value="#ffc2e0">ピンク・薄い</option><option value="#ff4fa3">ピンク・普通</option><option value="#a31658">ピンク・濃い</option><option value="#d8b89a">茶色・薄い</option><option value="#8b5a2b">茶色・普通</option><option value="#4b2b16">茶色・濃い</option><option value="#d9d9d9">グレー・薄い</option><option value="#808080">グレー・普通</option><option value="#404040">グレー・濃い</option><option value="#20252d">黒</option><option value="#f8fafc">白・薄い</option><option value="#ffffff">白</option><option value="#c0c0c0">銀色</option><option value="#d4af37">金色</option></select></label><label class="stick-design-field"><span>両端</span><select id="endColor" class="color-select"><option value="#ffb3b3">赤・薄い</option><option value="#ff5b4d" selected>赤・普通</option><option value="#b5121b">赤・濃い</option><option value="#ffd1a3">オレンジ・薄い</option><option value="#ff8a00">オレンジ・普通</option><option value="#a84300">オレンジ・濃い</option><option value="#fff2a6">黄色・薄い</option><option value="#ffd400">黄色・普通</option><option value="#b38f00">黄色・濃い</option><option value="#d9f7a5">黄緑・薄い</option><option value="#8bcf32">黄緑・普通</option><option value="#426b12">黄緑・濃い</option><option value="#a8e6b0">緑・薄い</option><option value="#00b84a">緑・普通</option><option value="#00652b">緑・濃い</option><option value="#b8f0f5">水色・薄い</option><option value="#00c8d7">水色・普通</option><option value="#007c91">水色・濃い</option><option value="#b8d4ff">青・薄い</option><option value="#2463eb">青・普通</option><option value="#102b7a">青・濃い</option><option value="#aab8e8">紺・薄い</option><option value="#293f8f">紺・普通</option><option value="#10183f">紺・濃い</option><option value="#ddc2ff">紫・薄い</option><option value="#7b2cff">紫・普通</option><option value="#431078">紫・濃い</option><option value="#ffc2e0">ピンク・薄い</option><option value="#ff4fa3">ピンク・普通</option><option value="#a31658">ピンク・濃い</option><option value="#d8b89a">茶色・薄い</option><option value="#8b5a2b">茶色・普通</option><option value="#4b2b16">茶色・濃い</option><option value="#d9d9d9">グレー・薄い</option><option value="#808080">グレー・普通</option><option value="#404040">グレー・濃い</option><option value="#20252d">黒</option><option value="#f8fafc">白・薄い</option><option value="#ffffff">白</option><option value="#c0c0c0">銀色</option><option value="#d4af37">金色</option></select></label><label class="stick-design-field"><span>グリップ</span><select id="gripColor" class="color-select"><option value="#ffb3b3">赤・薄い</option><option value="#ff5b4d">赤・普通</option><option value="#b5121b">赤・濃い</option><option value="#ffd1a3">オレンジ・薄い</option><option value="#ff8a00">オレンジ・普通</option><option value="#a84300">オレンジ・濃い</option><option value="#fff2a6">黄色・薄い</option><option value="#ffd400">黄色・普通</option><option value="#b38f00">黄色・濃い</option><option value="#d9f7a5">黄緑・薄い</option><option value="#8bcf32">黄緑・普通</option><option value="#426b12">黄緑・濃い</option><option value="#a8e6b0">緑・薄い</option><option value="#00b84a">緑・普通</option><option value="#00652b">緑・濃い</option><option value="#b8f0f5">水色・薄い</option><option value="#00c8d7">水色・普通</option><option value="#007c91">水色・濃い</option><option value="#b8d4ff">青・薄い</option><option value="#2463eb">青・普通</option><option value="#102b7a">青・濃い</option><option value="#aab8e8">紺・薄い</option><option value="#293f8f">紺・普通</option><option value="#10183f">紺・濃い</option><option value="#ddc2ff">紫・薄い</option><option value="#7b2cff">紫・普通</option><option value="#431078">紫・濃い</option><option value="#ffc2e0">ピンク・薄い</option><option value="#ff4fa3">ピンク・普通</option><option value="#a31658">ピンク・濃い</option><option value="#d8b89a">茶色・薄い</option><option value="#8b5a2b">茶色・普通</option><option value="#4b2b16">茶色・濃い</option><option value="#d9d9d9">グレー・薄い</option><option value="#808080">グレー・普通</option><option value="#404040">グレー・濃い</option><option value="#20252d" selected>黒</option><option value="#f8fafc">白・薄い</option><option value="#ffffff">白</option><option value="#c0c0c0">銀色</option><option value="#d4af37">金色</option></select></label><label class="stick-design-field"><span>真ん中のテープ</span><select id="centerTapeColor" class="color-select"><option value="#ffb3b3">赤・薄い</option><option value="#ff5b4d">赤・普通</option><option value="#b5121b">赤・濃い</option><option value="#ffd1a3">オレンジ・薄い</option><option value="#ff8a00">オレンジ・普通</option><option value="#a84300">オレンジ・濃い</option><option value="#fff2a6">黄色・薄い</option><option value="#ffd400">黄色・普通</option><option value="#b38f00">黄色・濃い</option><option value="#d9f7a5">黄緑・薄い</option><option value="#8bcf32">黄緑・普通</option><option value="#426b12">黄緑・濃い</option><option value="#a8e6b0">緑・薄い</option><option value="#00b84a">緑・普通</option><option value="#00652b">緑・濃い</option><option value="#b8f0f5">水色・薄い</option><option value="#00c8d7">水色・普通</option><option value="#007c91">水色・濃い</option><option value="#b8d4ff">青・薄い</option><option value="#2463eb">青・普通</option><option value="#102b7a">青・濃い</option><option value="#aab8e8">紺・薄い</option><option value="#293f8f">紺・普通</option><option value="#10183f">紺・濃い</option><option value="#ddc2ff">紫・薄い</option><option value="#7b2cff">紫・普通</option><option value="#431078">紫・濃い</option><option value="#ffc2e0">ピンク・薄い</option><option value="#ff4fa3">ピンク・普通</option><option value="#a31658">ピンク・濃い</option><option value="#d8b89a">茶色・薄い</option><option value="#8b5a2b">茶色・普通</option><option value="#4b2b16">茶色・濃い</option><option value="#d9d9d9">グレー・薄い</option><option value="#808080">グレー・普通</option><option value="#404040">グレー・濃い</option><option value="#20252d">黒</option><option value="#f8fafc" selected>白・薄い</option><option value="#ffffff">白</option><option value="#c0c0c0">銀色</option><option value="#d4af37">金色</option></select></label><label class="stick-design-field"><span>両端側のテープ2本</span><select id="edgeTapeColor" class="color-select"><option value="#ffb3b3">赤・薄い</option><option value="#ff5b4d">赤・普通</option><option value="#b5121b">赤・濃い</option><option value="#ffd1a3">オレンジ・薄い</option><option value="#ff8a00">オレンジ・普通</option><option value="#a84300">オレンジ・濃い</option><option value="#fff2a6">黄色・薄い</option><option value="#ffd400">黄色・普通</option><option value="#b38f00">黄色・濃い</option><option value="#d9f7a5">黄緑・薄い</option><option value="#8bcf32">黄緑・普通</option><option value="#426b12">黄緑・濃い</option><option value="#a8e6b0">緑・薄い</option><option value="#00b84a">緑・普通</option><option value="#00652b">緑・濃い</option><option value="#b8f0f5">水色・薄い</option><option value="#00c8d7">水色・普通</option><option value="#007c91">水色・濃い</option><option value="#b8d4ff">青・薄い</option><option value="#2463eb">青・普通</option><option value="#102b7a">青・濃い</option><option value="#aab8e8">紺・薄い</option><option value="#293f8f">紺・普通</option><option value="#10183f">紺・濃い</option><option value="#ddc2ff">紫・薄い</option><option value="#7b2cff">紫・普通</option><option value="#431078">紫・濃い</option><option value="#ffc2e0">ピンク・薄い</option><option value="#ff4fa3">ピンク・普通</option><option value="#a31658">ピンク・濃い</option><option value="#d8b89a">茶色・薄い</option><option value="#8b5a2b">茶色・普通</option><option value="#4b2b16">茶色・濃い</option><option value="#d9d9d9">グレー・薄い</option><option value="#808080">グレー・普通</option><option value="#404040">グレー・濃い</option><option value="#20252d">黒</option><option value="#f8fafc" selected>白・薄い</option><option value="#ffffff">白</option><option value="#c0c0c0">銀色</option><option value="#d4af37">金色</option></select></label></div>
+<div class="stick-design-options">
+<label class="stick-design-field"><span>複数オブジェクトの色</span><select id="objectColorMode" class="color-select"><option value="same" selected>すべて同じ色</option><option value="different">すべて違う色</option></select></label>
+<label><input id="gripWrapped" type="checkbox" checked> グリップを巻く</label>
+<label class="stick-design-field grip-mode-field"><span>巻き方</span><select id="gripMode" class="color-select"><option value="center" selected>中央だけ（今の巻き方）</option><option value="full">本体全体に巻く</option></select></label>
+<label><input id="endCapsEnabled" type="checkbox" checked> 両端パーツを付ける</label>
+<label><input id="edgeTapesEnabled" type="checkbox" checked> 両端側のテープ2本を表示</label>
+</div>
+<p class="stick-design-note">真ん中のテープは常に表示されます。両端側のテープ2本、グリップ、両端パーツは個別に切り替えできます。</p>
+<div class="stick-design-grid stick-shape-grid">
+<label class="stick-design-field"><span>長さ <output id="lengthOut">460</output></span><input id="stickLength" type="range" min="320" max="540" value="460"></label>
+<label class="stick-design-field"><span>太さ <output id="widthOut">64</output></span><input id="stickWidth" type="range" min="36" max="90" value="64"></label>
+</div>
+<div class="stick-design-actions"><button type="button" id="resetStickDesign">初期デザインに戻す</button><button type="button" id="randomStickDesign">ランダム配色</button></div>
+<div id="stickDesignStatus" aria-live="polite">変更はシミュレーターのスティックにすぐ反映されます。</div>
+</section>
 
             <div id="resultContainer" class="result-container">
                 <div class="section-title">🎥 録画が完了しました！</div>
@@ -667,7 +715,35 @@ code {
 // 定数・グローバル変数
 // =====================================
 const BEAT_TIME = 0.7;
-const COLORS = ["#e53e3e", "#3182ce", "#38a169", "#dd6b20", "#805ad5", "#f56565", "#4299e1", "#48bb78", "#ed8936", "#9f7aea"];
+function createObjectHueOffsets(count) {
+    const offsets=[0];
+    const hueStep=360/count;
+    for(let index=1;index<count;index++){
+        const jitter=(Math.random()-.5)*hueStep*.45;
+        offsets.push((index*hueStep+jitter+360)%360);
+    }
+    for(let index=offsets.length-1;index>1;index--){
+        const swapIndex=1+Math.floor(Math.random()*index);
+        [offsets[index],offsets[swapIndex]]=[offsets[swapIndex],offsets[index]];
+    }
+    return offsets;
+}
+function getObjectColor(index) {
+    const design=window.devilStickDesign||{};
+    const designColor=design.bodyColor||'#2463eb';
+    const base=getColorHsl(designColor);
+    if(!base)return designColor;
+    const count=Math.max(1,g_balls,index+1);
+    if(design.objectHueOffsetKey!==designColor||design.objectHueOffsets?.length!==count){
+        design.objectHueOffsetKey=designColor;
+        design.objectHueOffsets=createObjectHueOffsets(count);
+    }
+    if(index===0)return designColor;
+    const saturation=base.saturation||.72;
+    const hue=(base.hue+design.objectHueOffsets[index])%360;
+    const targetLuminance=Math.max(.001,Math.min(.999,getRelativeLuminance(designColor)));
+    return getColorAtLuminance(hue,saturation,targetLuminance);
+}
 const HS_NONE = 0, HS_HAND1 = 1, HS_HAND2 = 2;
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -1684,33 +1760,162 @@ function draw_stick(center, angle, color) {
 }
 function lerp(a, b, t) { return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
 
+function getDevilDesign() {
+    return window.devilStickDesign || {bodyColor:'#2463eb',endColor:'#ff5b4d',gripColor:'#20252d',centerTapeColor:'#f8fafc',edgeTapeColor:'#f8fafc',length:460,width:64,gripWrapped:true,edgeTapesEnabled:true,endCapsEnabled:true};
+}
+function getGripShade(hex, referenceHex=hex) {
+    const color=getColorHsl(hex);
+    if(!color)return hex;
+    const reference=getColorHsl(referenceHex)||color;
+    const bodyLuminance=getRelativeLuminance(hex);
+    const gripLuminance=reference.lightness>.52?bodyLuminance*.68:bodyLuminance+(1-bodyLuminance)*.42;
+    return getColorAtLuminance(color.hue,color.saturation,gripLuminance);
+}
+function getColorHsl(hex) {
+    const hslMatch=String(hex).match(/^hsla?\(\s*(-?[\d.]+)(?:deg)?\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%/i);
+    if(hslMatch)return {hue:(parseFloat(hslMatch[1])+360)%360,saturation:parseFloat(hslMatch[2])/100,lightness:parseFloat(hslMatch[3])/100};
+    const match=String(hex).match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if(!match)return null;
+    const [red,green,blue]=match.slice(1).map(value=>parseInt(value,16)/255);
+    const max=Math.max(red,green,blue), min=Math.min(red,green,blue), delta=max-min;
+    const lightness=(max+min)/2;
+    let hue=0, saturation=0;
+    if(delta){
+        saturation=delta/(1-Math.abs(2*lightness-1));
+        if(max===red)hue=((green-blue)/delta)%6;
+        else if(max===green)hue=(blue-red)/delta+2;
+        else hue=(red-green)/delta+4;
+        hue=(hue*60+360)%360;
+    }
+    return {hue,saturation,lightness};
+}
+function sameColorHue(first, second) {
+    const a=getColorHsl(first), b=getColorHsl(second);
+    if(!a||!b)return false;
+    if(a.saturation<.05||b.saturation<.05)return a.saturation<.05&&b.saturation<.05;
+    const difference=Math.abs(a.hue-b.hue);
+    return Math.min(difference,360-difference)<=12;
+}
+function getRelativeLuminance(hex) {
+    const color=getColorHsl(hex);
+    if(!color)return 0;
+    const hue=color.hue/60, chroma=(1-Math.abs(2*color.lightness-1))*color.saturation;
+    const x=chroma*(1-Math.abs(hue%2-1)), match=color.lightness-chroma/2;
+    let rgb;
+    if(hue<1)rgb=[chroma,x,0];
+    else if(hue<2)rgb=[x,chroma,0];
+    else if(hue<3)rgb=[0,chroma,x];
+    else if(hue<4)rgb=[0,x,chroma];
+    else if(hue<5)rgb=[x,0,chroma];
+    else rgb=[chroma,0,x];
+    const linear=rgb.map(value=>{
+        const channel=value+match;
+        return channel<=.04045?channel/12.92:Math.pow((channel+.055)/1.055,2.4);
+    });
+    return linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
+}
+function getColorAtLuminance(hue,saturation,targetLuminance) {
+    const target=Math.max(0,Math.min(1,targetLuminance));
+    let low=0, high=1;
+    for(let step=0;step<24;step++){
+        const lightness=(low+high)/2;
+        const candidate=`hsl(${hue}, ${saturation*100}%, ${lightness*100}%)`;
+        if(getRelativeLuminance(candidate)<target)low=lightness;
+        else high=lightness;
+    }
+    return `hsl(${hue.toFixed(3)}, ${(saturation*100).toFixed(2)}%, ${(((low+high)/2)*100).toFixed(3)}%)`;
+}
+function applyLuminanceDifference(hex, difference) {
+    const color=getColorHsl(hex);
+    if(!color)return hex;
+    const luminance=Math.max(0,Math.min(1,getRelativeLuminance(hex)+difference));
+    return getColorAtLuminance(color.hue,color.saturation,luminance);
+}
+function drawDesignedDevilStick(p1, p2, center, angle, color) {
+    const s=getDevilDesign();
+    const len=Math.hypot(p2.x-p1.x,p2.y-p1.y); if(len<.001)return;
+    const ux=(p2.x-p1.x)/len, uy=(p2.y-p1.y)/len, nx=-uy, ny=ux;
+    const widthScale=(Number(s.width)||64)/64;
+    const endW=18*widthScale, midW=8*widthScale;
+    // Main tapered body keeps the original simulator's geometry and animation.
+    // When distinct object colors are enabled, use the existing per-object palette
+    // for the body unless the grip is wrapped over the entire stick.
+    const distinctObjects=s.objectColorMode==='different';
+    const fullGrip=!!s.gripWrapped && s.gripMode==='full';
+    const objectColor=color||'#2463eb';
+        const bodyColor=(distinctObjects && !fullGrip) ? objectColor : (s.bodyColor||objectColor);
+        let gripColor=s.gripColor||'#20252d';
+        if(distinctObjects){
+            if(fullGrip){
+                gripColor=getGripShade(objectColor,s.bodyColor||objectColor);
+            }else if(sameColorHue(s.bodyColor||objectColor,gripColor)){
+                const lightnessDifference=getRelativeLuminance(gripColor)-getRelativeLuminance(s.bodyColor||objectColor);
+                gripColor=applyLuminanceDifference(objectColor,lightnessDifference);
+            }
+        }
+    drawTaperedStick(p1,p2,endW,midW,bodyColor);
+    // Grip can cover only the center (current style) or the whole body.
+    const gripHalf=len*.23;
+    const gp1={x:center.x-ux*gripHalf,y:center.y-uy*gripHalf};
+    const gp2={x:center.x+ux*gripHalf,y:center.y+uy*gripHalf};
+    if(s.gripWrapped){
+      if(s.gripMode==='full'){
+        drawTaperedStick(p1,p2,endW,midW,gripColor);
+        const ridgeCount=Math.max(18,Math.round(len/5));
+        for(let i=1;i<ridgeCount;i++){
+          const t=i/ridgeCount, q={x:p1.x+(p2.x-p1.x)*t,y:p1.y+(p2.y-p1.y)*t};
+          const localHalf=(midW/2+(endW-midW)/2*Math.pow(Math.abs(t-.5)*2,2))*.9;
+          drawLineEx({x:q.x-nx*localHalf,y:q.y-ny*localHalf},{x:q.x+nx*localHalf,y:q.y+ny*localHalf},Math.max(.55,.85*widthScale),'rgba(0,0,0,0.42)');
+        }
+      } else {
+        drawLineEx(gp1,gp2,Math.max(4,13*widthScale),gripColor);
+        for(let i=1;i<=9;i++){
+          const t=-.23+(i/10)*.46, q={x:center.x+ux*len*t,y:center.y+uy*len*t};
+          drawLineEx({x:q.x-nx*7*widthScale,y:q.y-ny*7*widthScale},{x:q.x+nx*7*widthScale,y:q.y+ny*7*widthScale},Math.max(1,1.4*widthScale),'rgba(0,0,0,0.52)');
+        }
+      }
+    }
+    // Tape is transverse to the stick. Center tape is always visible.
+    const tapeW=Math.max(2,4.2*widthScale);
+    const localBodyHalf=t=>midW/2+(endW-midW)/2*Math.pow(Math.abs(t)*2,2);
+        function tapeAt(t, tapeColor){
+            const q={x:center.x+ux*len*t,y:center.y+uy*len*t}, half=localBodyHalf(t)*1.05;
+      drawLineEx({x:q.x-nx*half,y:q.y-ny*half},{x:q.x+nx*half,y:q.y+ny*half},tapeW,tapeColor);
+      drawLineEx({x:q.x-nx*half*.78,y:q.y-ny*half*.78},{x:q.x+nx*half*.78,y:q.y+ny*half*.78},Math.max(0.6,tapeW*.10),'rgba(255,255,255,0.28)');
+    }
+        tapeAt(0,s.centerTapeColor||'#f8fafc');
+    if(s.edgeTapesEnabled){
+            [-.23,.23].forEach(t=>tapeAt(t,s.edgeTapeColor||'#f8fafc'));
+    }
+    if(s.endCapsEnabled){
+      const capW=Math.max(5,endW*1.1), capLen=Math.max(5,5*widthScale);
+      [p1,p2].forEach((p,i)=>{
+        const dir=i===0?1:-1;
+        const a={x:p.x+ux*dir*capLen,y:p.y+uy*dir*capLen};
+        drawLineEx({x:p.x-nx*capW/2,y:p.y-ny*capW/2},{x:p.x+nx*capW/2,y:p.y+ny*capW/2},capLen*1.8,s.endColor||'#ff5b4d');
+      });
+    }
+}
+
 function draw_horizontal_devilstick(center, angle, color) {
-    const L = 108.0; const PITCH_SCALE = 0.25; const TILT_ANGLE = 15 * Math.PI / 180; 
+    const L = 108.0 * ((Number(getDevilDesign().length)||460) / 460); const PITCH_SCALE = 0.25; const TILT_ANGLE = 15 * Math.PI / 180; 
     let x1_3d = L * Math.sin(angle); let y1_3d = L * Math.cos(angle);
     let x2_3d = -L * Math.sin(angle); let y2_3d = -L * Math.cos(angle);
     let cosT = Math.cos(TILT_ANGLE);
     let scr_x1 = center.x + x1_3d; let scr_y1 = center.y + (y1_3d * cosT) * PITCH_SCALE;
     let scr_x2 = center.x + x2_3d; let scr_y2 = center.y + (y2_3d * cosT) * PITCH_SCALE;
-    drawTaperedStick({ x: scr_x1, y: scr_y1 }, { x: scr_x2, y: scr_y2 }, 18, 8, color);
+    drawDesignedDevilStick({ x: scr_x1, y: scr_y1 }, { x: scr_x2, y: scr_y2 }, center, angle, color);
     let dx = scr_x2 - scr_x1; let dy = scr_y2 - scr_y1; let len = Math.sqrt(dx * dx + dy * dy);
     if (len > 0.0001) { dx /= len; dy /= len; }
-    const cap = 14.0;
-    drawLineEx({ x: scr_x1, y: scr_y1 }, { x: scr_x1 + dx * cap, y: scr_y1 + dy * cap }, 15, "#1a202c");
-    drawLineEx({ x: scr_x2, y: scr_y2 }, { x: scr_x2 - dx * cap, y: scr_y2 - dy * cap }, 15, "#1a202c");
-    drawCenterMarker(center, angle);
 }
 
 function draw_devilstick(center, angle, color) {
-    const L = 108.0;
+    const L = 108.0 * ((Number(getDevilDesign().length)||460) / 460);
     let x1 = center.x + L * Math.sin(angle); let y1 = center.y - L * Math.cos(angle);
     let x2 = center.x - L * Math.sin(angle); let y2 = center.y + L * Math.cos(angle);
-    drawTaperedStick({ x: x1, y: y1 }, { x: x2, y: y2 }, 18, 8, color);
+    drawDesignedDevilStick({ x: x1, y: y1 }, { x: x2, y: y2 }, center, angle, color);
     let dx = x2 - x1; let dy = y2 - y1; let len = Math.sqrt(dx * dx + dy * dy);
     if (len > 0.0001) { dx /= len; dy /= len; }
-    const cap = 16.0;
-    drawLineEx({ x: x1, y: y1 }, { x: x1 + dx * cap, y: y1 + dy * cap }, 14, "#1a202c");
-    drawLineEx({ x: x2, y: y2 }, { x: x2 - dx * cap, y: y2 - dy * cap }, 14, "#1a202c");
-    drawCenterMarker(center, angle);
 }
 
 function draw_flying_handstick(center, angle) {
@@ -2129,19 +2334,19 @@ function getPrefixHandOffset(globalTime, handSide) {
             if (!c || !(c.value > 0) || c.handSide !== handSide) continue;
             const prefix = c.toPrefix || '';
             if (!prefix) continue; // 無記号の拍は目標オフセット 0 のまま
-            const d = displacement(c.value, prefix);
-            // 同じ手・同じ拍に複数の位置指定があれば、最初の指定を安定して採用する。
-            if (targets[t].priority === 0) targets[t] = { x: d.x, y: d.y, priority: 1 };
+            const arrivalBeat = (t + Math.floor(c.value / 2)) % T;
+            const d = displacement(c.to, prefix);
+            // 位置指定は投げた拍ではなく、オブジェクトが到達する拍に適用する。
+            if (targets[arrivalBeat].priority === 0) targets[arrivalBeat] = { x: d.x, y: d.y, priority: 1 };
         }
     }
 
-    // 目標は「拍の時点」で切り替わるため、現在の拍では前拍の目標から
-    // 現在の拍の目標へ補間する。これで r4/l4 に向かう移動が次拍まで遅れない。
+    // 次の拍の到達位置へ現在の拍から補間し、拍の境界では目標位置に着いておく。
     const beat = Math.floor(gt / BEAT_TIME) % T;
     const u = (gt % BEAT_TIME) / BEAT_TIME;
-    const prevBeat = (beat - 1 + T) % T;
-    const from = targets[prevBeat];
-    const to = targets[beat];
+    const nextBeat = (beat + 1) % T;
+    const from = targets[beat];
+    const to = targets[nextBeat];
     return {
         x: from.x + (to.x - from.x) * u,
         y: from.y + (to.y - from.y) * u
@@ -2433,7 +2638,7 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
 
     if (table && g_balls > 0) {
         for (let b = 0; b < g_balls; b++) {
-            draw_ball(table[b], globalTime, COLORS[b % COLORS.length], b);
+            draw_ball(table[b], globalTime, getObjectColor(b), b);
         }
     }
 
@@ -3986,5 +4191,64 @@ document.getElementById("h2dSolveButton").addEventListener("click", solveHandToD
     document.querySelectorAll('.result-filter').forEach(setupResultTextFilter);
 })();
 </script>
+<script>
+(() => {
+ const $=id=>document.getElementById(id);
+ const toggle=$('stickDesignToggle'), panel=$('stickDesignPanel');
+ const defaults={bodyColor:'#ff5b4d',endColor:'#20252d',gripColor:'#ffb3b3',centerTapeColor:'#f8fafc',edgeTapeColor:'#f8fafc',length:460,width:64,gripWrapped:true,gripMode:'center',objectColorMode:'different',objectHueOffsets:null,objectHueOffsetKey:null,edgeTapesEnabled:true,endCapsEnabled:true};
+ window.devilStickDesign={...defaults};
+ function applyDefaultsToControls(){
+  ['bodyColor','endColor','gripColor','centerTapeColor','edgeTapeColor'].forEach(id=>$(id).value=defaults[id]);
+  $('gripWrapped').checked=defaults.gripWrapped;$('gripMode').value=defaults.gripMode;$('objectColorMode').value=defaults.objectColorMode;
+  $('endCapsEnabled').checked=defaults.endCapsEnabled;$('edgeTapesEnabled').checked=defaults.edgeTapesEnabled;
+  $('stickLength').value=defaults.length;$('stickWidth').value=defaults.width;
+ }
+ applyDefaultsToControls();
+ function update(){
+  const s=window.devilStickDesign;
+  ['bodyColor','endColor','gripColor','centerTapeColor','edgeTapeColor'].forEach(id=>{if($(id))s[id]=$(id).value.toLowerCase()});
+  s.gripWrapped=$('gripWrapped').checked;s.gripMode=$('gripMode').value;s.objectColorMode=$('objectColorMode').value;s.endCapsEnabled=$('endCapsEnabled').checked;s.edgeTapesEnabled=$('edgeTapesEnabled').checked;
+  s.length=+$('stickLength').value;s.width=+$('stickWidth').value;
+  $('lengthOut').textContent=s.length;$('widthOut').textContent=s.width;
+  $('gripColor').disabled=!s.gripWrapped;
+  $('stickDesignStatus').textContent='変更はシミュレーターのスティックにすぐ反映されます。';
+  // Main animation loop redraws the canvas continuously; the next frame picks up these settings.
+ }
+ toggle.addEventListener('click',()=>{const open=panel.style.display!=='block';panel.style.display=open?'block':'none';toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'🎨 デザインを閉じる':'🎨 デザインを開く';});
+ ['bodyColor','endColor','gripColor','centerTapeColor','edgeTapeColor','gripWrapped','gripMode','objectColorMode','endCapsEnabled','edgeTapesEnabled','stickLength','stickWidth'].forEach(id=>$(id).addEventListener(id==='stickLength'||id==='stickWidth'?'input':'change',()=>{
+  if(id==='bodyColor'||id==='objectColorMode'){
+   window.devilStickDesign.objectHueOffsets=null;
+   window.devilStickDesign.objectHueOffsetKey=null;
+  }
+  update();
+ }));
+ $('resetStickDesign').addEventListener('click',()=>{Object.assign(window.devilStickDesign,defaults);applyDefaultsToControls();update();$('stickDesignStatus').textContent='初期デザインに戻しました。'});
+ $('randomStickDesign').addEventListener('click',()=>{
+  const palette=Array.from($('bodyColor').options).map(o=>o.value);
+  const bodyBefore=$('bodyColor').value, gripBefore=$('gripColor').value;
+  const gripFull=$('gripWrapped').checked&&$('gripMode').value==='full';
+  const preserveGripShade=gripFull||sameColorHue(bodyBefore,gripBefore);
+  const oldBodyHsl=getColorHsl(bodyBefore), oldGripHsl=getColorHsl(gripBefore);
+  const lightnessDifference=oldBodyHsl&&oldGripHsl?oldGripHsl.lightness-oldBodyHsl.lightness:0;
+  const bodyAfter=palette[Math.floor(Math.random()*palette.length)];
+  $('bodyColor').value=bodyAfter;
+    window.devilStickDesign.objectHueOffsets=null;
+    window.devilStickDesign.objectHueOffsetKey=null;
+  if(preserveGripShade){
+   const matchingColors=palette.filter(candidate=>sameColorHue(candidate,bodyAfter));
+   const candidates=matchingColors.length?matchingColors:palette;
+   const newBodyHsl=getColorHsl(bodyAfter);
+   $('gripColor').value=candidates.reduce((best,candidate)=>{
+    const candidateHsl=getColorHsl(candidate), bestHsl=getColorHsl(best);
+    return Math.abs((candidateHsl.lightness-newBodyHsl.lightness)-lightnessDifference)<Math.abs((bestHsl.lightness-newBodyHsl.lightness)-lightnessDifference)?candidate:best;
+   },candidates[0]);
+  }
+  ['endColor','centerTapeColor','edgeTapeColor'].forEach(id=>$(id).value=palette[Math.floor(Math.random()*palette.length)]);
+  update();$('stickDesignStatus').textContent='ランダムな配色に変更しました。';
+ });
+ update();
+})();
+</script>
+
 </body>
 </html>
