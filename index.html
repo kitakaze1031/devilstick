@@ -13,7 +13,7 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f5f7fa; co
 h1 { font-size: 24px; margin: 0 0 10px 0; color: #2c3e50; text-align: center; }
 .main-container { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 1200px; }
 .canvas-container { width: 100%; max-width: 800px; display: flex; justify-content: center; }
-canvas { background: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; height: auto; aspect-ratio: 8 / 6; display: block; }
+canvas { background: #e0e0e0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; height: auto; aspect-ratio: 8 / 6; display: block; }
 .control-panel { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 800px; }
 #controls { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; }
 label { font-weight: bold; color: #4a5568; }
@@ -828,6 +828,7 @@ function get_data(id) {
              "sp-1": [340,230], "sp1": [460,230] }
     };
     let key = String(id).replace(/x$/i, "");
+    if (baseData[key]) return { ...baseData[key] };
     let prefix = "";
     let state = key;
     let m = key.match(/^([lro])(?=(?:sp|f|-?\d))/i);
@@ -2565,7 +2566,7 @@ function update(timestamp) {
     let beat = g_n > 0 ? (Math.floor(globalTime / BEAT_TIME) % g_n) : 0;
     let u = (globalTime % BEAT_TIME) / BEAT_TIME;
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#e0e0e0";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
