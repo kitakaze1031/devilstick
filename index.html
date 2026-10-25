@@ -2645,19 +2645,13 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
 
     const asLeftOffset = getPrefixHandOffset(globalTime, 0, "as").y;
     const asRightOffset = getPrefixHandOffset(globalTime, 1, "as").y;
-    const ssLean = Math.max(
-        getPrefixHandOffset(globalTime, 0, "ss").y,
-        getPrefixHandOffset(globalTime, 1, "ss").y
-    ) / 60;
+    const ssLeftOffset = getPrefixHandOffset(globalTime, 0, "ss").y;
+    const ssRightOffset = getPrefixHandOffset(globalTime, 1, "ss").y;
+    const ssLean = Math.max(ssLeftOffset, ssRightOffset) / 60;
     const asActive = Math.max(asLeftOffset, asRightOffset) > 0;
     const ssActive = ssLean > 0;
     const liftedLeg = asActive ? (asLeftOffset >= asRightOffset ? 0 : 1) : -1;
     const handstickBehindFigure = asActive || ssActive;
-    if (handstickBehindFigure && table && g_balls > 0) {
-        for (let b = 0; b < g_balls; b++) {
-            draw_ball(table[b], globalTime, getObjectColor(b), b);
-        }
-    }
     if (handstickBehindFigure && handTable && g_handBalls > 0) {
         for (let b = 0; b < g_handBalls; b++) {
             draw_handstick_ball(handTable[b], handGlobalTime, b, g_handIsAsync, handT);
@@ -2667,18 +2661,24 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
 
     ctx.beginPath(); ctx.arc(actualLeftHand.x, actualLeftHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
     ctx.beginPath(); ctx.arc(actualRightHand.x, actualRightHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
-    if (asActive) {
-        const raisedKnee = liftedLeg === 0 ? { x: 330, y: 430 } : { x: 470, y: 430 };
-        ctx.save();
+    if (handstickBehindFigure && table && g_balls > 0) {
+        for (let b = 0; b < g_balls; b++) {
+            draw_ball(table[b], globalTime, getObjectColor(b), b);
+        }
+    }
+    if (asActive || ssActive) {
         ctx.beginPath();
+        ctx.moveTo(400, 380);
+        ctx.lineTo(330, liftedLeg === 0 ? 430 : 480);
+        ctx.lineTo(315, liftedLeg === 0 ? 590 : 640);
+        ctx.moveTo(400, 380);
+        ctx.lineTo(470, liftedLeg === 1 ? 430 : 480);
+        ctx.lineTo(485, liftedLeg === 1 ? 590 : 640);
         ctx.strokeStyle = "#4a5568";
         ctx.lineWidth = 6;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.moveTo(400, 380);
-        ctx.lineTo(raisedKnee.x, raisedKnee.y);
         ctx.stroke();
-        ctx.restore();
     }
 
     if (!handstickBehindFigure && handTable && g_handBalls > 0) {
