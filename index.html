@@ -1171,7 +1171,7 @@ function parse(s) {
             if (tokenIndex >= tokens.length) return null;
             let token = tokens[tokenIndex];
             
-            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null, positionPrefix: "" };
+            let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null, positionPrefix: "", positionState: "" };
 
             // l/r/o/as/ss は投げ状態の座標修飾子。
             const posMatch = token.match(/^(ss|as|[lro])(?=(?:sp|f)?-?(?:10|[0-9a-zA-Z]))/i);
@@ -1203,6 +1203,7 @@ function parse(s) {
             } else {
                 th.val = valueToken.toLowerCase().charCodeAt(0) - 87;
             }
+            th.positionState = (th.is_minus ? "-" : "") + String(th.val);
             token = token.substring(valueToken.length); 
             
             if (token.includes('x')) th.cross = 1;
@@ -1294,7 +1295,7 @@ function parse(s) {
             pending_prefix = ''; 
 
             let parseSingleThrow = () => {
-                let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null, positionPrefix: "" };
+                let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null, positionPrefix: "", positionState: "" };
                 // l/r/o/as/ss は状態座標の修飾子。
                 const positionPrefixMatch = s.slice(i).match(/^(ss|as|[lro])(?=(?:sp|f)?-?(?:\d|a))/i);
                 if (positionPrefixMatch) {
@@ -1323,6 +1324,7 @@ function parse(s) {
                     }
                 }
                 if (!hasNum) return null;
+                th.positionState = (th.is_minus ? "-" : "") + String(th.val);
 
                 while (i < s.length && s[i] !== ' ' && s[i] !== ',' && s[i] !== ')' && s[i] !== ']') {
                     if (s[i] === 'x') { th.cross = 1; i++; }
@@ -1419,7 +1421,7 @@ function object_count(seq) {
 // 軌道構築
 // =====================================
 function build(seq, balls, localT, isAsync) {
-    let outTable = Array.from({ length: balls }, () => Array.from({ length: localT }, () => ({ value: -1, from: -1, to: -1, fromPrefix: "", toPrefix: "", positionPrefix: "", angleExpr: "", action_str: "", propeller: 0, rot: null, handSide: 0 })) );
+    let outTable = Array.from({ length: balls }, () => Array.from({ length: localT }, () => ({ value: -1, from: -1, to: -1, fromPrefix: "", toPrefix: "", positionPrefix: "", positionState: "", angleExpr: "", action_str: "", propeller: 0, rot: null, handSide: 0 })) );
     
     let ex = [];
     for (let t = 0; t < localT; t++) { 
@@ -1494,7 +1496,7 @@ function build(seq, balls, localT, isAsync) {
             let rot = th.rot;
             let hs = th.hs;
 
-            outTable[ball][t] = { value, from, to, fromPrefix: "", toPrefix: th.positionPrefix || "", positionPrefix: th.positionPrefix || "", angleExpr: "", action_str, propeller, rot, hs, handSide: side };
+            outTable[ball][t] = { value, from, to, fromPrefix: "", toPrefix: th.positionPrefix || "", positionPrefix: th.positionPrefix || "", positionState: th.positionState || String(value), angleExpr: "", action_str, propeller, rot, hs, handSide: side };
 
             t += Math.floor(value / 2);
             if (to === -1 || to === 1) side ^= 1;
@@ -2330,13 +2332,16 @@ function getPrefixHandOffset(globalTime, handSide, requiredPrefix = null) {
             if (!c || !(c.value > 0) || !c.positionPrefix) continue;
             if (requiredPrefix && c.positionPrefix !== requiredPrefix) continue;
             if (c.handSide !== handSide) continue;
-            const positioned = get_data(c.positionPrefix + String(c.to));
+            const positioned = get_data(c.positionPrefix + c.positionState);
             const d = c.positionPrefix === "as" || c.positionPrefix === "ss"
                 ? { x: 0, y: 60 }
-                : {
-                    x: positioned.x - (handSide === 0 ? 340 : 460),
-                    y: positioned.y - 400
-                };
+                : (() => {
+                    const basePosition = get_data(c.positionState);
+                    return {
+                        x: positioned.x - basePosition.x,
+                        y: positioned.y - basePosition.y
+                    };
+                })();
             // 位置指定はオブジェクトの到達拍ではなく、接頭辞が付いた投げ拍に投げ手へ適用する。
             if (targets[t].priority === 0) targets[t] = { x: d.x, y: d.y, priority: 1 };
         }
