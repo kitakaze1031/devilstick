@@ -2661,11 +2661,6 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
 
     ctx.beginPath(); ctx.arc(actualLeftHand.x, actualLeftHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
     ctx.beginPath(); ctx.arc(actualRightHand.x, actualRightHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
-    if (handstickBehindFigure && table && g_balls > 0) {
-        for (let b = 0; b < g_balls; b++) {
-            draw_ball(table[b], globalTime, getObjectColor(b), b);
-        }
-    }
     if (asActive || ssActive) {
         ctx.beginPath();
         ctx.moveTo(400, 380);
@@ -2679,6 +2674,11 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.stroke();
+    }
+    if (handstickBehindFigure && table && g_balls > 0) {
+        for (let b = 0; b < g_balls; b++) {
+            draw_ball(table[b], globalTime, getObjectColor(b), b);
+        }
     }
 
     if (!handstickBehindFigure && handTable && g_handBalls > 0) {
