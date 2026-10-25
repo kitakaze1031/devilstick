@@ -13,7 +13,7 @@ body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f5f7fa; co
 h1 { font-size: 24px; margin: 0 0 10px 0; color: #2c3e50; text-align: center; }
 .main-container { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 1200px; }
 .canvas-container { width: 100%; max-width: 800px; display: flex; justify-content: center; }
-canvas { background: #e0e0e0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; height: auto; aspect-ratio: 8 / 6; display: block; }
+canvas { background: #e0e0e0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; height: auto; aspect-ratio: 40 / 33; display: block; }
 .control-panel { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 800px; }
 #controls { background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; }
 label { font-weight: bold; color: #4a5568; }
@@ -161,7 +161,7 @@ footer a:hover { color: #2b6cb0; border-bottom-style: solid; }
 
 <div class="main-container">
     <div class="canvas-container">
-        <canvas id="simCanvas" width="800" height="600"></canvas>
+        <canvas id="simCanvas" width="800" height="660"></canvas>
     </div>
 
      <div class="control-panel">
@@ -790,7 +790,7 @@ let logicalTimeAccumulator = 0;
 // 座標・角度取得関数
 // =====================================
 function get_data(id) {
-    // l/r/o の位置は、接頭辞と状態の組み合わせごとに定義する。
+    // l/r/o は状態ごとの位置、as/ss は基準座標からの相対移動で定義する。
     // l4 / 4l の両方を受け付ける。末尾の x は位置判定では無視する。
     const baseData = {
         "-4": { x: 300, y: 460, angle: 50 * DEG_TO_RAD },
@@ -831,14 +831,15 @@ function get_data(id) {
     if (baseData[key]) return { ...baseData[key] };
     let prefix = "";
     let state = key;
-    let m = key.match(/^([lro])(?=(?:sp|f|-?\d))/i);
-    if (m) { prefix = m[1].toLowerCase(); state = key.slice(1); }
+    let m = key.match(/^(ss|as|[lro])(?=(?:sp|f|-?\d))/i);
+    if (m) { prefix = m[1].toLowerCase(); state = key.slice(m[0].length); }
     else {
-        m = key.match(/^(sp-?\d+|f-?\d+|-?\d+)([lro])$/i);
+        m = key.match(/^(sp-?\d+|f-?\d+|-?\d+)(ss|as|[lro])$/i);
         if (m) { state = m[1]; prefix = m[2].toLowerCase(); }
     }
     const base = baseData[state];
     if (!base) return { x: 400, y: 460, angle: 0 };
+    if (prefix === "as" || prefix === "ss") return { x: base.x, y: base.y + 60, angle: base.angle };
     if (prefix && prefixData[prefix] && prefixData[prefix][state]) {
         const xy = prefixData[prefix][state];
         return { x: xy[0], y: xy[1], angle: base.angle };
@@ -1172,11 +1173,11 @@ function parse(s) {
             
             let th = { val: null, is_minus: false, cross: null, hs: 0, mode: 0, propeller: 0, rot: null, positionPrefix: "" };
 
-            // l/r/o は投げ状態の座標修飾子。lf2、lsp-2、l-2 も認識する。
-            const posMatch = token.match(/^([lro])(?=(?:sp|f)?-?(?:10|[0-9a-zA-Z]))/i);
+            // l/r/o/as/ss は投げ状態の座標修飾子。
+            const posMatch = token.match(/^(ss|as|[lro])(?=(?:sp|f)?-?(?:10|[0-9a-zA-Z]))/i);
             if (posMatch) {
                 th.positionPrefix = posMatch[1].toLowerCase();
-                token = token.substring(1);
+                token = token.substring(posMatch[0].length);
             }
             if (token.startsWith('-')) {
                 th.is_minus = true;
@@ -1230,8 +1231,8 @@ function parse(s) {
         // [2 3(r1)] のような [...] 全体を「1ビート」として扱う。
         // 括弧正規化後は [2 3r1 ] の形になるため、[] の境界を先に保持して解析する。
         // 「10」は1・0ではなく1つのサイトスワップ値、a は従来どおり10を表す。
-        const throwRegex = /[lro]?-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/gi;
-        const beatRegex = /\[[^\]]*\]|[lro]?-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/gi;
+        const throwRegex = /(?:ss|as|[lro])?-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/gi;
+        const beatRegex = /\[[^\]]*\]|(?:ss|as|[lro])?-?(?:sp|f)?(?:10|[0-9a-zA-Z])(?:[x\*+\^]|r-?[0-9]*)*/gi;
         const beatTokens = normalized.match(beatRegex) || [];
 
         for (const beatToken of beatTokens) {
@@ -1294,10 +1295,11 @@ function parse(s) {
 
             let parseSingleThrow = () => {
                 let th = { val: 0, is_minus: false, cross: 0, hs: 0, mode: 0, propeller: p_mode, rot: null, positionPrefix: "" };
-                // l/r/o は状態座標の修飾子。lf、lsp、l- などを識別する。
-                if (/[lro]/i.test(s[i] || "") && /^(?:[lro])(?=(?:sp|f)?-?(?:\d|a))/i.test(s.slice(i))) {
-                    th.positionPrefix = s[i].toLowerCase();
-                    i++;
+                // l/r/o/as/ss は状態座標の修飾子。
+                const positionPrefixMatch = s.slice(i).match(/^(ss|as|[lro])(?=(?:sp|f)?-?(?:\d|a))/i);
+                if (positionPrefixMatch) {
+                    th.positionPrefix = positionPrefixMatch[1].toLowerCase();
+                    i += positionPrefixMatch[0].length;
                 }
                 // sp は2文字で1つの接頭記号。p より先に判定する。
                 if (i + 1 < s.length && s[i] === 's' && s[i + 1] === 'p') { th.propeller = 6; i += 2; }
@@ -2102,11 +2104,13 @@ function draw_handstick_ball(balls, globalTime, ballIndex, isAsync, localT) {
     }
 }
 
-function draw_ball(balls, globalTime, color, ballIndex) {
+function draw_ball(balls, globalTime, color, ballIndex, layer = "all") {
     if (!balls) return;
     for (let t = 0; t < T; t++) {
         let c = balls[t];
         if (!c || c.value <= 0) continue;
+        if (layer === "behindHandstick" && c.toPrefix !== "as") continue;
+        if (layer === "inFrontOfHandstick" && c.toPrefix === "as") continue;
 
         let startTime = t * BEAT_TIME;
         let duration = (c.value / 2.0) * BEAT_TIME;
@@ -2253,7 +2257,7 @@ function draw_ball(balls, globalTime, color, ballIndex) {
                     let strikeProgress = Math.sin(timeRatio * Math.PI);
                     p = lerp(p0, centerStrike, strikeProgress);
                 }
-                // 通常のデビルスティックは、接頭辞 l/r/o の有無にかかわらず弾む。
+                // 通常のデビルスティックは、位置接頭辞の有無にかかわらず弾む。
                 // 中心の x は座標間を補間し、y にはサイトスワップ値に応じた弾みを重ねる。
                 p.y -= hOffset;
 
@@ -2311,7 +2315,7 @@ function draw_ball(balls, globalTime, color, ballIndex) {
 
 // 接頭辞の到達位置へ受け手側の握り手を移動させる。
 // 左右の手は別々に目標位置を計算する。
-function getPrefixHandOffset(globalTime, handSide) {
+function getPrefixHandOffset(globalTime, handSide, requiredPrefix = null) {
     if (!table || !T) return { x: 0, y: 0 };
     const cycleDuration = T * BEAT_TIME;
     if (cycleDuration <= 0) return { x: 0, y: 0 };
@@ -2323,16 +2327,19 @@ function getPrefixHandOffset(globalTime, handSide) {
         for (let t = 0; t < T; t++) {
             const c = table[b] && table[b][t];
             if (!c || !(c.value > 0) || !c.toPrefix) continue;
+            if (requiredPrefix && c.toPrefix !== requiredPrefix) continue;
             const catchHandSide = typeof c.to === "number"
                 ? (c.to <= -1 ? 0 : 1)
                 : c.handSide;
             if (catchHandSide !== handSide) continue;
             const arrivalBeat = (t + Math.floor(c.value / 2)) % T;
             const positioned = get_center_point(c, "to");
-            const d = {
-                x: positioned.x - (handSide === 0 ? 340 : 460),
-                y: positioned.y - 400
-            };
+            const d = c.toPrefix === "as" || c.toPrefix === "ss"
+                ? { x: 0, y: 60 }
+                : {
+                    x: positioned.x - (handSide === 0 ? 340 : 460),
+                    y: positioned.y - 400
+                };
             // 位置指定は投げた拍ではなく、オブジェクトが到達する拍に適用する。
             if (targets[arrivalBeat].priority === 0) targets[arrivalBeat] = { x: d.x, y: d.y, priority: 1 };
         }
@@ -2481,16 +2488,30 @@ function getFlatHitMotion(globalTime, handSide, basePos) {
 // =====================================
 // 人物描画（インバースキネマティクス）
 // =====================================
-function drawStickman(ctx, leftTarget, rightTarget) {
+function drawStickman(ctx, leftTarget, rightTarget, leanBack = 0, liftedLeg = -1) {
     ctx.save(); ctx.strokeStyle = "#4a5568"; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const projectUpperBodyY = y => 380 + (y - 380) * (1 - 0.3 * leanBack);
     // 頭
-    ctx.beginPath(); ctx.arc(400, 180, 25, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(400, projectUpperBodyY(180), 25, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.stroke();
     // 背骨
-    ctx.beginPath(); ctx.moveTo(400, 205); ctx.lineTo(400, 380); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(400, projectUpperBodyY(205)); ctx.lineTo(400, 380); ctx.stroke();
     // 肩
-    ctx.beginPath(); ctx.moveTo(340, 230); ctx.lineTo(460, 230); ctx.stroke();
+    const leftShoulder = { x: 340, y: projectUpperBodyY(230) };
+    const rightShoulder = { x: 460, y: projectUpperBodyY(230) };
+    ctx.beginPath(); ctx.moveTo(leftShoulder.x, leftShoulder.y); ctx.lineTo(rightShoulder.x, rightShoulder.y); ctx.stroke();
     // 足
-    ctx.beginPath(); ctx.moveTo(400, 380); ctx.lineTo(350, 530); ctx.moveTo(400, 380); ctx.lineTo(450, 530); ctx.stroke();
+    const leftKnee = { x: 330, y: liftedLeg === 0 ? 430 : 480 };
+    const rightKnee = { x: 470, y: liftedLeg === 1 ? 430 : 480 };
+    const leftFoot = liftedLeg === 0 ? { x: 315, y: 590 } : { x: 315, y: 640 };
+    const rightFoot = liftedLeg === 1 ? { x: 485, y: 590 } : { x: 485, y: 640 };
+    ctx.beginPath();
+    ctx.moveTo(400, 380); ctx.lineTo(leftKnee.x, leftKnee.y); ctx.lineTo(leftFoot.x, leftFoot.y);
+    ctx.moveTo(400, 380); ctx.lineTo(rightKnee.x, rightKnee.y); ctx.lineTo(rightFoot.x, rightFoot.y);
+    ctx.stroke();
+    [leftFoot, rightFoot].forEach(foot => {
+        ctx.beginPath(); ctx.arc(foot.x, foot.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.stroke();
+    });
 
     function drawArm(shoulder, target, isLeft) {
         let dx = target.x - shoulder.x; let dy = target.y - shoulder.y;
@@ -2508,8 +2529,8 @@ function drawStickman(ctx, leftTarget, rightTarget) {
         let elbowX = shoulder.x + L1 * Math.cos(elbowAngle); let elbowY = shoulder.y + L1 * Math.sin(elbowAngle);
         ctx.beginPath(); ctx.moveTo(shoulder.x, shoulder.y); ctx.lineTo(elbowX, elbowY); ctx.lineTo(target.x, target.y); ctx.stroke();
     }
-    drawArm({x: 340, y: 230}, leftTarget, true);
-    drawArm({x: 460, y: 230}, rightTarget, false);
+    drawArm(leftShoulder, leftTarget, true);
+    drawArm(rightShoulder, rightTarget, false);
     ctx.restore();
 }
 
@@ -2622,18 +2643,51 @@ let right_hs = calcHandMotion(virtualTime, period, right_phase);
         y: handRightTip.y + Math.sin(rightAngle) * gripOffset
     };
 
-    drawStickman(ctx, actualLeftHand, actualRightHand);
+    const asLeftOffset = getPrefixHandOffset(globalTime, 0, "as").y;
+    const asRightOffset = getPrefixHandOffset(globalTime, 1, "as").y;
+    const ssLean = Math.max(
+        getPrefixHandOffset(globalTime, 0, "ss").y,
+        getPrefixHandOffset(globalTime, 1, "ss").y
+    ) / 60;
+    const asActive = Math.max(asLeftOffset, asRightOffset) > 0;
+    const ssActive = ssLean > 0;
+    const liftedLeg = asActive ? (asLeftOffset >= asRightOffset ? 0 : 1) : -1;
+    const handstickBehindFigure = asActive || ssActive;
+    if (handstickBehindFigure && table && g_balls > 0) {
+        for (let b = 0; b < g_balls; b++) {
+            draw_ball(table[b], globalTime, getObjectColor(b), b);
+        }
+    }
+    if (handstickBehindFigure && handTable && g_handBalls > 0) {
+        for (let b = 0; b < g_handBalls; b++) {
+            draw_handstick_ball(handTable[b], handGlobalTime, b, g_handIsAsync, handT);
+        }
+    }
+    drawStickman(ctx, actualLeftHand, actualRightHand, Math.min(1, ssLean), liftedLeg);
 
     ctx.beginPath(); ctx.arc(actualLeftHand.x, actualLeftHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
     ctx.beginPath(); ctx.arc(actualRightHand.x, actualRightHand.y, 9, 0, Math.PI * 2); ctx.fillStyle = "#edf2f7"; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#4a5568"; ctx.stroke();
+    if (asActive) {
+        const raisedKnee = liftedLeg === 0 ? { x: 330, y: 430 } : { x: 470, y: 430 };
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = "#4a5568";
+        ctx.lineWidth = 6;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.moveTo(400, 380);
+        ctx.lineTo(raisedKnee.x, raisedKnee.y);
+        ctx.stroke();
+        ctx.restore();
+    }
 
-    if (handTable && g_handBalls > 0) {
+    if (!handstickBehindFigure && handTable && g_handBalls > 0) {
         for (let b = 0; b < g_handBalls; b++) {
             draw_handstick_ball(handTable[b], handGlobalTime, b, g_handIsAsync, handT);
         }
     }
 
-    if (table && g_balls > 0) {
+    if (!handstickBehindFigure && table && g_balls > 0) {
         for (let b = 0; b < g_balls; b++) {
             draw_ball(table[b], globalTime, getObjectColor(b), b);
         }
