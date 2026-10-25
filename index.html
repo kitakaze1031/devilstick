@@ -1419,7 +1419,7 @@ function object_count(seq) {
 // 軌道構築
 // =====================================
 function build(seq, balls, localT, isAsync) {
-    let outTable = Array.from({ length: balls }, () => Array.from({ length: localT }, () => ({ value: -1, from: -1, to: -1, fromPrefix: "", toPrefix: "", angleExpr: "", action_str: "", propeller: 0, rot: null, handSide: 0 })) );
+    let outTable = Array.from({ length: balls }, () => Array.from({ length: localT }, () => ({ value: -1, from: -1, to: -1, fromPrefix: "", toPrefix: "", positionPrefix: "", angleExpr: "", action_str: "", propeller: 0, rot: null, handSide: 0 })) );
     
     let ex = [];
     for (let t = 0; t < localT; t++) { 
@@ -1494,7 +1494,7 @@ function build(seq, balls, localT, isAsync) {
             let rot = th.rot;
             let hs = th.hs;
 
-            outTable[ball][t] = { value, from, to, fromPrefix: "", toPrefix: th.positionPrefix || "", angleExpr: "", action_str, propeller, rot, hs, handSide: side };
+            outTable[ball][t] = { value, from, to, fromPrefix: "", toPrefix: th.positionPrefix || "", positionPrefix: th.positionPrefix || "", angleExpr: "", action_str, propeller, rot, hs, handSide: side };
 
             t += Math.floor(value / 2);
             if (to === -1 || to === 1) side ^= 1;
@@ -1557,9 +1557,15 @@ function build(seq, balls, localT, isAsync) {
             } else {
                 curr_throw.to = next_key.endsWith('l') ? -2 : 2;
             }
-            // この投げに書かれた l/r/o 修飾を、この投げの到達側の座標として保持する。
-            // 次のトークンの接頭辞にずらすと、r/o/l の指定が1拍ずれて中心が動かない。
+            // 元のトークンに付いた接頭辞は positionPrefix に保持し、
+            // 軌道の到着位置は次の投げの接頭辞に後で合わせる。
             curr_throw.toPrefix = curr_throw.toPrefix || "";
+        }
+
+        for (let i = 0; i < path.length; i++) {
+            const curr_throw = outTable[b][path[i]];
+            const next_throw = outTable[b][path[(i + 1) % path.length]];
+            curr_throw.toPrefix = next_throw.positionPrefix || "";
         }
 
         for (let i = 0; i < path.length; i++) {
@@ -1570,7 +1576,6 @@ function build(seq, balls, localT, isAsync) {
 
             curr_throw.from = prev_throw.to;
             curr_throw.fromPrefix = prev_throw.toPrefix || "";
-            // toPrefix は outTable 作成時に現在の入力トークンから設定済み。
 
             let angleTable = isAsync ? ASYNC_ANGLE_RULES : SYNC_ANGLE_RULES;
             let f = String(curr_throw.from);
@@ -2109,8 +2114,8 @@ function draw_ball(balls, globalTime, color, ballIndex, layer = "all") {
     for (let t = 0; t < T; t++) {
         let c = balls[t];
         if (!c || c.value <= 0) continue;
-        if (layer === "behindHandstick" && c.toPrefix !== "as") continue;
-        if (layer === "inFrontOfHandstick" && c.toPrefix === "as") continue;
+        if (layer === "behindHandstick" && c.positionPrefix !== "as") continue;
+        if (layer === "inFrontOfHandstick" && c.positionPrefix === "as") continue;
 
         let startTime = t * BEAT_TIME;
         let duration = (c.value / 2.0) * BEAT_TIME;
@@ -2181,9 +2186,6 @@ function draw_ball(balls, globalTime, color, ballIndex, layer = "all") {
                 let p; let s = Math.floor(c.value / 2);
                 let base_s = (c.rot !== null && c.rot !== undefined) ? c.rot : s;
                 if (c.fromPrefix || c.toPrefix) {
-                    // 接頭辞付きの 2x も、手の位置ではなく中心座標の遷移を使う。
-                    // get_center_point() は接頭辞遷移の累積オフセットを含むため、
-                    // 指定された Δx/Δy に沿って中心が等速直線運動する。
                     const p0 = get_center_point(c, "from");
                     const p1 = get_center_point(c, "to");
                     p = lerp(p0, p1, timeRatio);
@@ -2313,7 +2315,7 @@ function draw_ball(balls, globalTime, color, ballIndex, layer = "all") {
     }
 }
 
-// 接頭辞の到達位置へ受け手側の握り手を移動させる。
+// 接頭辞が付いた投げ拍から、投げ手側の握り手を指定位置へ移動させる。
 // 左右の手は別々に目標位置を計算する。
 function getPrefixHandOffset(globalTime, handSide, requiredPrefix = null) {
     if (!table || !T) return { x: 0, y: 0 };
@@ -2321,27 +2323,22 @@ function getPrefixHandOffset(globalTime, handSide, requiredPrefix = null) {
     if (cycleDuration <= 0) return { x: 0, y: 0 };
     const gt = ((globalTime % cycleDuration) + cycleDuration) % cycleDuration;
 
-    // 到達位置の接頭辞は、投げた手ではなく受け取る手の目標位置に反映する。
     const targets = Array.from({ length: T }, () => ({ x: 0, y: 0, priority: 0 }));
     for (let b = 0; b < g_balls; b++) {
         for (let t = 0; t < T; t++) {
             const c = table[b] && table[b][t];
-            if (!c || !(c.value > 0) || !c.toPrefix) continue;
-            if (requiredPrefix && c.toPrefix !== requiredPrefix) continue;
-            const catchHandSide = typeof c.to === "number"
-                ? (c.to <= -1 ? 0 : 1)
-                : c.handSide;
-            if (catchHandSide !== handSide) continue;
-            const arrivalBeat = (t + Math.floor(c.value / 2)) % T;
-            const positioned = get_center_point(c, "to");
-            const d = c.toPrefix === "as" || c.toPrefix === "ss"
+            if (!c || !(c.value > 0) || !c.positionPrefix) continue;
+            if (requiredPrefix && c.positionPrefix !== requiredPrefix) continue;
+            if (c.handSide !== handSide) continue;
+            const positioned = get_data(c.positionPrefix + String(c.to));
+            const d = c.positionPrefix === "as" || c.positionPrefix === "ss"
                 ? { x: 0, y: 60 }
                 : {
                     x: positioned.x - (handSide === 0 ? 340 : 460),
                     y: positioned.y - 400
                 };
-            // 位置指定は投げた拍ではなく、オブジェクトが到達する拍に適用する。
-            if (targets[arrivalBeat].priority === 0) targets[arrivalBeat] = { x: d.x, y: d.y, priority: 1 };
+            // 位置指定はオブジェクトの到達拍ではなく、接頭辞が付いた投げ拍に投げ手へ適用する。
+            if (targets[t].priority === 0) targets[t] = { x: d.x, y: d.y, priority: 1 };
         }
     }
 
